@@ -185,6 +185,59 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
 .rel-btn-lbl{line-height:1.2}
 #resultadoRel{border-radius:var(--r-lg);max-height:480px;overflow-y:auto;scrollbar-width:thin}
 
+/* TASK ALERTS */
+.task-section{margin:10px 0}
+.task-title{font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.task-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:var(--r-md);margin:6px 0;border:1px solid transparent;font-size:.8rem}
+.task-item.task-urgent{background:#fff1f2;border-color:#fca5a5;color:#9f1239}
+.task-item.task-warn{background:#fffbeb;border-color:#fcd34d;color:#78350f}
+.task-item.task-info{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+.task-item.task-ok{background:#f0fdf4;border-color:#86efac;color:#14532d}
+.task-ico{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.task-body{flex:1}
+.task-head{font-weight:700;margin-bottom:1px}
+.task-sub{font-size:.7rem;opacity:.8}
+
+/* BIOMASSA VENDA CARD */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
+.kpi-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh-sm)}
+.kpi-card.kpi-green{border-left:4px solid var(--green);background:var(--green-l)}
+.kpi-card.kpi-blue{border-left:4px solid var(--blue);background:var(--blue-xl)}
+.kpi-card.kpi-amber{border-left:4px solid var(--amber);background:var(--amber-l)}
+.kpi-card.kpi-red{border-left:4px solid var(--red);background:var(--red-l)}
+.kpi-val{font-size:1.2rem;font-weight:800;color:var(--text)}
+.kpi-lbl{font-size:.65rem;font-weight:600;color:var(--text2);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+.kpi-sub{font-size:.7rem;color:var(--text3);margin-top:3px}
+
+/* COMPACT TOGGLE SECTIONS */
+.section-toggle-bar{display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px}
+.section-toggle-title{font-weight:800;font-size:.95rem;color:var(--blue);display:flex;align-items:center;gap:8px}
+.count-badge{background:var(--blue-l);color:var(--blue);padding:2px 9px;border-radius:12px;font-size:.7rem;font-weight:700}
+.form-collapse{display:none;animation:slideDown .22s var(--ease) both}
+.form-collapse.open{display:block}
+
+/* LIST ITEMS compact */
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r-md);margin:6px 0;gap:8px;flex-wrap:wrap;box-shadow:var(--sh-sm)}
+.list-item:hover{border-color:var(--blue);background:var(--blue-xl)}
+.list-item-main{flex:1;min-width:0}
+.list-item-title{font-weight:700;font-size:.88rem;color:var(--text)}
+.list-item-sub{font-size:.7rem;color:var(--text3);margin-top:2px}
+.list-item-actions{display:flex;gap:5px;flex-shrink:0}
+
+/* Lote accordion */
+.lote-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r-lg);margin:8px 0;box-shadow:var(--sh-sm);overflow:hidden}
+.lote-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;gap:10px;transition:background .15s}
+.lote-header:hover{background:var(--surf2)}
+.lote-body{border-top:1px solid var(--border);padding:14px 16px;display:none;animation:slideDown .2s var(--ease) both}
+.lote-body.open{display:block}
+.lote-chevron{font-size:.7rem;color:var(--text3);transition:transform .25s var(--ease);width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--surf3)}
+.lote-chevron.open{transform:rotate(180deg);background:var(--blue-l);color:var(--blue)}
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.stat-cell{background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-xs);padding:8px 10px;font-size:.75rem}
+.stat-cell strong{display:block;font-size:.85rem;color:var(--text)}
+.stat-cell span{color:var(--text3);font-size:.68rem}
+
 /* RESPONSIVE */
 @media(max-width:480px){
   .menu-btn .m-ico{font-size:1.3rem}
@@ -192,9 +245,12 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
   .rel-btn-grid{grid-template-columns:1fr}
   .dash-stats{grid-template-columns:1fr 1fr}
   .tank-chevron{width:20px;height:20px;font-size:.6rem}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .stat-row{grid-template-columns:1fr 1fr}
 }
 @media(max-width:360px){
   .menu-btn{font-size:.6rem;padding:10px 2px}
+  .kpi-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -224,69 +280,132 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
         </div>
         <div class="dash-card">
             <strong style="font-size:.75rem;opacity:.8;letter-spacing:.8px;text-transform:uppercase;">📌 Painel Rápido</strong>
-            <div class="dash-stats">
+            <div class="dash-stats" style="grid-template-columns:repeat(4,1fr);">
                 <div class="dash-stat"><div class="dash-stat-val" id="dashPeixes">—</div><div class="dash-stat-lbl">🐟 Peixes</div></div>
                 <div class="dash-stat"><div class="dash-stat-val" id="dashLotes">—</div><div class="dash-stat-lbl">📦 Lotes</div></div>
-                <div class="dash-stat"><div class="dash-stat-val" id="dashRacao">—</div><div class="dash-stat-lbl">🌾 Ração em estoque</div></div>
-                <div class="dash-stat"><div class="dash-stat-val" id="dashColabs">—</div><div class="dash-stat-lbl">👷 Colaboradores</div></div>
+                <div class="dash-stat"><div class="dash-stat-val" id="dashRacao">—</div><div class="dash-stat-lbl">🌾 Estoque</div></div>
+                <div class="dash-stat"><div class="dash-stat-val" id="dashColabs">—</div><div class="dash-stat-lbl">👷 Equipe</div></div>
             </div>
         </div>
+        <!-- KPIs financeiros e biomassa -->
+        <div class="kpi-grid">
+            <div class="kpi-card kpi-green">
+                <div class="kpi-val" id="dashBiomassaVenda">—</div>
+                <div class="kpi-lbl">Biomassa pronta p/ venda</div>
+                <div class="kpi-sub" id="dashBiomassaVendaSub">Peixes ≥ 600g</div>
+            </div>
+            <div class="kpi-card kpi-blue">
+                <div class="kpi-val" id="dashBiomassaTotal">—</div>
+                <div class="kpi-lbl">Biomassa total</div>
+                <div class="kpi-sub" id="dashBiomassaTotalSub">Todos os lotes</div>
+            </div>
+            <div class="kpi-card kpi-amber">
+                <div class="kpi-val" id="dashCustoPorKg">—</div>
+                <div class="kpi-lbl">Custo médio/kg produzido</div>
+                <div class="kpi-sub" id="dashCustoTotal">Custo total de produção</div>
+            </div>
+            <div class="kpi-card kpi-blue">
+                <div class="kpi-val" id="dashConsumoHoje">—</div>
+                <div class="kpi-lbl">Ração consumida hoje</div>
+                <div class="kpi-sub">Registrada nos tratos</div>
+            </div>
+        </div>
+        <!-- Tarefas e alertas -->
+        <div class="task-section" id="dashTarefas"></div>
     </div>
 
     <!-- TANQUES -->
     <div id="tanques" class="hidden">
         <div class="section-header">
             <div class="card-header" style="margin-bottom:0;">🏞️ Tanques</div>
-            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
-        </div>
-        <div class="card">
-            <div class="card-title">➕ Tanque Individual</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <div class="field"><label>Número do tanque</label><input type="text" id="tnum" placeholder="ex: T01"></div>
-              <div class="field"><label>Volume (m³)</label><input type="number" id="tvol" placeholder="ex: 50" step="0.1"></div>
-              <div class="field"><label>Malha / Tipo</label><input type="text" id="tmalha" placeholder="ex: 10mm"></div>
-              <div class="field"><label>Material</label><select id="tmat"><option>Inox</option><option>PVC</option><option>Geomembrana</option></select></div>
-            </div>
-            <button onclick="addTanque()" class="btn-full" style="margin-top:8px;">💾 Salvar Tanque</button>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar</button>
         </div>
 
-        <div class="card" style="background: #f8fafc;">
-            <div class="card-title">⚡ Criação em Lote</div>
-            <small>Gera automaticamente o próximo número disponível</small>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-              <div class="field"><label>Quantidade</label><input type="number" id="loteQtde" min="1" value="5"></div>
-              <div class="field"><label>Prefixo</label><input type="text" id="lotePrefix" value="T"></div>
-              <div class="field"><label>Volume padrão (m³)</label><input type="number" id="loteVol" step="0.1" value="14"></div>
-              <div class="field"><label>Malha padrão</label><input type="text" id="loteMalha" value="10mm"></div>
-              <div class="field" style="grid-column:1/-1"><label>Material</label><select id="loteMat"><option>Inox</option><option>PVC</option><option>Geomembrana</option></select></div>
+        <!-- Toggle bar -->
+        <div class="section-toggle-bar">
+            <div class="section-toggle-title">Tanques Cadastrados <span class="count-badge" id="contTanques">0</span></div>
+            <div style="display:flex;gap:6px;">
+                <button class="btn-sm btn-outline" onclick="toggleFormTanque('individual')">➕ Individual</button>
+                <button class="btn-sm btn-teal" onclick="toggleFormTanque('lote')">⚡ Em Lote</button>
             </div>
-            <button onclick="addMultiplosTanques()" class="btn-teal btn-full" style="margin-top:8px;">🚀 Criar Múltiplos</button>
         </div>
 
-        <div id="tanquesLista" class="scroll-list"></div>
+        <!-- Form individual (hidden by default) -->
+        <div id="formTanqueIndividual" class="form-collapse">
+            <div class="card" style="border-left:3px solid var(--blue);margin-top:4px;">
+                <div class="card-title">➕ Novo Tanque Individual</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="field"><label>Número / Identificação</label><input type="text" id="tnum" placeholder="ex: T01"></div>
+                    <div class="field"><label>Volume (m³)</label><input type="number" id="tvol" placeholder="ex: 50" step="0.1"></div>
+                    <div class="field"><label>Malha / Tipo de tela</label><input type="text" id="tmalha" placeholder="ex: 10mm"></div>
+                    <div class="field"><label>Material</label><select id="tmat"><option>Inox</option><option>PVC</option><option>Geomembrana</option></select></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:6px;">
+                    <button onclick="addTanque()" class="btn-success" style="flex:1;">💾 Salvar Tanque</button>
+                    <button onclick="toggleFormTanque('individual')" class="btn-outline btn-sm">✕ Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form lote (hidden by default) -->
+        <div id="formTanqueLote" class="form-collapse">
+            <div class="card" style="border-left:3px solid var(--teal);margin-top:4px;">
+                <div class="card-title">⚡ Criação Rápida em Lote</div>
+                <small style="margin-bottom:8px;display:block;">Numera automaticamente a partir do último existente</small>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                    <div class="field"><label>Qtd.</label><input type="number" id="loteQtde" min="1" value="5"></div>
+                    <div class="field"><label>Prefixo</label><input type="text" id="lotePrefix" value="T"></div>
+                    <div class="field"><label>Volume (m³)</label><input type="number" id="loteVol" step="0.1" value="14"></div>
+                    <div class="field"><label>Malha</label><input type="text" id="loteMalha" value="10mm"></div>
+                    <div class="field" style="grid-column:1/-1"><label>Material padrão</label><select id="loteMat"><option>Inox</option><option>PVC</option><option>Geomembrana</option></select></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:6px;">
+                    <button onclick="addMultiplosTanques()" class="btn-teal" style="flex:1;">🚀 Criar Múltiplos</button>
+                    <button onclick="toggleFormTanque('lote')" class="btn-outline btn-sm">✕ Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tanquesLista"></div>
     </div>
 
     <!-- LOTES -->
     <div id="lotes" class="hidden">
         <div class="section-header">
             <div class="card-header" style="margin-bottom:0;">🐟 Lotes</div>
-            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar</button>
         </div>
-        <div class="card">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <div class="field"><label>Qtd. total de peixes</label><input type="number" id="lqtd" placeholder="ex: 2000"></div>
-              <div class="field"><label>Valor alevinos (R$)</label><input type="number" id="lvalor" placeholder="ex: 1200.00" step="0.01"></div>
-              <div class="field"><label>Fornecedor</label><input type="text" id="lfornecedor" placeholder="Nome do fornecedor"></div>
-              <div class="field"><label>Cidade de origem</label><input type="text" id="lcidadeOrigem" placeholder="Ex: Patos de Minas"></div>
-              <div class="field"><label>Peso médio alevino (g)</label><input type="number" id="lpesoMedioAlevino" placeholder="ex: 5" step="0.1"></div>
-              <div class="field"><label>Data de estocagem</label><input type="date" id="ldataEstocagem"></div>
+
+        <div class="section-toggle-bar">
+            <div class="section-toggle-title">Lotes Ativos <span class="count-badge" id="contLotes">0</span></div>
+            <button class="btn-sm btn-success" onclick="toggleFormLote()">➕ Registrar Novo Lote</button>
+        </div>
+
+        <!-- Form novo lote (hidden by default) -->
+        <div id="formLote" class="form-collapse">
+            <div class="card" style="border-left:3px solid var(--green);margin-top:4px;">
+                <div class="card-title">🎣 Novo Lote de Alevinos</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="field"><label>Qtd. total de peixes</label><input type="number" id="lqtd" placeholder="ex: 2000"></div>
+                    <div class="field"><label>Peso médio alevino (g)</label><input type="number" id="lpesoMedioAlevino" placeholder="ex: 5" step="0.1"></div>
+                    <div class="field"><label>Valor total alevinos (R$)</label><input type="number" id="lvalor" placeholder="ex: 1200.00" step="0.01"></div>
+                    <div class="field"><label>Data de estocagem</label><input type="date" id="ldataEstocagem"></div>
+                    <div class="field"><label>Fornecedor</label><input type="text" id="lfornecedor" placeholder="Nome do fornecedor"></div>
+                    <div class="field"><label>Cidade de origem</label><input type="text" id="lcidadeOrigem" placeholder="Ex: Patos de Minas"></div>
+                </div>
+                <div class="field" style="margin-top:4px;">
+                    <label>🏞️ Distribuir nos tanques (apenas disponíveis — segure Ctrl para múltiplos):</label>
+                    <select id="lTanquesSelect" multiple style="height:120px;margin-top:4px;"></select>
+                </div>
+                <small>💡 Os peixes serão divididos igualmente entre os tanques selecionados</small>
+                <div style="display:flex;gap:8px;margin-top:10px;">
+                    <button onclick="addLote()" class="btn-success" style="flex:1;">🎣 Registrar Lote</button>
+                    <button onclick="toggleFormLote()" class="btn-outline btn-sm">✕ Cancelar</button>
+                </div>
             </div>
-            <label style="font-size:.72rem;font-weight:600;color:var(--c-text-2);">📌 Distribuição por Tanques (apenas disponíveis):</label>
-            <select id="lTanquesSelect" multiple size="3" style="height:140px"></select>
-            <small>🔹 Segure para múltipla seleção (apenas tanques vazios)</small>
-            <button onclick="addLote()" class="btn-full">🎣 Registrar Lote</button>
         </div>
-        <div id="lotesLista" class="scroll-list"></div>
+
+        <div id="lotesLista"></div>
     </div>
 
     <!-- BIOMETRIA -->
@@ -365,64 +484,83 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
             <button id="tabMortalidadeBtn" style="flex:1; background:#c2410c;" onclick="mostrarAbaMortalidade()">⚠️ Mortalidade</button>
         </div>
         <div id="abaAlimentacao">
-            <div class="flex-row" style="align-items: center;">
-                <div style="flex:1;">
-                    <strong>🥤 Copo</strong>
-                    <input type="number" id="pesoCopo" placeholder="kg" step="0.1" value="2.5" style="padding:8px 12px; margin:4px 0;">
-                    <small>kg</small>
-                </div>
-                <div style="flex:2;">
-                    <strong>📊 Tratos/dia</strong>
-                    <input type="number" id="numTratosPorDia" placeholder="Nº de tratos" min="1" max="50" value="4" style="padding:8px 12px; margin:4px 0;">
-                    <small>1 a 50 tratos</small>
-                </div>
+            <!-- 3 botões de ação principal - visíveis sempre -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:8px 0;">
+                <button onclick="fornecerUmTratoParaTodosTanques()" class="btn-teal" style="margin:0;flex-direction:column;gap:3px;padding:12px 6px;font-size:.72rem;border-radius:14px;">
+                    <span style="font-size:1.1rem;">🎯</span>1 Trato<br>Todos
+                </button>
+                <button onclick="concluirDiaAlimentacao()" class="btn-success" style="margin:0;flex-direction:column;gap:3px;padding:12px 6px;font-size:.72rem;border-radius:14px;">
+                    <span style="font-size:1.1rem;">✅</span>Concluir<br>Dia
+                </button>
+                <button onclick="resetarDiaTodosTanques()" class="btn-danger" style="margin:0;flex-direction:column;gap:3px;padding:12px 6px;font-size:.72rem;border-radius:14px;">
+                    <span style="font-size:1.1rem;">🔄</span>Resetar<br>Dia
+                </button>
             </div>
-            <div class="card">
-                <strong>⏰ Horário do Primeiro e Último Trato</strong>
-                <div class="flex-row">
-                    <input type="time" id="horaPrimeiraRacao" value="08:00" style="flex:1;">
-                    <input type="time" id="horaUltimaRacao" value="17:00" style="flex:1;">
-                </div>
-                <button onclick="configurarTratos()" class="btn-sm">📅 Calcular Horários dos Tratos</button>
-                <div id="horariosTratos" class="card" style="margin-top:8px; background:#f0f9ff; font-size:0.85rem;">
-                    Nenhum horário configurado. Clique em "Calcular Horários".
-                </div>
-            </div>
-<!-- Botão para 1 trato em todos tanques -->
-<div class="card">
-    <button onclick="fornecerUmTratoParaTodosTanques()" class="btn-success" style="width:100%; background:#0f766e;">🎯 Fornecer 1º Trato para TODOS os Tanques</button>
-    <small>Fornece o primeiro trato pendente de cada tanque (respeitando a ordem dos tratos)</small>
-</div>
 
-<!-- Botão para Concluir Dia -->
-<div class="card">
-    <button onclick="concluirDiaAlimentacao()" class="btn-success" style="width:100%; background:#15803d;">✅ Concluir Dia de Alimentação</button>
-    <small>Finaliza o dia, registra consumo consolidado e prepara para amanhã</small>
-</div>
-
-<div class="card">
-    <button onclick="resetarDiaTodosTanques()" class="btn-danger" style="width:100%;">🔄 Resetar Dia em TODOS os Tanques</button>
-    <small>Remove toda alimentação do dia e retorna ao estoque</small>
-</div>
-            <div class="card">
-                <label>⚙️ Fator de Conversão Alimentar (CA):</label>
-                <select id="caSelectRacao">
-                    <option value="1.0">CA 1.0 (alta eficiência)</option>
-                    <option value="1.2">CA 1.2</option>
-                    <option value="1.4" selected>CA 1.4 (recomendado)</option>
-                    <option value="1.6">CA 1.6</option>
-                    <option value="1.8">CA 1.8</option>
-                    <option value="2.0">CA 2.0</option>
-                </select>
-                <button onclick="calcularRacaoPorTanque()">📊 Calcular Ração Diária por Tanque</button>
+            <!-- Configurações de tratos - colapsável -->
+            <div class="section-toggle-bar" style="margin-top:6px;">
+                <div class="section-toggle-title" style="font-size:.85rem;">⚙️ Configurar Tratos & Horários</div>
+                <button class="btn-sm btn-outline" onclick="toggleFormAlim('config')">⚙️ Config</button>
             </div>
+            <div id="formAlimConfig" class="form-collapse">
+                <div class="card" style="border-left:3px solid var(--blue);margin-top:4px;">
+                    <div class="flex-row" style="align-items: center;">
+                        <div style="flex:1;">
+                            <strong>🥤 Copo</strong>
+                            <input type="number" id="pesoCopo" placeholder="kg" step="0.1" value="2.5" style="padding:8px 12px; margin:4px 0;">
+                            <small>kg</small>
+                        </div>
+                        <div style="flex:2;">
+                            <strong>📊 Tratos/dia</strong>
+                            <input type="number" id="numTratosPorDia" placeholder="Nº de tratos" min="1" max="50" value="4" style="padding:8px 12px; margin:4px 0;">
+                            <small>1 a 50 tratos</small>
+                        </div>
+                    </div>
+                    <div class="card" style="margin:8px 0 4px;">
+                        <strong>⏰ Horário do Primeiro e Último Trato</strong>
+                        <div class="flex-row">
+                            <input type="time" id="horaPrimeiraRacao" value="08:00" style="flex:1;">
+                            <input type="time" id="horaUltimaRacao" value="17:00" style="flex:1;">
+                        </div>
+                        <button onclick="configurarTratos()" class="btn-sm" style="margin-top:6px;">📅 Calcular Horários</button>
+                        <div id="horariosTratos" class="card" style="margin-top:8px; background:#f0f9ff; font-size:0.85rem;">
+                            Nenhum horário configurado. Clique em "Calcular Horários".
+                        </div>
+                    </div>
+                    <div class="card" style="margin:4px 0;">
+                        <label>⚙️ Fator de Conversão Alimentar (CA):</label>
+                        <select id="caSelectRacao">
+                            <option value="1.0">CA 1.0 (alta eficiência)</option>
+                            <option value="1.2">CA 1.2</option>
+                            <option value="1.4" selected>CA 1.4 (recomendado)</option>
+                            <option value="1.6">CA 1.6</option>
+                            <option value="1.8">CA 1.8</option>
+                            <option value="2.0">CA 2.0</option>
+                        </select>
+                        <button onclick="calcularRacaoPorTanque()" class="btn-sm" style="margin-top:6px;">📊 Calcular Ração por Tanque</button>
+                    </div>
+                    <button onclick="toggleFormAlim('config')" class="btn-outline btn-sm" style="margin-top:6px;">✕ Fechar</button>
+                </div>
+            </div>
+
+            <!-- Lançamento manual - colapsável -->
+            <div class="section-toggle-bar" style="margin-top:6px;">
+                <div class="section-toggle-title" style="font-size:.85rem;">🍽️ Lançamento Manual</div>
+                <button class="btn-sm btn-outline" onclick="toggleFormAlim('manual')">+ Lançar</button>
+            </div>
+            <div id="formAlimManual" class="form-collapse">
+                <div class="card" style="border-left:3px solid var(--amber);margin-top:4px;">
+                    <div class="card-title">🍽️ Lançar Consumo Manual</div>
+                    <div class="field"><label>Tanque</label><select id="alimTanque" style="height:50px"></select></div>
+                    <div class="field"><label>Quantidade (kg)</label><input type="number" id="alimKg" placeholder="ex: 2.5" step="0.1"></div>
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="registrarAlimentacao()" class="btn-success" style="flex:1;">🍽️ Lançar Consumo</button>
+                        <button onclick="toggleFormAlim('manual')" class="btn-outline btn-sm">✕</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="tratosTanquesContainer"></div>
-            <div class="card">
-                <strong>🍽️ Lançar Consumo Manual</strong>
-                <select id="alimTanque" style="height:50px"></select>
-                <input type="number" id="alimKg" placeholder="Quantidade de ração (kg)" step="0.1">
-                <button onclick="registrarAlimentacao()">🍽️ Lançar Consumo</button>
-            </div>
         </div>
 <div id="abaMortalidade" style="display:none;">
     <div class="card">
@@ -452,38 +590,65 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
             <div class="card-header" style="margin-bottom:0;">📦 Compra de Ração</div>
             <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
         </div>
-        <div class="card">
-            <strong>🏷️ Modelos de Ração (pré-cadastro)</strong>
-            <small>Cadastre marcas com características fixas</small>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-              <div class="field"><label>Marca</label><input type="text" id="novaMarcaModelo" placeholder="Ex: Supra"></div>
-              <div class="field"><label>Tipo de Pellet</label><input type="text" id="novoPelletModelo" placeholder="ex: 4-6mm" list="pelletSuggestions"></div>
-              <div class="field"><label>Proteína (%)</label><input type="number" id="novaPbModelo" placeholder="ex: 32" step="0.1"></div>
-              <div class="field"><label>Peso do saco (kg)</label><input type="number" id="novaPesoModelo" placeholder="25" step="0.1" value="25"></div>
+
+        <!-- Modelos -->
+        <div class="section-toggle-bar">
+            <div class="section-toggle-title">Modelos & Compras</div>
+            <div style="display:flex;gap:6px;">
+                <button class="btn-sm btn-outline" onclick="toggleFormRacao('modelos')">🏷️ Modelos</button>
+                <button class="btn-sm btn-success" onclick="toggleFormRacao('compra')">🛒 Nova Compra</button>
             </div>
-            <button onclick="adicionarModeloRacao()" class="btn-full" style="margin-top:4px;">➕ Salvar Modelo</button>
-            <div id="listaModelosRacao" class="scroll-list" style="max-height: 180px; margin-top: 12px;"></div>
         </div>
-        <div class="card">
-            <strong>⚡ Compra Rápida (selecione um modelo)</strong>
-            <select id="selectModeloRacao" onchange="carregarModeloParaCompra()">
-                <option value="">-- Selecione um modelo --</option>
-            </select>
-            <hr>
-            <input type="text" id="marcaR" placeholder="Marca *">
-            <input type="number" id="pbR" placeholder="Proteína Bruta (%)" step="0.1">
-            <input type="text" id="pelletR" placeholder="Pellet" list="pelletSuggestionsCompra">
-            <input type="number" id="pesoR" placeholder="Peso do saco (kg)" step="0.1">
-            <input type="number" id="qtdR" placeholder="Quantidade de sacos *" step="1" value="0">
-            <input type="number" id="valorR" placeholder="Valor por saco (R$) *" step="0.01" value="0">
-            <button onclick="addItemCarrada()">📦 Adicionar à carrada</button>
+
+        <div id="formRacaoModelos" class="form-collapse">
+            <div class="card" style="border-left:3px solid var(--purple);margin-top:4px;">
+                <div class="card-title">🏷️ Modelos de Ração (pré-cadastro)</div>
+                <small style="display:block;margin-bottom:8px;">Cadastre marcas com características fixas</small>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div class="field"><label>Marca</label><input type="text" id="novaMarcaModelo" placeholder="Ex: Supra"></div>
+                  <div class="field"><label>Tipo de Pellet</label><input type="text" id="novoPelletModelo" placeholder="ex: 4-6mm" list="pelletSuggestions"></div>
+                  <div class="field"><label>Proteína (%)</label><input type="number" id="novaPbModelo" placeholder="ex: 32" step="0.1"></div>
+                  <div class="field"><label>Peso do saco (kg)</label><input type="number" id="novaPesoModelo" placeholder="25" step="0.1" value="25"></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:6px;">
+                    <button onclick="adicionarModeloRacao()" class="btn-success" style="flex:1;">➕ Salvar Modelo</button>
+                    <button onclick="toggleFormRacao('modelos')" class="btn-outline btn-sm">✕ Fechar</button>
+                </div>
+                <div id="listaModelosRacao" class="scroll-list" style="max-height: 180px; margin-top: 12px;"></div>
+            </div>
         </div>
+
+        <div id="formRacaoCompra" class="form-collapse">
+            <div class="card" style="border-left:3px solid var(--green);margin-top:4px;">
+                <div class="card-title">⚡ Compra Rápida</div>
+                <div class="field"><label>Modelo salvo (opcional)</label>
+                <select id="selectModeloRacao" onchange="carregarModeloParaCompra()">
+                    <option value="">-- Selecione um modelo --</option>
+                </select></div>
+                <hr>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="field"><label>Marca *</label><input type="text" id="marcaR" placeholder="Marca"></div>
+                    <div class="field"><label>Proteína (%)</label><input type="number" id="pbR" placeholder="32" step="0.1"></div>
+                    <div class="field"><label>Pellet</label><input type="text" id="pelletR" placeholder="ex: 4-6mm" list="pelletSuggestionsCompra"></div>
+                    <div class="field"><label>Peso do saco (kg)</label><input type="number" id="pesoR" placeholder="25" step="0.1"></div>
+                    <div class="field"><label>Qtd. sacos *</label><input type="number" id="qtdR" placeholder="0" step="1" value="0"></div>
+                    <div class="field"><label>Valor por saco (R$) *</label><input type="number" id="valorR" placeholder="0" step="0.01" value="0"></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:4px;">
+                    <button onclick="addItemCarrada()" class="btn-teal" style="flex:1;">📦 Adicionar à carrada</button>
+                    <button onclick="toggleFormRacao('compra')" class="btn-outline btn-sm">✕ Fechar</button>
+                </div>
+            </div>
+        </div>
+
         <div id="itensCarrada"></div>
         <div class="flex-row">
             <input type="number" id="freteTotal" placeholder="Frete total (R$)" step="0.01" style="flex:2;">
             <button onclick="finalizarCarrada()" style="background:#0891b2; flex:1;">✅ Finalizar Compra</button>
         </div>
-        <h3>📦 Estoque Atual</h3>
+        <div class="section-toggle-bar" style="margin-top:12px;">
+            <div class="section-toggle-title">📦 Estoque Atual</div>
+        </div>
         <div id="estoqueRacao" class="scroll-list"></div>
     </div>
 
@@ -606,7 +771,12 @@ function getInfoTanqueOcupado(numTanque) {
     for (let l of lotes) {
         let tanque = l.tanques.find(t => t.num === numTanque);
         if (tanque && tanque.qtdPeixes > 0) {
-            return { loteId: l.id, qtdPeixes: tanque.qtdPeixes, lote: l };
+            return {
+                loteId: l.id,
+                qtdPeixes: tanque.qtdPeixes,
+                lote: l,
+                tanque: tanque
+            };
         }
     }
     return null;
@@ -653,6 +823,9 @@ function addTanque() {
     document.getElementById("tvol").value = "";
     document.getElementById("tmalha").value = "";
     showMessage(`Tanque ${num} adicionado`);
+    // Close form
+    let fi = document.getElementById("formTanqueIndividual");
+    if (fi) fi.classList.remove("open");
 }
 
 function addMultiplosTanques() {
@@ -683,18 +856,42 @@ function addMultiplosTanques() {
     saveData("tanques", [...tanquesExistentes, ...novos]);
     renderTanques();
     showMessage(`${novos.length} tanques criados: ${nomes.join(', ')}`);
+    let fl = document.getElementById("formTanqueLote");
+    if (fl) fl.classList.remove("open");
 }
 
 function renderTanques() {
     let tanques = loadData("tanques");
     let div = document.getElementById("tanquesLista");
-    if(!tanques.length) { div.innerHTML = "<div class='card'>Nenhum tanque cadastrado</div>"; return; }
-    div.innerHTML = tanques.map(t => {
-        let ocupado = isTanqueOcupado(t.num);
-        let statusBadge = ocupado ? '<span class="badge-ocupado">🐟 Ocupado</span>' : '<span class="badge-disponivel">✅ Disponível</span>';
-        let liberarBtn = ocupado ? `<button onclick="liberarTanque('${t.num}')" class="btn-success btn-sm" style="margin-left:8px">🔄 Liberar</button>` : '';
-        return `<div class='card'><strong>${t.num}</strong> | ${t.vol}m³ | ${t.malha || '-'} | ${t.material} ${statusBadge}<button onclick="excluirTanque(${t.id})" class="btn-danger btn-sm" style="float:right">🗑️</button>${liberarBtn}</div>`;
-    }).join('');
+    let cnt = document.getElementById("contTanques");
+    if (cnt) cnt.textContent = tanques.length;
+
+    if (!tanques.length) {
+        div.innerHTML = `<div class="list-item" style="justify-content:center;color:var(--text3);">
+            Nenhum tanque cadastrado. Clique em ➕ Individual ou ⚡ Em Lote para adicionar.
+        </div>`;
+    } else {
+        div.innerHTML = tanques.map(t => {
+            let ocupado = isTanqueOcupado(t.num);
+            let info = ocupado ? getInfoTanqueOcupado(t.num) : null;
+            let badge = ocupado
+                ? `<span class="badge-ocupado">🐟 Lote #${info ? info.loteId : '?'}</span>`
+                : `<span class="badge-disponivel">✅ Livre</span>`;
+            let subInfo = info
+                ? `${info.qtdPeixes} peixes · ${t.vol}m³ · ${t.malha||'-'} · ${t.material}`
+                : `${t.vol}m³ · ${t.malha||'-'} · ${t.material}`;
+            let actions = `<div class="list-item-actions">`;
+            if (ocupado) actions += `<button onclick="liberarTanque('${t.num}')" class="btn-success btn-xs">🎣 Despescar</button>`;
+            actions += `<button onclick="excluirTanque(${t.id})" class="btn-danger btn-xs">🗑️</button></div>`;
+            return `<div class="list-item">
+                <div class="list-item-main">
+                    <div class="list-item-title">🏞️ ${t.num} ${badge}</div>
+                    <div class="list-item-sub">${subInfo}</div>
+                </div>
+                ${actions}
+            </div>`;
+        }).join('');
+    }
     atualizarSelectTanques("lTanquesSelect", "distribuicao");
     atualizarSelectTanques("bioTanque", "ocupados");
     atualizarSelectTanques("alimTanque", "ocupados");
@@ -786,12 +983,22 @@ function addLote() {
     document.getElementById("lcidadeOrigem").value = "";
     document.getElementById("lpesoMedioAlevino").value = "";
     document.getElementById("ldataEstocagem").value = "";
+    // Close form
+    let fm = document.getElementById("formLote");
+    if (fm) fm.classList.remove("open");
 }
 
 function renderLotes() {
     let lotes = loadData("lotes");
     let div = document.getElementById("lotesLista");
-    if (!lotes.length) { div.innerHTML = "<div class='card'>Nenhum lote ativo</div>"; return; }
+    let cnt = document.getElementById("contLotes");
+    if (cnt) cnt.textContent = lotes.length;
+    if (!lotes.length) {
+        div.innerHTML = `<div class="list-item" style="justify-content:center;color:var(--text3);">
+            Nenhum lote ativo. Clique em ➕ Registrar Novo Lote para adicionar.
+        </div>`;
+        return;
+    }
     
     div.innerHTML = lotes.map(l => {
         let consumoTotal = calcularConsumoRacaoLote(l);
@@ -801,48 +1008,98 @@ function renderLotes() {
         let ultimaBiometria = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length - 1] : null;
         let pesoMedioAtual = ultimaBiometria ? ultimaBiometria.pesoMedio : l.pesoMedioAlevino;
         
-        // Calcular custo de cada tanque
-        let tanquesInfo = l.tanques.map(t => {
+        let custoRacaoDetalhado = calcularCustoRacaoLoteReal(l);
+        let detalhesRacao = "";
+        for (let [tipo, dados] of Object.entries(custoRacaoDetalhado.porTipo)) {
+            let tipoLimpo = tipo;
+            let match = tipo.match(/([0-9]+[–-][0-9]+mm)/);
+            if (match) tipoLimpo = match[1];
+            detalhesRacao += `<br>&nbsp;&nbsp;📦 ${tipoLimpo}: ${dados.kg.toFixed(1)}kg | R$ ${dados.custo.toFixed(2)}`;
+        }
+        
+        let tanquesInfo = l.tanques.filter(t => t.qtdPeixes > 0).map(t => {
             let custoTanque = calcularCustoTanque(l, t.num);
-            return `<span style="display:inline-block; background:#f0f9ff; padding:4px 8px; border-radius:12px; margin:4px; font-size:0.7rem;">
-                ${t.num}: ${t.qtdPeixes} peixes | R$ ${custoTanque.custoPorKg.toFixed(2)}/kg
-            </span>`;
+            return `<span class="tanque-tag">${t.num}: ${t.qtdPeixes}p · R$${custoTanque.custoPorKg.toFixed(2)}/kg</span>`;
         }).join('');
         
-        return `<div class='card' style="margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-                <strong style="font-size:1.1rem;">🐟 Lote #${l.id}</strong>
-                <button onclick="excluirLote(${l.id})" class="btn-danger btn-sm">❌ Remover</button>
+        let loteIdStr = `lote_body_${l.id}`;
+        let chevronId = `lote_chv_${l.id}`;
+        return `<div class="lote-card">
+            <div class="lote-header" onclick="toggleLoteCard(${l.id})">
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <strong style="font-size:.95rem;">🐟 Lote #${l.id}</strong>
+                        <span style="font-size:.7rem;color:var(--text3);">📅 ${l.dataEstocagem} · ${l.cidadeOrigem||'—'}</span>
+                    </div>
+                    <div style="display:flex;gap:12px;margin-top:5px;font-size:.75rem;flex-wrap:wrap;">
+                        <span>🐟 <strong>${l.qtdTotal}</strong> peixes</span>
+                        <span>⚖️ <strong>${pesoMedioAtual.toFixed(0)}g</strong></span>
+                        <span>📦 <strong>${biomassaTotal.toFixed(1)} kg</strong></span>
+                        <span>💰 <strong>R$ ${custos.custoPorKg.toFixed(2)}/kg</strong></span>
+                        <span style="color:${ca<1.5?'var(--green)':ca<1.8?'var(--amber)':'var(--red)'};">CA ${ca.toFixed(2)} ${ca<1.5?'✅':ca<1.8?'👍':'⚠️'}</span>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                    <button onclick="event.stopPropagation();excluirLote(${l.id})" class="btn-danger btn-xs">🗑️</button>
+                    <span class="lote-chevron" id="${chevronId}">▼</span>
+                </div>
             </div>
-            <small>📅 ${l.dataEstocagem} | 📍 ${l.cidadeOrigem} | Fornecedor: ${l.fornecedor}</small><br>
-            <strong>📊 Dados do Lote:</strong><br>
-            🐟 População: ${l.qtdTotal} peixes | ⚖️ Peso médio atual: ${pesoMedioAtual.toFixed(0)}g<br>
-            📦 Biomassa atual: <strong>${biomassaTotal.toFixed(2)} kg</strong><br>
-            🌾 Consumo total de ração: <strong>${consumoTotal.toFixed(2)} kg</strong><br>
-            📈 Conversão Alimentar (CA): <strong>${ca.toFixed(2)}</strong> ${ca < 1.5 ? '✅ Ótimo' : (ca < 1.8 ? '👍 Bom' : '⚠️ Alto')}<br>
-            💰 <strong>Custos de Produção:</strong><br>
-            &nbsp;&nbsp;🎣 Alevinos: R$ ${l.valorAlevinos.toFixed(2)}<br>
-            &nbsp;&nbsp;🌾 Ração: R$ ${calcularCustoRacaoLote(l).toFixed(2)}<br>
-            &nbsp;&nbsp;💰 <strong>Custo Total: R$ ${custos.custoTotal.toFixed(2)}</strong><br>
-            &nbsp;&nbsp;⚖️ <strong>Custo por Kg: R$ ${custos.custoPorKg.toFixed(2)}/kg</strong><br>
-            <hr style="margin:8px 0;">
-            <strong>🏞️ Tanques do Lote:</strong><br>
-            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
-                ${tanquesInfo}
-            </div>
-            <details style="margin-top:8px;">
-                <summary style="cursor:pointer; color:#0a7ea4;">📋 Detalhes dos tanques</summary>
-                ${l.tanques.map(t => {
+            <div class="lote-body" id="${loteIdStr}">
+                <div class="stat-row">
+                    <div class="stat-cell"><strong>R$ ${custos.custoTotal.toFixed(2)}</strong><span>💰 Custo total</span></div>
+                    <div class="stat-cell"><strong>R$ ${custos.custoPorKg.toFixed(2)}/kg</strong><span>📊 Custo por kg</span></div>
+                    <div class="stat-cell"><strong>R$ ${l.valorAlevinos.toFixed(2)}</strong><span>🎣 Custo alevinos</span></div>
+                    <div class="stat-cell"><strong>R$ ${custoRacaoDetalhado.custoTotal.toFixed(2)}</strong><span>🌾 Custo ração</span></div>
+                    <div class="stat-cell"><strong>${consumoTotal.toFixed(2)} kg</strong><span>🌾 Ração consumida</span></div>
+                    <div class="stat-cell"><strong>${l.tanques.filter(t=>t.qtdPeixes>0).length} ativos</strong><span>🏞️ Tanques</span></div>
+                </div>
+                ${detalhesRacao ? `<div style="font-size:.75rem;color:var(--text2);padding:6px 0;border-top:1px solid var(--border);margin-top:4px;"><strong>Ração por tipo:</strong>${detalhesRacao}</div>` : ''}
+                <div style="margin-top:10px;">
+                    <div class="card-title">🏞️ Tanques do Lote</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${tanquesInfo}</div>
+                ${l.tanques.filter(t => t.qtdPeixes > 0).map(t => {
                     let custo = calcularCustoTanque(l, t.num);
-                    let pesoMedioTanque = t.ultimoPesoMedio || l.pesoMedioAlevino;
-                    return `<div style="background:#f8fafc; padding:8px; border-radius:12px; margin:4px 0;">
-                        <strong>${t.num}</strong> - ${t.qtdPeixes} peixes | ${pesoMedioTanque.toFixed(0)}g<br>
-                        🌾 Consumo: ${(t.consumoRacao || 0).toFixed(2)} kg | ⚖️ Biomassa: ${custo.biomassa.toFixed(2)} kg<br>
-                        💰 Custo total: R$ ${custo.custoTotal.toFixed(2)} | Custo/kg: R$ ${custo.custoPorKg.toFixed(2)}
+                    let pesoMedioTanque = t.ultimoPesoMedio || l.pesoMedioAlevino || 0;
+                    let historicoConsumo = "";
+                    if (t.consumoDetalhado && t.consumoDetalhado.length > 0) {
+                        // Group by date-day for compact display
+                        let agrupado = {};
+                        for (let c of t.consumoDetalhado) {
+                            let dia = new Date(c.data).toLocaleDateString('pt-BR');
+                            if (!agrupado[dia]) agrupado[dia] = { kg: 0, custo: 0, tipos: new Set() };
+                            agrupado[dia].kg    += c.kg;
+                            agrupado[dia].custo += c.custoTotal;
+                            agrupado[dia].tipos.add(c.tipo || '—');
+                        }
+                        let dias = Object.entries(agrupado).slice(-7).reverse();
+                        historicoConsumo = `<div style="margin-top:8px;border-top:1px solid #e2e8f0;padding-top:6px;">
+                            <div style="font-size:.65rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;margin-bottom:5px;">📋 Últimos registros de consumo</div>
+                            ${dias.map(([dia, d]) => `<div style="display:flex;justify-content:space-between;font-size:.72rem;padding:3px 0;border-bottom:1px solid #f1f5f9;">
+                                <span style="color:#475569;">📅 ${dia}</span>
+                                <span><strong>${d.kg.toFixed(2)} kg</strong> · ${[...d.tipos].join(', ')}</span>
+                                <span style="color:#15803d;">R$ ${d.custo.toFixed(2)}</span>
+                            </div>`).join('')}
+                            <div style="font-size:.7rem;color:#94a3b8;margin-top:3px;">Total: ${t.consumoDetalhado.length} registros</div>
+                        </div>`;
+                    }
+                    return `<div style="background:#f8fafc; padding:8px 12px; border-radius:12px; margin:4px 0; border:1px solid #e2e8f0;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">
+                            <strong style="color:#0a7ea4;">🏞️ ${t.num}</strong>
+                            <span style="font-size:.7rem;background:#e0f7ff;color:#0a7ea4;padding:2px 8px;border-radius:10px;">${t.qtdPeixes} peixes · ${pesoMedioTanque.toFixed(0)}g</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;font-size:.75rem;">
+                            <span>🌾 Ração: <strong>${(t.consumoRacao || 0).toFixed(1)} kg</strong></span>
+                            <span>⚖️ Biomassa: <strong>${custo.biomassa.toFixed(1)} kg</strong></span>
+                            <span>💰 Custo total: <strong>R$ ${custo.custoTotal.toFixed(2)}</strong></span>
+                            <span>📊 Custo/kg: <strong>R$ ${custo.custoPorKg.toFixed(2)}</strong></span>
+                        </div>
+                        ${historicoConsumo}
                     </div>`;
                 }).join('')}
-            </details>
-        </div>`;
+                </div><!-- /tanques details -->
+            </div><!-- /lote-body -->
+        </div><!-- /lote-card -->`;
+
     }).join('');
 }
 
@@ -963,26 +1220,103 @@ function calcularRacaoPorTanque() {
 }
 
 function aplicarRacaoTanque(tanqueNum, kgRacao) {
-    let estoque = loadData("estoqueRacao");
-    let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
-    if (totalEstoque < kgRacao) { showMessage(`Estoque insuficiente! Disponível: ${totalEstoque.toFixed(1)}kg`, true); return false; }
-    let consumoRestante = kgRacao;
-    for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
-        if (estoque[i].kgTotal >= consumoRestante) { estoque[i].kgTotal -= consumoRestante; consumoRestante = 0; }
-        else { consumoRestante -= estoque[i].kgTotal; estoque[i].kgTotal = 0; }
-    }
-    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
     let info = getInfoTanqueOcupado(tanqueNum);
-    if (info) {
-        let lotes = loadData("lotes");
-        let lote = lotes.find(l => l.id === info.loteId);
-        let tanque = lote.tanques.find(t => t.num === tanqueNum);
-        tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
-        saveData("lotes", lotes);
+    if (!info) { showMessage("Tanque não ocupado!", true); return false; }
+    
+    // Descobrir o tipo de ração necessário baseado no peso do peixe
+    let pesoMedio = info.tanque.ultimoPesoMedio || info.lote.pesoMedioAlevino || 5;
+    let tipoRacaoNecessario = tipoRacaoPorPeso(pesoMedio);
+    let diametroNecessario = extrairDiametroPellet(tipoRacaoNecessario);
+    
+    let estoque = loadData("estoqueRacao");
+    
+    // Buscar apenas itens COMPATÍVEIS com o tipo de pellet necessário
+    let itensCompativeis = [];
+    let indicesCompativeis = [];
+    
+    for (let i = 0; i < estoque.length; i++) {
+        let diametroItem = extrairDiametroPellet(estoque[i].pellet);
+        if (diametroNecessario && diametroItem && diametroNecessario === diametroItem) {
+            itensCompativeis.push(estoque[i]);
+            indicesCompativeis.push(i);
+        }
     }
-    showMessage(`✅ ${kgRacao.toFixed(1)}kg registrado para o tanque ${tanqueNum}`);
+    
+    // Se não tem estoque compatível, tentar compatibilidade aproximada
+    if (itensCompativeis.length === 0) {
+        for (let i = 0; i < estoque.length; i++) {
+            let diametroItem = extrairDiametroPellet(estoque[i].pellet);
+            if (diametroItem && diametroNecessario) {
+                let necMin = parseInt(diametroNecessario.split('-')[0]);
+                let necMax = parseInt(diametroNecessario.split('-')[1]);
+                let itemMin = parseInt(diametroItem.split('-')[0]);
+                if (itemMin <= necMax + 1 && itemMin >= necMin - 1) {
+                    itensCompativeis.push(estoque[i]);
+                    indicesCompativeis.push(i);
+                }
+            }
+        }
+    }
+    
+    let totalCompativel = itensCompativeis.reduce((s, i) => s + i.kgTotal, 0);
+    
+    if (totalCompativel < kgRacao) {
+        showMessage(`❌ Estoque insuficiente de ${tipoRacaoNecessario}! Disponível: ${totalCompativel.toFixed(1)}kg`, true);
+        return false;
+    }
+    
+    // Descontar APENAS dos itens compatíveis e registrar detalhes
+    let consumoRestante = kgRacao;
+    let detalhesConsumo = [];
+    
+    for (let i = 0; i < indicesCompativeis.length && consumoRestante > 0; i++) {
+        let idx = indicesCompativeis[i];
+        let kgConsumido = Math.min(estoque[idx].kgTotal, consumoRestante);
+        
+        detalhesConsumo.push({
+            tipo: estoque[idx].pellet,
+            marca: estoque[idx].marca,
+            kg: kgConsumido,
+            valorPorKg: estoque[idx].valorKg,
+            custoTotal: kgConsumido * estoque[idx].valorKg
+        });
+        
+        estoque[idx].kgTotal -= kgConsumido;
+        consumoRestante -= kgConsumido;
+    }
+    
+    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
+    
+    // Registrar consumo detalhado no lote
+    let lotes = loadData("lotes");
+    let lote = lotes.find(l => l.id === info.loteId);
+    let tanque = lote.tanques.find(t => t.num === tanqueNum);
+    
+    if (!tanque.consumoDetalhado) tanque.consumoDetalhado = [];
+    
+    for (let det of detalhesConsumo) {
+        tanque.consumoDetalhado.push({
+            data: new Date().toISOString(),
+            tipo: det.tipo,
+            marca: det.marca,
+            kg: det.kg,
+            valorPorKg: det.valorPorKg,
+            custoTotal: det.custoTotal,
+            origem: "Lançamento manual"
+        });
+    }
+    
+    tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
+    saveData("lotes", lotes);
+    
+    let custoReal = detalhesConsumo.reduce((sum, d) => sum + d.custoTotal, 0);
+    showMessage(`✅ ${kgRacao.toFixed(1)}kg de ${tipoRacaoNecessario} registrado para o tanque ${tanqueNum} | Custo: R$ ${custoReal.toFixed(2)}`);
+    
     renderEstoqueRacao();
     renderConsumoDiario();
+    renderLotes();
+    renderTratosTanques();
+    
     return true;
 }
 
@@ -1181,42 +1515,123 @@ function toggleTank(num) {
     if (chv) chv.classList.toggle("open", opening);
 }
 
-
+function extrairDiametroPellet(tipoRacao) {
+    if (!tipoRacao) return null;
+    
+    // Remove emojis e textos
+    let texto = tipoRacao.replace(/[🔵🟢🟡🟠🟤⚫🍼]/g, '').trim();
+    
+    // Padrões: "4-6mm", "2–3mm", "1.3–1.5mm", "0.8–1mm", etc.
+    let match = texto.match(/([0-9]+[.,]?[0-9]*)\s*[-–]\s*([0-9]+[.,]?[0-9]*)mm/i);
+    if (match) {
+        return `${parseFloat(match[1])}-${parseFloat(match[2])}mm`;
+    }
+    
+    // Caso especial: "pó"
+    if (texto.toLowerCase().includes('pó')) return "0-0.8mm";
+    
+    // Caso especial: pellet sem mm (ex: "Fina", "Média")
+    return null;
+}
 // Substitua a função registrarTrato existente por esta:
+// Na função registrarTrato, substitua a parte do registro de consumo:
+
 function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
     let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
-    if (tratos[tratoIndex] && tratos[tratoIndex].tratado) { showMessage("Este trato já foi fornecido hoje!", true); return; }
+    if (tratos[tratoIndex] && tratos[tratoIndex].tratado) {
+        showMessage("Este trato já foi fornecido hoje!", true);
+        return;
+    }
+    
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (!info) { showMessage("Tanque não ocupado", true); return; }
+    
+    // BUGFIX: usar última biometria do lote, não ultimoPesoMedio do tanque (que não existe)
+    let ultimaBiometria = info.lote.biometrias && info.lote.biometrias.length
+        ? info.lote.biometrias[info.lote.biometrias.length - 1] : null;
+    let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (info.lote.pesoMedioAlevino || 5);
+    let tipoRacaoNecessario = tipoRacaoPorPeso(pesoMedio);
+    let diametroNecessario = extrairDiametroPellet(tipoRacaoNecessario);
     
     let estoque = loadData("estoqueRacao");
-    let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
-    if (totalEstoque < kgRecomendado) { showMessage(`Estoque insuficiente! Disponível: ${totalEstoque.toFixed(1)}kg`, true); return; }
     
-    let consumoRestante = kgRecomendado;
-    for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
-        if (estoque[i].kgTotal >= consumoRestante) { estoque[i].kgTotal -= consumoRestante; consumoRestante = 0; }
-        else { consumoRestante -= estoque[i].kgTotal; estoque[i].kgTotal = 0; }
+    // Buscar itens compatíveis e seus preços
+    let itensCompativeis = estoque.filter(item => {
+        let diametroItem = extrairDiametroPellet(item.pellet);
+        return diametroNecessario && diametroItem && diametroNecessario === diametroItem;
+    });
+    
+    let totalCompativel = itensCompativeis.reduce((s, i) => s + i.kgTotal, 0);
+    if (totalCompativel < kgRecomendado) {
+        showMessage(`❌ Estoque insuficiente de ${tipoRacaoNecessario}!`, true);
+        return;
     }
+    
+    // Registrar consumo detalhado (QUAL tipo e QUAL valor)
+    let consumoRestante = kgRecomendado;
+    let detalhesConsumo = []; // Array para registrar cada item consumido
+    
+    for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
+        let diametroItem = extrairDiametroPellet(estoque[i].pellet);
+        if (diametroItem === diametroNecessario && estoque[i].kgTotal > 0) {
+            let kgConsumido = Math.min(estoque[i].kgTotal, consumoRestante);
+            
+            // Registrar detalhe do consumo
+            detalhesConsumo.push({
+                tipo: estoque[i].pellet,
+                marca: estoque[i].marca,
+                kg: kgConsumido,
+                valorPorKg: estoque[i].valorKg,
+                custoTotal: kgConsumido * estoque[i].valorKg
+            });
+            
+            estoque[i].kgTotal -= kgConsumido;
+            consumoRestante -= kgConsumido;
+        }
+    }
+    
     saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
+    
+    // SALVAR CONSUMO DETALHADO NO LOTE
+    let lotes = loadData("lotes");
+    let lote = lotes.find(l => l.id === info.loteId);
+    let tanque = lote.tanques.find(t => t.num === tanqueNum);
+    
+    // Inicializar estrutura de consumo detalhado se não existir
+    if (!tanque.consumoDetalhado) {
+        tanque.consumoDetalhado = [];
+    }
+    
+    // Adicionar registro de consumo com tipo específico
+    for (let det of detalhesConsumo) {
+        tanque.consumoDetalhado.push({
+            data: new Date().toISOString(),
+            tipo: det.tipo,
+            marca: det.marca,
+            kg: det.kg,
+            valorPorKg: det.valorPorKg,
+            custoTotal: det.custoTotal,
+            trato: tratoIndex + 1
+        });
+    }
+    
+    // Manter também o consumo total somado (para compatibilidade)
+    tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRecomendado;
+    
+    saveData("lotes", lotes);
     
     tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: true, kgFornecidos: kgRecomendado };
     localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
     
-    let info = getInfoTanqueOcupado(tanqueNum);
-    if (info) {
-        let lotes = loadData("lotes");
-        let lote = lotes.find(l => l.id === info.loteId);
-        let tanque = lote.tanques.find(t => t.num === tanqueNum);
-        tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRecomendado;
-        saveData("lotes", lotes);
-    }
+    // Calcular custo real do consumo
+    let custoReal = detalhesConsumo.reduce((sum, d) => sum + d.custoTotal, 0);
     
-    showMessage(`✅ Tanque ${tanqueNum} - Trato ${tratoIndex+1} fornecido: ${kgRecomendado.toFixed(1)}kg`);
+    showMessage(`✅ Tanque ${tanqueNum}: ${kgRecomendado.toFixed(1)}kg de ${tipoRacaoNecessario} | Custo: R$ ${custoReal.toFixed(2)}`);
     renderEstoqueRacao();
     renderConsumoDiario();
     renderTratosTanques();
-    renderLotes(); // Atualiza custos
+    renderLotes();
     
-    // Verificar se foi o último trato
     if (tratoIndex + 1 >= tratos.length || tratos[tratoIndex + 1]?.tratado) {
         verificarTodosTanquesConcluidos();
     }
@@ -1242,10 +1657,20 @@ function preencherTodosTratos(tanqueNum) {
     if (totalEstoque < totalNecessario) { showMessage(`Estoque insuficiente! Necessário: ${totalNecessario.toFixed(1)}kg`, true); return; }
     for (let i = 0; i < tratos.length; i++) {
         if (!tratos[i].tratado) {
+            // BUGFIX: descontar do tipo de ração correto
+            let tipoNec = info ? tipoRacaoPorPeso(info.lote.biometrias && info.lote.biometrias.length ? info.lote.biometrias[info.lote.biometrias.length-1].pesoMedio : (info.lote.pesoMedioAlevino||5)) : null;
+            let diaNec = tipoNec ? extrairDiametroPellet(tipoNec) : null;
+            let idxCompat = [];
+            for(let j=0;j<estoque.length;j++){
+                let d=extrairDiametroPellet(estoque[j].pellet);
+                if(diaNec && d && diaNec===d && estoque[j].kgTotal>0) idxCompat.push(j);
+            }
+            if(idxCompat.length===0) for(let j=0;j<estoque.length;j++){if(estoque[j].kgTotal>0)idxCompat.push(j);}
             let consumoRestante = kgPorTrato;
-            for (let j = 0; j < estoque.length && consumoRestante > 0; j++) {
-                if (estoque[j].kgTotal >= consumoRestante) { estoque[j].kgTotal -= consumoRestante; consumoRestante = 0; }
-                else { consumoRestante -= estoque[j].kgTotal; estoque[j].kgTotal = 0; }
+            for (let j = 0; j < idxCompat.length && consumoRestante > 0; j++) {
+                let idx=idxCompat[j];
+                if(estoque[idx].kgTotal >= consumoRestante) { estoque[idx].kgTotal -= consumoRestante; consumoRestante = 0; } 
+                else { consumoRestante -= estoque[idx].kgTotal; estoque[idx].kgTotal = 0; }
             }
             tratos[i] = { ...tratos[i], tratado: true, kgFornecidos: kgPorTrato };
         }
@@ -1322,10 +1747,20 @@ function fornecerUmTratoParaTodosTanques() {
         let primeiroTratoIndex = item.tratoIndex;
         let tratos = item.tratos;
         if (tratos[primeiroTratoIndex] && tratos[primeiroTratoIndex].tratado) continue;
+        // BUGFIX: descontar do tipo de ração correto
+        let tipoNec = tipoRacaoPorPeso(t.pesoMedio);
+        let diaNec = extrairDiametroPellet(tipoNec);
         let consumoRestante = kgPorTrato;
-        for (let i = 0; i < estoqueAtual.length && consumoRestante > 0; i++) {
-            if (estoqueAtual[i].kgTotal >= consumoRestante) { estoqueAtual[i].kgTotal -= consumoRestante; consumoRestante = 0; }
-            else { consumoRestante -= estoqueAtual[i].kgTotal; estoqueAtual[i].kgTotal = 0; }
+        let idxCompat = [];
+        for(let i=0;i<estoqueAtual.length;i++){
+            let d=extrairDiametroPellet(estoqueAtual[i].pellet);
+            if(diaNec && d && diaNec===d && estoqueAtual[i].kgTotal>0) idxCompat.push(i);
+        }
+        if(idxCompat.length===0) for(let i=0;i<estoqueAtual.length;i++){if(estoqueAtual[i].kgTotal>0)idxCompat.push(i);}
+        for (let i = 0; i < idxCompat.length && consumoRestante > 0; i++) {
+            let idx=idxCompat[i];
+            let kg=Math.min(estoqueAtual[idx].kgTotal, consumoRestante);
+            estoqueAtual[idx].kgTotal -= kg; consumoRestante -= kg;
         }
         if (consumoRestante > 0.01) { erros.push(`Tanque ${t.num}: faltou ${consumoRestante.toFixed(1)}kg no estoque`); continue; }
         tratos[primeiroTratoIndex] = { ...tratos[primeiroTratoIndex], tratado: true, kgFornecidos: kgPorTrato, registradoEm: new Date().toLocaleString() };
@@ -1516,26 +1951,37 @@ function registrarAlimentacao() {
     let tanqueNum = document.getElementById("alimTanque").value;
     let kgRacao = parseFloat(document.getElementById("alimKg").value);
     if(!tanqueNum || isNaN(kgRacao) || kgRacao <= 0) { showMessage("Tanque e kg válidos", true); return; }
-    let estoque = loadData("estoqueRacao");
-    let totalEstoque = estoque.reduce((s,i) => s + i.kgTotal, 0);
-    if(totalEstoque < kgRacao) { showMessage("Estoque insuficiente", true); return; }
-    let consumoRestante = kgRacao;
-    for(let i = 0; i < estoque.length && consumoRestante > 0; i++) {
-        if(estoque[i].kgTotal >= consumoRestante) { estoque[i].kgTotal -= consumoRestante; consumoRestante = 0; } 
-        else { consumoRestante -= estoque[i].kgTotal; estoque[i].kgTotal = 0; }
-    }
-    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
     let info = getInfoTanqueOcupado(tanqueNum);
-    if(info) {
-        let lotes = loadData("lotes");
-        let lote = lotes.find(l => l.id === info.loteId);
-        let tanque = lote.tanques.find(t => t.num === tanqueNum);
-        tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
-        saveData("lotes", lotes);
+    if(!info) { showMessage("Tanque não ocupado", true); return; }
+    // BUGFIX: descontar do tipo de ração correto para o peso do peixe
+    let ultimaBio = info.lote.biometrias && info.lote.biometrias.length ? info.lote.biometrias[info.lote.biometrias.length-1] : null;
+    let pesoMedio = ultimaBio ? ultimaBio.pesoMedio : (info.lote.pesoMedioAlevino || 5);
+    let tipoNec = tipoRacaoPorPeso(pesoMedio);
+    let diaMetroNec = extrairDiametroPellet(tipoNec);
+    let estoque = loadData("estoqueRacao");
+    let idxCompat = [];
+    for(let i=0;i<estoque.length;i++){
+        let d=extrairDiametroPellet(estoque[i].pellet);
+        if(diaMetroNec && d && diaMetroNec===d) idxCompat.push(i);
     }
-    showMessage(`Consumo de ${kgRacao}kg registrado`);
-    renderEstoqueRacao();
-    renderConsumoDiario();
+    if(idxCompat.length===0) for(let i=0;i<estoque.length;i++) idxCompat.push(i); // fallback
+    let totalComp = idxCompat.reduce((s,i)=>s+estoque[i].kgTotal,0);
+    if(totalComp<kgRacao){showMessage(`Estoque insuficiente de ${tipoNec}! Disponível: ${totalComp.toFixed(1)}kg`,true);return;}
+    let resto=kgRacao,dets=[];
+    for(let i=0;i<idxCompat.length&&resto>0;i++){
+        let idx=idxCompat[i],kg=Math.min(estoque[idx].kgTotal,resto);
+        dets.push({tipo:estoque[idx].pellet,marca:estoque[idx].marca,kg,valorPorKg:estoque[idx].valorKg,custoTotal:kg*estoque[idx].valorKg});
+        estoque[idx].kgTotal-=kg;resto-=kg;
+    }
+    saveData("estoqueRacao",estoque.filter(i=>i.kgTotal>0));
+    let lotes=loadData("lotes"),lote=lotes.find(l=>l.id===info.loteId),tanque=lote.tanques.find(t=>t.num===tanqueNum);
+    if(!tanque.consumoDetalhado) tanque.consumoDetalhado=[];
+    for(let d of dets) tanque.consumoDetalhado.push({data:new Date().toISOString(),tipo:d.tipo,marca:d.marca,kg:d.kg,valorPorKg:d.valorPorKg,custoTotal:d.custoTotal,origem:"Manual"});
+    tanque.consumoRacao=(tanque.consumoRacao||0)+kgRacao;
+    saveData("lotes",lotes);
+    let custoR=dets.reduce((s,d)=>s+d.custoTotal,0);
+    showMessage(`✅ ${kgRacao}kg de ${tipoNec} registrado | R$ ${custoR.toFixed(2)}`);
+    renderEstoqueRacao();renderConsumoDiario();renderLotes();
 }
 
 function registrarMortalidade() {
@@ -1598,8 +2044,7 @@ function mostrarAbaAlimentacao() {
     document.getElementById("tabMortalidadeBtn").style.background = "#c2410c";
     atualizarSelectTanques("alimTanque", "ocupados");
     atualizarSelectTanques("mortTanque", "ocupados");
-    if (horariosTratos.length === 0) configurarTratos();
-    else renderTratosTanques();
+    renderTratosTanques();
 }
 
 function mostrarAbaMortalidade() {
@@ -2877,16 +3322,144 @@ function atualizarDashboard() {
     let lotes   = loadData("lotes");
     let estoque = loadData("estoqueRacao");
     let colabs  = loadData("colab");
+    let setEl = (id, v) => { let el = document.getElementById(id); if (el) el.textContent = v; };
+
+    // ── Totais básicos ──────────────────────────────────
     let totalPeixes = lotes.reduce((s,l)=>s+l.qtdTotal, 0);
     let totalRacao  = estoque.reduce((s,i)=>s+i.kgTotal, 0);
-    let setEl = (id, v) => { let el = document.getElementById(id); if (el) el.textContent = v; };
     setEl("dashPeixes",  totalPeixes.toLocaleString("pt-BR"));
     setEl("dashLotes",   lotes.length);
-    setEl("dashRacao",   totalRacao.toFixed(0) + " kg");
+    setEl("dashRacao",   totalRacao.toFixed(0)+" kg");
     setEl("dashColabs",  colabs.length);
-    // Header badge
     let hb = document.getElementById("headerBadge");
-    if (hb) hb.textContent = "🐟 " + totalPeixes.toLocaleString("pt-BR") + " peixes";
+    if (hb) hb.textContent = "🐟 "+totalPeixes.toLocaleString("pt-BR")+" peixes";
+
+    // ── Biomassa total e pronta para venda ──────────────
+    let biomassaTotal = 0;
+    let biomassaVenda = 0;
+    let tanksProntos  = [];
+    let custoTotalGlobal = 0;
+
+    for (let l of lotes) {
+        let ultimaBio = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length-1] : null;
+        let pesoMedioLote = ultimaBio ? ultimaBio.pesoMedio : (l.pesoMedioAlevino || 0);
+        for (let t of l.tanques) {
+            if (t.qtdPeixes <= 0) continue;
+            let peso = t.ultimoPesoMedio || pesoMedioLote;
+            let bio  = t.ultimaBiomassa  || (peso / 1000) * t.qtdPeixes;
+            biomassaTotal += bio;
+            if (peso >= 600) {
+                biomassaVenda += bio;
+                tanksProntos.push({ tanque: t.num, loteId: l.id, bio: bio.toFixed(1), peso: peso.toFixed(0) });
+            }
+        }
+        let c = calcularCustoPorKGLote(l);
+        custoTotalGlobal += c.custoTotal;
+    }
+
+    let custoPorKgGlobal = biomassaTotal > 0 ? custoTotalGlobal / biomassaTotal : 0;
+    setEl("dashBiomassaTotal", biomassaTotal.toFixed(1)+" kg");
+    setEl("dashBiomassaTotalSub", lotes.length+" lotes · "+totalPeixes.toLocaleString()+" peixes");
+
+    let vEl = document.getElementById("dashBiomassaVenda");
+    let vSub = document.getElementById("dashBiomassaVendaSub");
+    if (vEl) vEl.textContent = biomassaVenda.toFixed(1)+" kg";
+    if (vSub) vSub.textContent = tanksProntos.length ? tanksProntos.map(t=>`${t.tanque}(${t.peso}g)`).join(", ") : "Nenhum tanque ≥ 600g";
+
+    let cEl = document.getElementById("dashCustoPorKg");
+    let cSub = document.getElementById("dashCustoTotal");
+    if (cEl) cEl.textContent = "R$ "+custoPorKgGlobal.toFixed(2)+"/kg";
+    if (cSub) cSub.textContent = "Total investido: R$ "+custoTotalGlobal.toFixed(2);
+
+    // ── Consumo hoje ────────────────────────────────────
+    let consumoHoje = 0;
+    for (let l of lotes) {
+        for (let t of l.tanques) {
+            if (t.qtdPeixes <= 0) continue;
+            let tratos = JSON.parse(localStorage.getItem("tratos_"+t.num)) || [];
+            for (let tr of tratos) {
+                if (tr.tratado) consumoHoje += tr.kgFornecidos || 0;
+            }
+        }
+    }
+    setEl("dashConsumoHoje", consumoHoje.toFixed(1)+" kg");
+
+    // ── Tarefas / Alertas ───────────────────────────────
+    let tarefas = [];
+    let agora = new Date();
+
+    for (let l of lotes) {
+        let ultimaBio = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length-1] : null;
+        let pesoMedioLote = ultimaBio ? ultimaBio.pesoMedio : (l.pesoMedioAlevino || 0);
+        let diasSemBio = ultimaBio
+            ? Math.floor((agora - new Date(ultimaBio.data)) / 86400000)
+            : Math.floor((agora - new Date(l.dataEstocagem || agora)) / 86400000);
+
+        for (let t of l.tanques) {
+            if (t.qtdPeixes <= 0) continue;
+            let peso = t.ultimoPesoMedio || pesoMedioLote;
+
+            // Alerta: biometria atrasada (>21 dias)
+            if (diasSemBio > 21) {
+                tarefas.push({
+                    tipo: diasSemBio > 35 ? "urgent" : "warn",
+                    ico: "📏",
+                    head: `Biometria necessária — Tanque ${t.num} (Lote #${l.id})`,
+                    sub:  `${diasSemBio} dias sem biometria. Peso estimado: ${peso.toFixed(0)}g`
+                });
+            }
+
+            // Alerta: pronto para despesca
+            if (peso >= 600) {
+                tarefas.push({
+                    tipo: "ok",
+                    ico: "🎣",
+                    head: `Pronto para despesca — Tanque ${t.num} (Lote #${l.id})`,
+                    sub:  `Peso médio: ${peso.toFixed(0)}g · Biomassa: ${(t.ultimaBiomassa || (peso/1000)*t.qtdPeixes).toFixed(1)} kg`
+                });
+            }
+
+            // Alerta: classificação por mudança de fase de ração
+            const fases = [
+                {lim:1,label:"Pó (55% PB)"}, {lim:2,label:"0.8–1mm"}, {lim:6,label:"1.3–1.5mm"},
+                {lim:15,label:"1.8–2.3mm"}, {lim:50,label:"2–3mm"}, {lim:250,label:"4–6mm"}
+            ];
+            for (let f of fases) {
+                if (peso > f.lim && diasSemBio > 14) {
+                    let faseAtual = fases.find(ff => peso <= ff.lim) || {label:"6–8mm"};
+                    if (peso > 50 && diasSemBio > 30) {
+                        tarefas.push({
+                            tipo: "info",
+                            ico: "🔀",
+                            head: `Classificação recomendada — Tanque ${t.num} (Lote #${l.id})`,
+                            sub:  `Peso ${peso.toFixed(0)}g · ${diasSemBio} dias sem revisão · Ração atual: ${faseAtual.label}`
+                        });
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Remover duplicatas
+    let tarefasUnicas = tarefas.filter((t,i,a) => i === a.findIndex(x => x.head === t.head));
+    let divTarefas = document.getElementById("dashTarefas");
+    if (divTarefas) {
+        if (!tarefasUnicas.length) {
+            divTarefas.innerHTML = "";
+        } else {
+            divTarefas.innerHTML = `
+                <div class="task-title">⚡ Tarefas Pendentes <span style="background:#fff;color:var(--text2);padding:2px 9px;border-radius:12px;font-size:.7rem;border:1px solid var(--border);">${tarefasUnicas.length}</span></div>
+                ${tarefasUnicas.map(t => `
+                    <div class="task-item task-${t.tipo}">
+                        <div class="task-ico">${t.ico}</div>
+                        <div class="task-body">
+                            <div class="task-head">${t.head}</div>
+                            <div class="task-sub">${t.sub}</div>
+                        </div>
+                    </div>`).join('')}`;
+        }
+    }
 }
 
 function seedExemplo() {
@@ -3031,7 +3604,6 @@ function executarClassificacao() {
     
     let tanqueOrigemObj = loteOrigem.tanques.find(t => t.num === tanqueOrigem);
     let populacaoOriginal = tanqueOrigemObj.qtdPeixes;
-    let biomassaOriginalTanque = tanqueOrigemObj.ultimaBiomassa || ((loteOrigem.pesoMedioAlevino / 1000) * populacaoOriginal);
     
     // Remover peixes do tanque de origem
     tanqueOrigemObj.qtdPeixes -= totalTransferido;
@@ -3046,20 +3618,6 @@ function executarClassificacao() {
     if (tanqueOrigemObj.qtdPeixes <= 0) {
         loteOrigem.tanques = loteOrigem.tanques.filter(t => t.num !== tanqueOrigem);
     }
-    
-    // Atualizar quantidade total do lote
-    loteOrigem.qtdTotal -= totalTransferido;
-    
-    // Recalcular biomassa total do lote
-    let novaBiomassaTotal = 0;
-    for (let t of loteOrigem.tanques) {
-        if (t.ultimaBiomassa) {
-            novaBiomassaTotal += t.ultimaBiomassa;
-        } else {
-            novaBiomassaTotal += (loteOrigem.pesoMedioAlevino / 1000) * t.qtdPeixes;
-        }
-    }
-    loteOrigem.biomassaAtual = novaBiomassaTotal;
     
     // Para cada destino, adicionar ao MESMO lote de origem
     for (let d of destinosValidos) {
@@ -3122,6 +3680,24 @@ function executarClassificacao() {
         }
     }
     
+    // 🔧 CORREÇÃO: Recalcular a quantidade total de peixes do lote corretamente
+    let novaQtdTotal = 0;
+    for (let t of loteOrigem.tanques) {
+        novaQtdTotal += t.qtdPeixes;
+    }
+    loteOrigem.qtdTotal = novaQtdTotal;
+    
+    // Recalcular biomassa total do lote
+    let novaBiomassaTotal = 0;
+    for (let t of loteOrigem.tanques) {
+        if (t.ultimaBiomassa) {
+            novaBiomassaTotal += t.ultimaBiomassa;
+        } else {
+            novaBiomassaTotal += (loteOrigem.pesoMedioAlevino / 1000) * t.qtdPeixes;
+        }
+    }
+    loteOrigem.biomassaAtual = novaBiomassaTotal;
+    
     // Salvar alterações
     saveData("lotes", lotes);
     
@@ -3133,7 +3709,6 @@ function executarClassificacao() {
         tanqueOrigem: tanqueOrigem,
         loteId: info.loteId,
         populacaoOriginal: populacaoOriginal,
-        biomassaOriginal: biomassaOriginalTanque,
         restanteOrigem: tanqueOrigemObj.qtdPeixes,
         destinos: destinosValidos.map(d => ({
             tanque: d.tanque,
@@ -3142,23 +3717,23 @@ function executarClassificacao() {
             biomassa: d.biomassa
         })),
         totalPeixes: totalTransferido,
-        totalBiomassa: totalBiomassaTransferida
+        totalBiomassa: totalBiomassaTransferida,
+        novaQtdTotalLote: novaQtdTotal
     });
     saveData("historicoClassificacoes", historico);
     
-    // ========== ATUALIZAR TODAS AS INTERFACES ==========
     // Limpar campos
     destinosRepicagem = [];
     renderAreaRepicagem();
     renderHistoricoClassificacoes();
     
     // Forçar atualização completa da tela
-    renderTanques(); // Atualiza lista de tanques
-    renderLotes(); // Atualiza lista de lotes
-    renderTratosTanques(); // Atualiza tratos
-    renderConsumoDiario(); // Atualiza consumo diário
-    atualizarDashboard(); // Atualiza painel rápido
-    renderBiometrias(); // Atualiza biometrias
+    renderTanques();
+    renderLotes();
+    renderTratosTanques();
+    renderConsumoDiario();
+    atualizarDashboard();
+    renderBiometrias();
     
     // Atualizar selects
     atualizarSelectTanques("origemTanque", "ocupados");
@@ -3169,15 +3744,7 @@ function executarClassificacao() {
     // Recarregar informações de origem
     carregarInfoOrigem();
     
-    // Limpar campos de quantidade e peso médio dos destinos
-    for (let d of destinosValidos) {
-        let qtdInput = document.getElementById(`destQtd_${d.id}`);
-        let pesoInput = document.getElementById(`destPeso_${d.id}`);
-        if (qtdInput) qtdInput.value = "";
-        if (pesoInput) pesoInput.value = "";
-    }
-    
-    showMessage(`✅ Transferência concluída! ${totalTransferido} peixes transferidos para ${destinosValidos.length} tanques.\nTodos os peixes continuam no mesmo lote #${info.loteId}.`);
+    showMessage(`✅ Transferência concluída! ${totalTransferido} peixes transferidos para ${destinosValidos.length} tanques.\nNovo total do lote #${info.loteId}: ${novaQtdTotal} peixes.`);
     
     // Se o tanque de origem foi esvaziado completamente, recarregar a página de classificação
     if (tanqueOrigemObj.qtdPeixes <= 0) {
@@ -3274,35 +3841,56 @@ function calcularBiomassaTotalLote(lote) {
     return biomassaTotal;
 }
 
-// Calcular Custo de Ração do Lote
-function calcularCustoRacaoLote(lote) {
-    let consumoTotal = calcularConsumoRacaoLote(lote);
-    // Buscar preço médio da ração no histórico de compras
-    let estoque = loadData("estoqueRacao");
-    let precoMedioKg = 0;
-    let totalKg = 0;
-    let totalCusto = 0;
+function calcularCustoRacaoLoteReal(lote) {
+    let custoTotalRacao = 0;
+    let consumoPorTipo = {};
     
-    for (let item of estoque) {
-        totalKg += item.kgTotal;
-        totalCusto += item.kgTotal * item.valorKg;
+    if (!lote.tanques) return { custoTotal: 0, porTipo: {} };
+    
+    for (let tanque of lote.tanques) {
+        if (tanque.consumoDetalhado && tanque.consumoDetalhado.length > 0) {
+            for (let consumo of tanque.consumoDetalhado) {
+                custoTotalRacao += consumo.custoTotal;
+                
+                // Usar o tipo do pellet como chave
+                let chave = consumo.tipo || consumo.tipoRacao || "Desconhecido";
+                if (!consumoPorTipo[chave]) {
+                    consumoPorTipo[chave] = { kg: 0, custo: 0 };
+                }
+                consumoPorTipo[chave].kg += consumo.kg;
+                consumoPorTipo[chave].custo += consumo.custoTotal;
+            }
+        }
     }
-    if (totalKg > 0) precoMedioKg = totalCusto / totalKg;
     
-    return consumoTotal * precoMedioKg;
+    return {
+        custoTotal: custoTotalRacao,
+        porTipo: consumoPorTipo
+    };
+}
+
+// Substituir a função antiga
+function calcularCustoRacaoLote(lote) {
+    let custoReal = calcularCustoRacaoLoteReal(lote);
+    return custoReal.custoTotal;
 }
 
 // Calcular Custo por Kg do Lote
 function calcularCustoPorKGLote(lote) {
     let custoAlevinos = lote.valorAlevinos || 0;
-    let custoRacao = calcularCustoRacaoLote(lote);
+    let custoRacao = calcularCustoRacaoLoteReal(lote).custoTotal;
     let custoTotal = custoAlevinos + custoRacao;
     let biomassaTotal = calcularBiomassaTotalLote(lote);
     
     if (biomassaTotal > 0) {
-        return { custoTotal: custoTotal, custoPorKg: custoTotal / biomassaTotal };
+        return {
+            custoTotal: custoTotal,
+            custoPorKg: custoTotal / biomassaTotal,
+            custoAlevinos: custoAlevinos,
+            custoRacao: custoRacao
+        };
     }
-    return { custoTotal: custoTotal, custoPorKg: 0 };
+    return { custoTotal: custoTotal, custoPorKg: 0, custoAlevinos: 0, custoRacao: 0 };
 }
 
 // Calcular CA (Conversão Alimentar) do Lote
@@ -3578,6 +4166,68 @@ function toggleRelGroup(headerEl) {
     if (chevron) chevron.classList.toggle("open", opening);
 }
 
+function toggleLoteCard(loteId) {
+    let body    = document.getElementById("lote_body_" + loteId);
+    let chevron = document.getElementById("lote_chv_" + loteId);
+    if (!body) return;
+    let opening = !body.classList.contains("open");
+    body.classList.toggle("open", opening);
+    if (chevron) chevron.classList.toggle("open", opening);
+}
+
+function toggleFormTanque(tipo) {
+    let ids = { individual: "formTanqueIndividual", lote: "formTanqueLote" };
+    let targetId = ids[tipo];
+    let el = document.getElementById(targetId);
+    if (!el) return;
+    let isOpen = el.classList.contains("open");
+    // Close all first
+    Object.values(ids).forEach(id => {
+        let e = document.getElementById(id);
+        if (e) e.classList.remove("open");
+    });
+    if (!isOpen) el.classList.add("open");
+}
+
+function toggleFormRacao(tipo) {
+    let ids = { modelos: "formRacaoModelos", compra: "formRacaoCompra" };
+    let targetId = ids[tipo];
+    let el = document.getElementById(targetId);
+    if (!el) return;
+    let isOpen = el.classList.contains("open");
+    Object.values(ids).forEach(id => {
+        let e = document.getElementById(id);
+        if (e) e.classList.remove("open");
+    });
+    if (!isOpen) {
+        el.classList.add("open");
+        if (tipo === 'compra') renderModelosRacao();
+    }
+}
+
+function toggleFormAlim(tipo) {
+    let ids = { config: "formAlimConfig", manual: "formAlimManual" };
+    let targetId = ids[tipo];
+    let el = document.getElementById(targetId);
+    if (!el) return;
+    let isOpen = el.classList.contains("open");
+    el.classList.toggle("open", !isOpen);
+    if (!isOpen && tipo === 'manual') atualizarSelectTanques("alimTanque", "ocupados");
+}
+
+function toggleFormLote() {
+    let el = document.getElementById("formLote");
+    if (!el) return;
+    let opening = !el.classList.contains("open");
+    el.classList.toggle("open", opening);
+    if (opening) {
+        atualizarSelectTanques("lTanquesSelect", "distribuicao");
+        // Set today's date
+        let d = document.getElementById("ldataEstocagem");
+        if (d && !d.value) d.value = new Date().toISOString().slice(0,10);
+    }
+}
+
 function init() {
     seedExemplo();
     renderTanques();
@@ -3650,6 +4300,11 @@ window.atualizarCurva = atualizarCurva;
 window.removerAmostra = removerAmostra;
 window.toggleTank = toggleTank;
 window.toggleRelGroup = toggleRelGroup;
+window.toggleLoteCard = toggleLoteCard;
+window.toggleFormTanque = toggleFormTanque;
+window.toggleFormLote = toggleFormLote;
+window.toggleFormRacao = toggleFormRacao;
+window.toggleFormAlim = toggleFormAlim;
 window.removerItemCarrada = removerItemCarrada;
 window.removerItemEstoque = removerItemEstoque;
 window.removerDestino = removerDestino;
