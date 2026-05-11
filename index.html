@@ -1,0 +1,3666 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, viewport-fit=cover">
+<title>🐟 AquaGestor PRO | ERP Piscicultura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg:      #eef2f7;
+  --surf:    #ffffff;
+  --surf2:   #f8fafc;
+  --surf3:   #f1f5f9;
+  --border:  #e2e8f0;
+  --bh:      #cbd5e1;
+  --blue:    #0a7ea4;
+  --blue-d:  #065f7c;
+  --blue-l:  #e0f7ff;
+  --blue-xl: #f0fbff;
+  --green:   #15803d;
+  --green-l: #dcfce7;
+  --red:     #c2410c;
+  --red-l:   #fee2e2;
+  --amber:   #b45309;
+  --amber-l: #fef3c7;
+  --purple:  #7c3aed;
+  --purple-l:#f3f0ff;
+  --teal:    #0f766e;
+  --teal-l:  #ccfbf1;
+  --text:    #1a2c3e;
+  --text2:   #475569;
+  --text3:   #94a3b8;
+  --text4:   #cbd5e1;
+  --r-xs: 8px; --r-sm: 12px; --r-md: 18px; --r-lg: 24px; --r-xl: 32px;
+  --sh-sm: 0 1px 3px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03);
+  --sh-md: 0 4px 14px rgba(0,0,0,.07),0 2px 5px rgba(0,0,0,.04);
+  --sh-lg: 0 12px 32px rgba(0,0,0,.10),0 4px 10px rgba(0,0,0,.05);
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;padding-bottom:40px}
+
+/* HEADER */
+header{background:linear-gradient(130deg,#0e8fc0,#065f7c 55%,#044a62);padding:14px 18px 16px;position:sticky;top:0;z-index:200;box-shadow:0 3px 16px rgba(6,95,124,.45)}
+.header-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px}
+header h1{font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+header p{font-size:.68rem;color:rgba(255,255,255,.75);margin-top:1px}
+.header-badge{background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 12px;font-size:.7rem;color:#fff;font-weight:600;white-space:nowrap;flex-shrink:0}
+
+/* CONTAINER */
+.container{max-width:640px;margin:0 auto;padding:14px 12px}
+
+/* MENU */
+.menu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.menu-btn{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 4px 12px;font-family:inherit;font-weight:700;font-size:.65rem;color:var(--text2);box-shadow:var(--sh-sm);cursor:pointer;transition:all .18s var(--ease);width:100%;text-align:center;line-height:1.2}
+.menu-btn .m-ico{font-size:1.45rem;line-height:1}
+.menu-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-xl);transform:translateY(-2px);box-shadow:var(--sh-md)}
+.menu-btn:active{transform:scale(.95)}
+
+/* DASHBOARD */
+.dash-card{background:linear-gradient(130deg,var(--blue),var(--blue-d));border:none;border-radius:var(--r-lg);padding:16px 18px;margin:10px 0;box-shadow:var(--sh-md);color:#fff}
+.dash-card strong{color:#fff;font-weight:700}
+.dash-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.dash-stat{background:rgba(255,255,255,.12);border-radius:var(--r-sm);padding:10px 12px;border:1px solid rgba(255,255,255,.15)}
+.dash-stat-val{font-size:1.15rem;font-weight:800}
+.dash-stat-lbl{font-size:.63rem;opacity:.8;margin-top:1px}
+
+/* SECTION HEADER */
+.section-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+
+/* CARDS */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin:10px 0;box-shadow:var(--sh-sm)}
+.card-header{font-weight:800;font-size:.95rem;color:var(--blue);border-left:3px solid var(--blue);padding-left:10px;margin-bottom:14px}
+.card-title{font-size:.65rem;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* FORM */
+.field{margin-bottom:10px}
+.field label{display:block;font-size:.7rem;font-weight:700;color:var(--text2);margin-bottom:5px}
+input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:.88rem;background:var(--surf2);color:var(--text);transition:border-color .15s,box-shadow .15s;margin:0;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,126,164,.12);background:#fff}
+input::placeholder,textarea::placeholder{color:var(--text4)}
+.card>input,.card>select,.card>textarea{margin:5px 0}
+select[multiple]{height:130px;padding:6px;border-radius:var(--r-sm)}
+select[multiple] option{padding:7px 10px;border-radius:6px;font-size:.85rem}
+
+/* BUTTONS */
+button{font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer;border:none;border-radius:var(--r-xl);padding:10px 18px;transition:all .17s var(--ease);display:inline-flex;align-items:center;justify-content:center;gap:5px;background:var(--blue);color:#fff;box-shadow:var(--sh-sm);margin:4px 4px 0 0;white-space:nowrap}
+button:hover{filter:brightness(1.1);box-shadow:var(--sh-md)}
+button:active{transform:scale(.95);filter:brightness(.95);box-shadow:none}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.btn-outline{background:var(--surf);border:1.5px solid var(--blue);color:var(--blue);box-shadow:none}
+.btn-outline:hover{background:var(--blue-l)}
+.btn-danger {background:var(--red)}
+.btn-success{background:var(--green)}
+.btn-teal   {background:var(--teal)}
+.btn-amber  {background:var(--amber)}
+.btn-sm{padding:6px 12px;font-size:.75rem;border-radius:20px}
+.btn-xs{padding:4px 10px;font-size:.7rem;border-radius:16px}
+.btn-full{width:100%;margin:8px 0 0}
+
+/* BADGES */
+.badge-ocupado,.badge-disponivel{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:700}
+.badge-ocupado{background:var(--red-l);color:var(--red)}
+.badge-disponivel{background:var(--green-l);color:var(--green)}
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:.7rem;font-weight:800;color:#fff;white-space:nowrap;flex-shrink:0}
+.status-pill.pendente {background:var(--red)}
+.status-pill.concluido{background:var(--green)}
+.status-pill.jejum    {background:var(--purple)}
+
+/* UTILS */
+.hidden{display:none!important}
+hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-height:1.4}
+.flex-row{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0;align-items:flex-start}
+.flex-row>button{margin:0}
+.back-top-btn{margin-bottom:0}
+.tanque-tag{display:inline-flex;background:var(--blue-l);color:var(--blue);padding:3px 9px;border-radius:10px;font-size:.68rem;font-weight:700;margin:3px}
+
+/* SCROLL LIST */
+.scroll-list{max-height:300px;overflow-y:auto;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--surf);scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scroll-list .card{margin:0;border:none;border-bottom:1px solid var(--border);border-radius:0;box-shadow:none}
+.scroll-list .card:first-child{border-radius:var(--r-lg) var(--r-lg) 0 0}
+.scroll-list .card:last-child{border-bottom:none;border-radius:0 0 var(--r-lg) var(--r-lg)}
+
+/* TOAST */
+.message{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;color:#fff;padding:11px 20px;border-radius:50px;font-size:.8rem;font-weight:600;z-index:9999;opacity:0;transition:opacity .22s var(--ease),transform .22s var(--ease);pointer-events:none;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+.message.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* TANK ACCORDION */
+.tank-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r-lg);margin:8px 0;box-shadow:var(--sh-sm);overflow:hidden;transition:box-shadow .18s}
+.tank-card:hover{box-shadow:var(--sh-md)}
+.tank-card.suspended{border-color:#dda0a0;background:#fff8f8}
+.tank-card.done{border-color:#86efac}
+
+.tank-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;gap:10px;transition:background .15s}
+.tank-header:hover{background:var(--surf2)}
+.tank-header:active{background:var(--surf3)}
+
+.tank-info{flex:1;min-width:0}
+.tank-name{font-weight:800;font-size:.92rem;color:var(--text)}
+.tank-meta{font-size:.68rem;color:var(--text3);margin-top:2px}
+
+.tank-progress-wrap{margin-top:7px}
+.tank-progress-bar{height:5px;background:var(--border);border-radius:10px;overflow:hidden}
+.tank-progress-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--blue),#22d3ee);transition:width .4s var(--ease)}
+.tank-progress-fill.done{background:linear-gradient(90deg,var(--green),#4ade80)}
+.tank-progress-fill.jejum{background:var(--purple)}
+.tank-progress-text{font-size:.63rem;color:var(--text3);margin-top:3px}
+
+.tank-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tank-chevron{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--surf3);font-size:.7rem;color:var(--text3);transition:transform .25s var(--ease),background .15s;flex-shrink:0}
+.tank-chevron.open{transform:rotate(180deg);background:var(--blue-l);color:var(--blue)}
+
+.tank-details{border-top:1px solid var(--border);padding:14px 16px;animation:slideDown .2s var(--ease) both}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.trato-item{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px 12px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);margin:5px 0}
+.trato-item.done-trato{background:var(--green-l);border-color:#86efac}
+.trato-item.suspended{background:var(--purple-l);border-color:#c4b5fd;opacity:.75}
+.trato-label{font-size:.8rem;font-weight:600}
+.trato-info{font-size:.73rem;color:var(--text2)}
+
+/* REPORTS */
+.rel-groups{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.rel-group{background:var(--surf);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-sm)}
+.rel-group-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;transition:background .15s}
+.rel-group-header:hover{background:var(--surf2)}
+.rel-group-title{font-weight:800;font-size:.88rem;display:flex;align-items:center;gap:10px}
+.rg-ico{width:34px;height:34px;border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.rel-group-chevron{font-size:.7rem;color:var(--text3);transition:transform .25s var(--ease)}
+.rel-group-chevron.open{transform:rotate(180deg)}
+.rel-group-body{padding:4px 12px 14px;border-top:1px solid var(--border);display:none}
+.rel-group-body.open{display:block;animation:slideDown .2s var(--ease) both}
+.rel-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.rel-btn-item{display:flex;align-items:center;gap:9px;padding:12px 14px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;font-family:inherit;font-weight:600;font-size:.78rem;color:var(--text);text-align:left;transition:all .15s var(--ease);width:100%;margin:0;box-shadow:none}
+.rel-btn-item:hover{background:var(--blue-xl);border-color:var(--blue);color:var(--blue);transform:none;box-shadow:none}
+.rel-btn-item:active{transform:scale(.97)}
+.rel-btn-ico{font-size:.95rem;flex-shrink:0}
+.rel-btn-lbl{line-height:1.2}
+#resultadoRel{border-radius:var(--r-lg);max-height:480px;overflow-y:auto;scrollbar-width:thin}
+
+/* RESPONSIVE */
+@media(max-width:480px){
+  .menu-btn .m-ico{font-size:1.3rem}
+  .menu-btn{font-size:.62rem;padding:12px 3px}
+  .rel-btn-grid{grid-template-columns:1fr}
+  .dash-stats{grid-template-columns:1fr 1fr}
+  .tank-chevron{width:20px;height:20px;font-size:.6rem}
+}
+@media(max-width:360px){
+  .menu-btn{font-size:.6rem;padding:10px 2px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>🐟 AquaGestor PRO</h1>
+      <p>ERP completo para Piscicultura</p>
+    </div>
+    <div class="header-badge" id="headerBadge">🐟 — peixes</div>
+  </div>
+</header>
+
+<div class="container">
+    <div id="menu">
+        <div class="menu-grid">
+            <button class="menu-btn" onclick="nav('tanques')"><span class="m-ico">🏞️</span>Tanques</button>
+            <button class="menu-btn" onclick="nav('lotes')"><span class="m-ico">🐟</span>Lotes</button>
+            <button class="menu-btn" onclick="nav('biometria')"><span class="m-ico">📏</span>Biometria</button>
+            <button class="menu-btn" onclick="nav('classificacao')"><span class="m-ico">🔀</span>Classif.</button>
+            <button class="menu-btn" onclick="nav('alimentacao')"><span class="m-ico">🌾</span>Alimentação</button>
+            <button class="menu-btn" onclick="nav('racao')"><span class="m-ico">📦</span>Compras</button>
+            <button class="menu-btn" onclick="nav('mao')"><span class="m-ico">👷</span>Mão de Obra</button>
+            <button class="menu-btn" onclick="nav('relatorios')"><span class="m-ico">📊</span>Relatórios</button>
+        </div>
+        <div class="dash-card">
+            <strong style="font-size:.75rem;opacity:.8;letter-spacing:.8px;text-transform:uppercase;">📌 Painel Rápido</strong>
+            <div class="dash-stats">
+                <div class="dash-stat"><div class="dash-stat-val" id="dashPeixes">—</div><div class="dash-stat-lbl">🐟 Peixes</div></div>
+                <div class="dash-stat"><div class="dash-stat-val" id="dashLotes">—</div><div class="dash-stat-lbl">📦 Lotes</div></div>
+                <div class="dash-stat"><div class="dash-stat-val" id="dashRacao">—</div><div class="dash-stat-lbl">🌾 Ração em estoque</div></div>
+                <div class="dash-stat"><div class="dash-stat-val" id="dashColabs">—</div><div class="dash-stat-lbl">👷 Colaboradores</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TANQUES -->
+    <div id="tanques" class="hidden">
+        <div class="section-header">
+            <div class="card-header" style="margin-bottom:0;">🏞️ Tanques</div>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
+        </div>
+        <div class="card">
+            <div class="card-title">➕ Tanque Individual</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div class="field"><label>Número do tanque</label><input type="text" id="tnum" placeholder="ex: T01"></div>
+              <div class="field"><label>Volume (m³)</label><input type="number" id="tvol" placeholder="ex: 50" step="0.1"></div>
+              <div class="field"><label>Malha / Tipo</label><input type="text" id="tmalha" placeholder="ex: 10mm"></div>
+              <div class="field"><label>Material</label><select id="tmat"><option>Inox</option><option>PVC</option><option>Geomembrana</option></select></div>
+            </div>
+            <button onclick="addTanque()" class="btn-full" style="margin-top:8px;">💾 Salvar Tanque</button>
+        </div>
+
+        <div class="card" style="background: #f8fafc;">
+            <div class="card-title">⚡ Criação em Lote</div>
+            <small>Gera automaticamente o próximo número disponível</small>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+              <div class="field"><label>Quantidade</label><input type="number" id="loteQtde" min="1" value="5"></div>
+              <div class="field"><label>Prefixo</label><input type="text" id="lotePrefix" value="T"></div>
+              <div class="field"><label>Volume padrão (m³)</label><input type="number" id="loteVol" step="0.1" value="14"></div>
+              <div class="field"><label>Malha padrão</label><input type="text" id="loteMalha" value="10mm"></div>
+              <div class="field" style="grid-column:1/-1"><label>Material</label><select id="loteMat"><option>Inox</option><option>PVC</option><option>Geomembrana</option></select></div>
+            </div>
+            <button onclick="addMultiplosTanques()" class="btn-teal btn-full" style="margin-top:8px;">🚀 Criar Múltiplos</button>
+        </div>
+
+        <div id="tanquesLista" class="scroll-list"></div>
+    </div>
+
+    <!-- LOTES -->
+    <div id="lotes" class="hidden">
+        <div class="section-header">
+            <div class="card-header" style="margin-bottom:0;">🐟 Lotes</div>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
+        </div>
+        <div class="card">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div class="field"><label>Qtd. total de peixes</label><input type="number" id="lqtd" placeholder="ex: 2000"></div>
+              <div class="field"><label>Valor alevinos (R$)</label><input type="number" id="lvalor" placeholder="ex: 1200.00" step="0.01"></div>
+              <div class="field"><label>Fornecedor</label><input type="text" id="lfornecedor" placeholder="Nome do fornecedor"></div>
+              <div class="field"><label>Cidade de origem</label><input type="text" id="lcidadeOrigem" placeholder="Ex: Patos de Minas"></div>
+              <div class="field"><label>Peso médio alevino (g)</label><input type="number" id="lpesoMedioAlevino" placeholder="ex: 5" step="0.1"></div>
+              <div class="field"><label>Data de estocagem</label><input type="date" id="ldataEstocagem"></div>
+            </div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--c-text-2);">📌 Distribuição por Tanques (apenas disponíveis):</label>
+            <select id="lTanquesSelect" multiple size="3" style="height:140px"></select>
+            <small>🔹 Segure para múltipla seleção (apenas tanques vazios)</small>
+            <button onclick="addLote()" class="btn-full">🎣 Registrar Lote</button>
+        </div>
+        <div id="lotesLista" class="scroll-list"></div>
+    </div>
+
+    <!-- BIOMETRIA -->
+    <div id="biometria" class="hidden">
+        <div class="section-header">
+            <div class="card-header" style="margin-bottom:0;">📏 Biometria</div>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
+        </div>
+        <div class="card">
+            <select id="bioTanque" style="height:60px"></select>
+            <div id="bioInfoLote" class="card" style="background:#f0f9ff; margin-top:8px; font-size:0.85rem;">
+                Selecione um tanque ocupado para ver as informações
+            </div>
+            <hr>
+            <strong>📊 Amostragem Múltipla</strong>
+            <small>Adicione várias amostras para calcular o peso médio real</small>
+            <div style="background:#f8fafc; padding:10px; border-radius:16px; margin:8px 0;">
+                <div class="flex-row" style="align-items:flex-end;">
+                    <div class="field" style="flex:2;margin:0;"><label>Peso da amostra (kg)</label><input type="number" id="amostraPeso" placeholder="ex: 1.85" step="0.01"></div>
+                    <div class="field" style="flex:1;margin:0;"><label>Nº de peixes</label><input type="number" id="amostraQtde" placeholder="ex: 10" step="1"></div>
+                    <button onclick="adicionarAmostra()" class="btn-success btn-sm" style="margin:0;align-self:flex-end;white-space:nowrap;">➕ Add</button>
+                </div>
+            </div>
+            <div id="listaAmostras" class="scroll-list" style="max-height: 200px; margin: 8px 0;"></div>
+            <div class="flex-row">
+                <button onclick="calcularMediaAmostras()" class="btn-success">📊 Calcular Média e Registrar</button>
+                <button onclick="limparAmostras()" class="btn-outline">🗑️ Limpar Amostras</button>
+            </div>
+            <small>Adicione quantas amostras quiser. O sistema calculará o peso médio ponderado automaticamente.</small>
+        </div>
+        <div id="biometriasLista" class="scroll-list"></div>
+    </div>
+
+<!-- CLASSIFICAÇÃO E REPICAGEM -->
+<div id="classificacao" class="hidden">
+    <div class="section-header">
+        <div class="card-header" style="margin-bottom:0;">📊 Classificação & Repicagem</div>
+        <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
+    </div>
+    
+    <!-- Origem -->
+    <div class="card">
+        <strong>📤 TANQUE DE ORIGEM</strong>
+        <select id="origemTanque" style="height:50px" onchange="carregarInfoOrigem()"></select>
+        <div id="infoOrigem" class="card" style="background:#f0f9ff; margin-top:8px; font-size:0.85rem;">
+            Selecione um tanque ocupado
+        </div>
+    </div>
+    
+    <!-- Destinos -->
+    <div class="card">
+        <strong>🎯 TRANSFERÊNCIA PARA NOVOS TANQUES</strong>
+        <small>Distribua os peixes do tanque de origem para tanques disponíveis</small>
+        
+        <div id="areaRepicagem"></div>
+        
+        <button onclick="adicionarDestino()" class="btn-outline btn-sm" style="margin-top:8px;">➕ Adicionar Tanque de Destino</button>
+        <button onclick="executarClassificacao()" class="btn-success" style="width:100%; margin-top:12px;">🎯 Executar Transferência</button>
+    </div>
+    
+    <!-- Histórico -->
+    <div class="card">
+        <strong>📜 HISTÓRICO DE TRANSFERÊNCIAS</strong>
+        <div id="historicoClassificacoes" class="scroll-list" style="max-height: 200px;"></div>
+    </div>
+</div>
+
+    <!-- ALIMENTAÇÃO -->
+    <div id="alimentacao" class="hidden">
+        <div class="section-header">
+            <div class="card-header" style="margin-bottom:0;">🌾 Alimentação & Mortalidade</div>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
+        </div>
+        <div style="display: flex; gap: 8px; margin: 8px 0;">
+            <button id="tabAlimentacaoBtn" style="flex:1; background:#0a7ea4;" onclick="mostrarAbaAlimentacao()">🍽️ Alimentação</button>
+            <button id="tabMortalidadeBtn" style="flex:1; background:#c2410c;" onclick="mostrarAbaMortalidade()">⚠️ Mortalidade</button>
+        </div>
+        <div id="abaAlimentacao">
+            <div class="flex-row" style="align-items: center;">
+                <div style="flex:1;">
+                    <strong>🥤 Copo</strong>
+                    <input type="number" id="pesoCopo" placeholder="kg" step="0.1" value="2.5" style="padding:8px 12px; margin:4px 0;">
+                    <small>kg</small>
+                </div>
+                <div style="flex:2;">
+                    <strong>📊 Tratos/dia</strong>
+                    <input type="number" id="numTratosPorDia" placeholder="Nº de tratos" min="1" max="50" value="4" style="padding:8px 12px; margin:4px 0;">
+                    <small>1 a 50 tratos</small>
+                </div>
+            </div>
+            <div class="card">
+                <strong>⏰ Horário do Primeiro e Último Trato</strong>
+                <div class="flex-row">
+                    <input type="time" id="horaPrimeiraRacao" value="08:00" style="flex:1;">
+                    <input type="time" id="horaUltimaRacao" value="17:00" style="flex:1;">
+                </div>
+                <button onclick="configurarTratos()" class="btn-sm">📅 Calcular Horários dos Tratos</button>
+                <div id="horariosTratos" class="card" style="margin-top:8px; background:#f0f9ff; font-size:0.85rem;">
+                    Nenhum horário configurado. Clique em "Calcular Horários".
+                </div>
+            </div>
+<!-- Botão para 1 trato em todos tanques -->
+<div class="card">
+    <button onclick="fornecerUmTratoParaTodosTanques()" class="btn-success" style="width:100%; background:#0f766e;">🎯 Fornecer 1º Trato para TODOS os Tanques</button>
+    <small>Fornece o primeiro trato pendente de cada tanque (respeitando a ordem dos tratos)</small>
+</div>
+
+<!-- Botão para Concluir Dia -->
+<div class="card">
+    <button onclick="concluirDiaAlimentacao()" class="btn-success" style="width:100%; background:#15803d;">✅ Concluir Dia de Alimentação</button>
+    <small>Finaliza o dia, registra consumo consolidado e prepara para amanhã</small>
+</div>
+
+<div class="card">
+    <button onclick="resetarDiaTodosTanques()" class="btn-danger" style="width:100%;">🔄 Resetar Dia em TODOS os Tanques</button>
+    <small>Remove toda alimentação do dia e retorna ao estoque</small>
+</div>
+            <div class="card">
+                <label>⚙️ Fator de Conversão Alimentar (CA):</label>
+                <select id="caSelectRacao">
+                    <option value="1.0">CA 1.0 (alta eficiência)</option>
+                    <option value="1.2">CA 1.2</option>
+                    <option value="1.4" selected>CA 1.4 (recomendado)</option>
+                    <option value="1.6">CA 1.6</option>
+                    <option value="1.8">CA 1.8</option>
+                    <option value="2.0">CA 2.0</option>
+                </select>
+                <button onclick="calcularRacaoPorTanque()">📊 Calcular Ração Diária por Tanque</button>
+            </div>
+            <div id="tratosTanquesContainer"></div>
+            <div class="card">
+                <strong>🍽️ Lançar Consumo Manual</strong>
+                <select id="alimTanque" style="height:50px"></select>
+                <input type="number" id="alimKg" placeholder="Quantidade de ração (kg)" step="0.1">
+                <button onclick="registrarAlimentacao()">🍽️ Lançar Consumo</button>
+            </div>
+        </div>
+<div id="abaMortalidade" style="display:none;">
+    <div class="card">
+        <strong>⚠️ Registrar Mortalidade</strong>
+        <select id="mortTanque" style="height:50px"></select>
+        <input type="number" id="mortQtde" placeholder="Nº de peixes mortos">
+        <select id="motivoMorte" style="margin:8px 0;">
+            <option value="">-- Motivo (opcional) --</option>
+            <option value="Doença">🦠 Doença</option>
+            <option value="Predador">🐊 Predador</option>
+            <option value="Qualidade água">💧 Qualidade da água</option>
+            <option value="Temperatura">🌡️ Temperatura</option>
+            <option value="Oxigênio">🫧 Baixo oxigênio</option>
+            <option value="Alimentação">🍽️ Problema alimentação</option>
+            <option value="Manejo">👨‍🌾 Erro de manejo</option>
+            <option value="Outro">📝 Outro</option>
+        </select>
+        <button onclick="registrarMortalidade()">⚠️ Registrar Mortalidade</button>
+    </div>
+</div>
+        <div id="consumoDiario" class="scroll-list"></div>
+    </div>
+
+    <!-- COMPRAS DE RAÇÃO -->
+    <div id="racao" class="hidden">
+        <div class="section-header">
+            <div class="card-header" style="margin-bottom:0;">📦 Compra de Ração</div>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
+        </div>
+        <div class="card">
+            <strong>🏷️ Modelos de Ração (pré-cadastro)</strong>
+            <small>Cadastre marcas com características fixas</small>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+              <div class="field"><label>Marca</label><input type="text" id="novaMarcaModelo" placeholder="Ex: Supra"></div>
+              <div class="field"><label>Tipo de Pellet</label><input type="text" id="novoPelletModelo" placeholder="ex: 4-6mm" list="pelletSuggestions"></div>
+              <div class="field"><label>Proteína (%)</label><input type="number" id="novaPbModelo" placeholder="ex: 32" step="0.1"></div>
+              <div class="field"><label>Peso do saco (kg)</label><input type="number" id="novaPesoModelo" placeholder="25" step="0.1" value="25"></div>
+            </div>
+            <button onclick="adicionarModeloRacao()" class="btn-full" style="margin-top:4px;">➕ Salvar Modelo</button>
+            <div id="listaModelosRacao" class="scroll-list" style="max-height: 180px; margin-top: 12px;"></div>
+        </div>
+        <div class="card">
+            <strong>⚡ Compra Rápida (selecione um modelo)</strong>
+            <select id="selectModeloRacao" onchange="carregarModeloParaCompra()">
+                <option value="">-- Selecione um modelo --</option>
+            </select>
+            <hr>
+            <input type="text" id="marcaR" placeholder="Marca *">
+            <input type="number" id="pbR" placeholder="Proteína Bruta (%)" step="0.1">
+            <input type="text" id="pelletR" placeholder="Pellet" list="pelletSuggestionsCompra">
+            <input type="number" id="pesoR" placeholder="Peso do saco (kg)" step="0.1">
+            <input type="number" id="qtdR" placeholder="Quantidade de sacos *" step="1" value="0">
+            <input type="number" id="valorR" placeholder="Valor por saco (R$) *" step="0.01" value="0">
+            <button onclick="addItemCarrada()">📦 Adicionar à carrada</button>
+        </div>
+        <div id="itensCarrada"></div>
+        <div class="flex-row">
+            <input type="number" id="freteTotal" placeholder="Frete total (R$)" step="0.01" style="flex:2;">
+            <button onclick="finalizarCarrada()" style="background:#0891b2; flex:1;">✅ Finalizar Compra</button>
+        </div>
+        <h3>📦 Estoque Atual</h3>
+        <div id="estoqueRacao" class="scroll-list"></div>
+    </div>
+
+    <!-- MÃO DE OBRA -->
+    <div id="mao" class="hidden">
+        <div class="section-header">
+            <div class="card-header" style="margin-bottom:0;">👷 Colaboradores</div>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
+        </div>
+        <div class="card">
+            <div class="card-title">➕ Novo Colaborador</div>
+            <div class="field"><label>Nome</label><input type="text" id="cnome" placeholder="Nome completo"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div class="field"><label>Tipo</label><select id="ctipo"><option value="mensal">Mensalista</option><option value="diaria">Diarista</option></select></div>
+              <div class="field"><label>Valor base (R$)</label><input type="number" id="cvalor" placeholder="ex: 2200" step="0.01"></div>
+            </div>
+            <button onclick="addColaborador()" class="btn-full" style="margin-top:8px;">➕ Adicionar Colaborador</button>
+        </div>
+        <div class="card">
+            <div class="card-title">💰 Adiantamento / Vale</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div class="field"><label>ID do colaborador</label><input type="number" id="adIdColab" placeholder="ex: 4001"></div>
+              <div class="field"><label>Valor (R$)</label><input type="number" id="adValor" placeholder="ex: 300.00" step="0.01"></div>
+            </div>
+            <button onclick="addAdiantamento()" class="btn-full" style="margin-top:8px;">💸 Registrar Vale</button>
+        </div>
+        <div id="colabLista" class="scroll-list"></div>
+    </div>
+
+    <!-- RELATÓRIOS -->
+    <div id="relatorios" class="hidden">
+        <div class="section-header">
+            <div class="card-header" style="margin-bottom:0;">📊 Relatórios</div>
+            <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar</button>
+        </div>
+
+        <div class="rel-groups">
+            <!-- Grupo 1: Produção & Crescimento -->
+            <div class="rel-group">
+                <div class="rel-group-header" onclick="toggleRelGroup(this)">
+                    <div class="rel-group-title">
+                        <div class="rg-ico" style="background:#e0f7ff;font-size:1.1rem;">📈</div>
+                        Produção &amp; Crescimento
+                    </div>
+                    <span class="rel-group-chevron">▼</span>
+                </div>
+                <div class="rel-group-body">
+                    <div class="rel-btn-grid">
+                        <button class="rel-btn-item" onclick="relProducao()"><span class="rel-btn-ico">📈</span><span class="rel-btn-lbl">Produção Geral</span></button>
+                        <button class="rel-btn-item" onclick="relCurvaCrescimento()"><span class="rel-btn-ico">📊</span><span class="rel-btn-lbl">Curva de Crescimento</span></button>
+                        <button class="rel-btn-item" onclick="relBiomassaDetalhada()"><span class="rel-btn-ico">⚖️</span><span class="rel-btn-lbl">Biomassa Detalhada</span></button>
+                        <button class="rel-btn-item" onclick="relTanques()"><span class="rel-btn-ico">🏞️</span><span class="rel-btn-lbl">Ocupação de Tanques</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grupo 2: Financeiro & Custos -->
+            <div class="rel-group">
+                <div class="rel-group-header" onclick="toggleRelGroup(this)">
+                    <div class="rel-group-title">
+                        <div class="rg-ico" style="background:#fef3c7;font-size:1.1rem;">💰</div>
+                        Financeiro &amp; Custos
+                    </div>
+                    <span class="rel-group-chevron">▼</span>
+                </div>
+                <div class="rel-group-body">
+                    <div class="rel-btn-grid">
+                        <button class="rel-btn-item" onclick="relCustos()"><span class="rel-btn-ico">💰</span><span class="rel-btn-lbl">Custos Resumido</span></button>
+                        <button class="rel-btn-item" onclick="relCustosDetalhados()"><span class="rel-btn-ico">📋</span><span class="rel-btn-lbl">Custos Detalhados</span></button>
+                        <button class="rel-btn-item" onclick="relFinanceiroFolha()"><span class="rel-btn-ico">👥</span><span class="rel-btn-lbl">Folha de Pagamento</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grupo 3: Alimentação & Estoque -->
+            <div class="rel-group">
+                <div class="rel-group-header" onclick="toggleRelGroup(this)">
+                    <div class="rel-group-title">
+                        <div class="rg-ico" style="background:#dcfce7;font-size:1.1rem;">🌾</div>
+                        Alimentação &amp; Estoque
+                    </div>
+                    <span class="rel-group-chevron">▼</span>
+                </div>
+                <div class="rel-group-body">
+                    <div class="rel-btn-grid">
+                        <button class="rel-btn-item" onclick="relConsumoRacao()"><span class="rel-btn-ico">🌾</span><span class="rel-btn-lbl">Consumo de Ração</span></button>
+                        <button class="rel-btn-item" onclick="relEstoqueCompleto()"><span class="rel-btn-ico">🥣</span><span class="rel-btn-lbl">Estoque Completo</span></button>
+                        <button class="rel-btn-item" onclick="relMortalidade()"><span class="rel-btn-ico">📉</span><span class="rel-btn-lbl">Mortalidade</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultadoRel" class="card" style="margin-top:4px;"></div>
+    </div>
+</div>
+
+<div id="toastMessage" class="message"></div>
+
+<script>
+// ==================== AUXILIARES ====================
+function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+function loadData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
+
+function showMessage(msg, isError = false) {
+    const toast = document.getElementById('toastMessage');
+    toast.textContent = msg;
+    toast.style.background = isError ? '#b91c1c' : '#0a7ea4';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2700);
+}
+
+function isTanqueOcupado(numTanque) {
+    let lotes = loadData("lotes");
+    return lotes.some(l => l.tanques.some(t => t.num === numTanque && t.qtdPeixes > 0));
+}
+
+function getInfoTanqueOcupado(numTanque) {
+    let lotes = loadData("lotes");
+    for (let l of lotes) {
+        let tanque = l.tanques.find(t => t.num === numTanque);
+        if (tanque && tanque.qtdPeixes > 0) {
+            return { loteId: l.id, qtdPeixes: tanque.qtdPeixes, lote: l };
+        }
+    }
+    return null;
+}
+
+function atualizarSelectTanques(selectId, tipo = 'todos') {
+    let tanques = loadData("tanques");
+    let select = document.getElementById(selectId);
+    if (!select) return;
+    let options = [];
+    if (tipo === 'distribuicao') {
+        tanques.forEach(t => {
+            if (!isTanqueOcupado(t.num)) {
+                options.push(`<option value="${t.num}">${t.num} (${t.vol}m³) ${t.malha ? `- ${t.malha}` : ''}</option>`);
+            }
+        });
+    } else if (tipo === 'ocupados') {
+        tanques.forEach(t => {
+            if (isTanqueOcupado(t.num)) {
+                options.push(`<option value="${t.num}">${t.num} (${t.vol}m³) ${t.malha ? `- ${t.malha}` : ''}</option>`);
+            }
+        });
+    } else {
+        tanques.forEach(t => {
+            options.push(`<option value="${t.num}">${t.num} (${t.vol}m³)</option>`);
+        });
+    }
+    select.innerHTML = options.length ? options.join('') : '<option value="">Nenhum tanque disponível</option>';
+}
+
+// ==================== TANQUES ====================
+function addTanque() {
+    let num = document.getElementById("tnum").value.trim();
+    let vol = parseFloat(document.getElementById("tvol").value);
+    let malha = document.getElementById("tmalha").value;
+    let material = document.getElementById("tmat").value;
+    if(!num || isNaN(vol) || vol <= 0) { showMessage("Preencha número e volume", true); return; }
+    let tanques = loadData("tanques");
+    if(tanques.some(t => t.num === num)) { showMessage("Tanque já existe!", true); return; }
+    tanques.push({ id: Date.now(), num, vol, malha, material });
+    saveData("tanques", tanques);
+    renderTanques();
+    document.getElementById("tnum").value = "";
+    document.getElementById("tvol").value = "";
+    document.getElementById("tmalha").value = "";
+    showMessage(`Tanque ${num} adicionado`);
+}
+
+function addMultiplosTanques() {
+    let quantidade = parseInt(document.getElementById("loteQtde").value);
+    let prefixo = document.getElementById("lotePrefix").value.trim();
+    let volume = parseFloat(document.getElementById("loteVol").value);
+    let malha = document.getElementById("loteMalha").value;
+    let material = document.getElementById("loteMat").value;
+    if(isNaN(quantidade) || quantidade <= 0 || isNaN(volume) || volume <= 0) { showMessage("Dados inválidos", true); return; }
+    if(!prefixo) prefixo = "T";
+    let tanquesExistentes = loadData("tanques");
+    let numerosExistentes = tanquesExistentes.filter(t => t.num.startsWith(prefixo)).map(t => {
+        let num = parseInt(t.num.substring(prefixo.length), 10);
+        return isNaN(num) ? 0 : num;
+    }).filter(n => n > 0);
+    let maiorNumero = numerosExistentes.length ? Math.max(...numerosExistentes) : 0;
+    let proximo = maiorNumero + 1;
+    let novos = [];
+    let nomes = [];
+    for(let i = 0; i < quantidade; i++) {
+        let numAtual = proximo + i;
+        let nome = `${prefixo}${numAtual.toString().padStart(2, '0')}`;
+        if(tanquesExistentes.some(t => t.num === nome)) continue;
+        novos.push({ id: Date.now() + i, num: nome, vol: volume, malha, material });
+        nomes.push(nome);
+    }
+    if(!novos.length) { showMessage("Nenhum tanque criado (duplicados)", true); return; }
+    saveData("tanques", [...tanquesExistentes, ...novos]);
+    renderTanques();
+    showMessage(`${novos.length} tanques criados: ${nomes.join(', ')}`);
+}
+
+function renderTanques() {
+    let tanques = loadData("tanques");
+    let div = document.getElementById("tanquesLista");
+    if(!tanques.length) { div.innerHTML = "<div class='card'>Nenhum tanque cadastrado</div>"; return; }
+    div.innerHTML = tanques.map(t => {
+        let ocupado = isTanqueOcupado(t.num);
+        let statusBadge = ocupado ? '<span class="badge-ocupado">🐟 Ocupado</span>' : '<span class="badge-disponivel">✅ Disponível</span>';
+        let liberarBtn = ocupado ? `<button onclick="liberarTanque('${t.num}')" class="btn-success btn-sm" style="margin-left:8px">🔄 Liberar</button>` : '';
+        return `<div class='card'><strong>${t.num}</strong> | ${t.vol}m³ | ${t.malha || '-'} | ${t.material} ${statusBadge}<button onclick="excluirTanque(${t.id})" class="btn-danger btn-sm" style="float:right">🗑️</button>${liberarBtn}</div>`;
+    }).join('');
+    atualizarSelectTanques("lTanquesSelect", "distribuicao");
+    atualizarSelectTanques("bioTanque", "ocupados");
+    atualizarSelectTanques("alimTanque", "ocupados");
+}
+
+function excluirTanque(id) {
+    let tanques = loadData("tanques");
+    let tanque = tanques.find(t => t.id === id);
+    if (tanque && isTanqueOcupado(tanque.num)) {
+        showMessage("Não é possível excluir tanque ocupado. Libere primeiro.", true);
+        return;
+    }
+    saveData("tanques", tanques.filter(t => t.id !== id));
+    renderTanques();
+    showMessage("Tanque removido");
+}
+
+function liberarTanque(numTanque) {
+    let lotes = loadData("lotes");
+    let loteIndex = -1;
+    let tanqueIndex = -1;
+    for (let i = 0; i < lotes.length; i++) {
+        let idx = lotes[i].tanques.findIndex(t => t.num === numTanque);
+        if (idx !== -1) {
+            loteIndex = i;
+            tanqueIndex = idx;
+            break;
+        }
+    }
+    if (loteIndex === -1) { showMessage("Tanque não está ocupado", true); return; }
+    let lote = lotes[loteIndex];
+    let tanqueRemovido = lote.tanques[tanqueIndex];
+    let peixesRemovidos = tanqueRemovido.qtdPeixes;
+    if (confirm(`Despescar tanque ${numTanque}? Removerá ${peixesRemovidos} peixes do lote #${lote.id}.`)) {
+        lote.tanques.splice(tanqueIndex, 1);
+        lote.qtdTotal -= peixesRemovidos;
+        if (lote.tanques.length === 0 || lote.qtdTotal <= 0) {
+            lotes.splice(loteIndex, 1);
+            showMessage(`Lote #${lote.id} finalizado.`);
+        } else {
+            showMessage(`Tanque ${numTanque} liberado.`);
+        }
+        saveData("lotes", lotes);
+        renderLotes();
+        renderTanques();
+    }
+}
+
+// ==================== LOTES ====================
+function addLote() {
+    let qtd = parseFloat(document.getElementById("lqtd").value);
+    let valorTotal = parseFloat(document.getElementById("lvalor").value);
+    let fornecedor = document.getElementById("lfornecedor").value.trim();
+    let cidadeOrigem = document.getElementById("lcidadeOrigem").value.trim();
+    let pesoMedioAlevino = parseFloat(document.getElementById("lpesoMedioAlevino").value);
+    let dataEstocagem = document.getElementById("ldataEstocagem").value;
+    let tanquesSel = Array.from(document.getElementById("lTanquesSelect").selectedOptions).map(o => o.value);
+    
+    if (isNaN(qtd) || qtd <= 0) { showMessage("Quantidade inválida", true); return; }
+    if (tanquesSel.length === 0) { showMessage("Selecione tanques", true); return; }
+    for (let t of tanquesSel) { if (isTanqueOcupado(t)) { showMessage(`Tanque ${t} ocupado`, true); return; } }
+    
+    let qtdPorTanque = Math.floor(qtd / tanquesSel.length);
+    let biomassaInicial = isNaN(pesoMedioAlevino) ? 0 : (pesoMedioAlevino / 1000) * qtd;
+    
+    let novoLote = {
+        id: Date.now(),
+        qtdTotal: qtd,
+        valorAlevinos: valorTotal || 0,
+        custoUnitario: qtd > 0 ? (valorTotal / qtd) : 0,
+        fornecedor: fornecedor || "Não informado",
+        cidadeOrigem: cidadeOrigem || "Não informada",
+        pesoMedioAlevino: isNaN(pesoMedioAlevino) ? 0 : pesoMedioAlevino,
+        dataEstocagem: dataEstocagem || new Date().toISOString().slice(0, 10),
+        biomassaInicial: biomassaInicial,
+        tanques: tanquesSel.map(num => ({ num, qtdPeixes: qtdPorTanque, mortalidade: 0, consumoRacao: 0 })),
+        biometrias: []
+    };
+    let lotes = loadData("lotes");
+    lotes.push(novoLote);
+    saveData("lotes", lotes);
+    renderLotes();
+    renderTanques();
+    showMessage(`Lote #${novoLote.id} registrado | Biomassa inicial: ${biomassaInicial.toFixed(1)}kg`);
+    
+    document.getElementById("lqtd").value = "";
+    document.getElementById("lvalor").value = "";
+    document.getElementById("lfornecedor").value = "";
+    document.getElementById("lcidadeOrigem").value = "";
+    document.getElementById("lpesoMedioAlevino").value = "";
+    document.getElementById("ldataEstocagem").value = "";
+}
+
+function renderLotes() {
+    let lotes = loadData("lotes");
+    let div = document.getElementById("lotesLista");
+    if (!lotes.length) { div.innerHTML = "<div class='card'>Nenhum lote ativo</div>"; return; }
+    
+    div.innerHTML = lotes.map(l => {
+        let consumoTotal = calcularConsumoRacaoLote(l);
+        let biomassaTotal = calcularBiomassaTotalLote(l);
+        let ca = calcularCALote(l);
+        let custos = calcularCustoPorKGLote(l);
+        let ultimaBiometria = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length - 1] : null;
+        let pesoMedioAtual = ultimaBiometria ? ultimaBiometria.pesoMedio : l.pesoMedioAlevino;
+        
+        // Calcular custo de cada tanque
+        let tanquesInfo = l.tanques.map(t => {
+            let custoTanque = calcularCustoTanque(l, t.num);
+            return `<span style="display:inline-block; background:#f0f9ff; padding:4px 8px; border-radius:12px; margin:4px; font-size:0.7rem;">
+                ${t.num}: ${t.qtdPeixes} peixes | R$ ${custoTanque.custoPorKg.toFixed(2)}/kg
+            </span>`;
+        }).join('');
+        
+        return `<div class='card' style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <strong style="font-size:1.1rem;">🐟 Lote #${l.id}</strong>
+                <button onclick="excluirLote(${l.id})" class="btn-danger btn-sm">❌ Remover</button>
+            </div>
+            <small>📅 ${l.dataEstocagem} | 📍 ${l.cidadeOrigem} | Fornecedor: ${l.fornecedor}</small><br>
+            <strong>📊 Dados do Lote:</strong><br>
+            🐟 População: ${l.qtdTotal} peixes | ⚖️ Peso médio atual: ${pesoMedioAtual.toFixed(0)}g<br>
+            📦 Biomassa atual: <strong>${biomassaTotal.toFixed(2)} kg</strong><br>
+            🌾 Consumo total de ração: <strong>${consumoTotal.toFixed(2)} kg</strong><br>
+            📈 Conversão Alimentar (CA): <strong>${ca.toFixed(2)}</strong> ${ca < 1.5 ? '✅ Ótimo' : (ca < 1.8 ? '👍 Bom' : '⚠️ Alto')}<br>
+            💰 <strong>Custos de Produção:</strong><br>
+            &nbsp;&nbsp;🎣 Alevinos: R$ ${l.valorAlevinos.toFixed(2)}<br>
+            &nbsp;&nbsp;🌾 Ração: R$ ${calcularCustoRacaoLote(l).toFixed(2)}<br>
+            &nbsp;&nbsp;💰 <strong>Custo Total: R$ ${custos.custoTotal.toFixed(2)}</strong><br>
+            &nbsp;&nbsp;⚖️ <strong>Custo por Kg: R$ ${custos.custoPorKg.toFixed(2)}/kg</strong><br>
+            <hr style="margin:8px 0;">
+            <strong>🏞️ Tanques do Lote:</strong><br>
+            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                ${tanquesInfo}
+            </div>
+            <details style="margin-top:8px;">
+                <summary style="cursor:pointer; color:#0a7ea4;">📋 Detalhes dos tanques</summary>
+                ${l.tanques.map(t => {
+                    let custo = calcularCustoTanque(l, t.num);
+                    let pesoMedioTanque = t.ultimoPesoMedio || l.pesoMedioAlevino;
+                    return `<div style="background:#f8fafc; padding:8px; border-radius:12px; margin:4px 0;">
+                        <strong>${t.num}</strong> - ${t.qtdPeixes} peixes | ${pesoMedioTanque.toFixed(0)}g<br>
+                        🌾 Consumo: ${(t.consumoRacao || 0).toFixed(2)} kg | ⚖️ Biomassa: ${custo.biomassa.toFixed(2)} kg<br>
+                        💰 Custo total: R$ ${custo.custoTotal.toFixed(2)} | Custo/kg: R$ ${custo.custoPorKg.toFixed(2)}
+                    </div>`;
+                }).join('')}
+            </details>
+        </div>`;
+    }).join('');
+}
+
+function excluirLote(id) {
+    if(confirm("Remover este lote liberará todos os tanques?")) {
+        let lotes = loadData("lotes");
+        saveData("lotes", lotes.filter(l => l.id !== id));
+        renderLotes();
+        renderTanques();
+        showMessage("Lote removido.");
+    }
+}
+
+// ==================== TABELAS AUXILIARES ====================
+// ==================== CORREÇÃO DA TABELA GPD ====================
+const tabelaGPD = [
+    { peso: 1, gpd: 0.08 }, // 1g → 0.08g/dia (levaria ~12.5 dias para chegar a 2g)
+    { peso: 2, gpd: 0.15 }, // 2g → 0.15g/dia
+    { peso: 3, gpd: 0.22 }, // 3g → 0.22g/dia
+    { peso: 5, gpd: 0.35 }, // 5g → 0.35g/dia
+    { peso: 10, gpd: 0.65 }, // 10g → 0.65g/dia
+    { peso: 20, gpd: 1.2 }, // 20g → 1.2g/dia
+    { peso: 50, gpd: 2.0 }, // 50g → 2.0g/dia
+    { peso: 100, gpd: 3.2 }, // 100g → 3.2g/dia
+    { peso: 200, gpd: 4.5 }, // 200g → 4.5g/dia
+    { peso: 300, gpd: 5.5 }, // 300g → 5.5g/dia
+    { peso: 500, gpd: 6.5 }, // 500g → 6.5g/dia
+    { peso: 800, gpd: 7.5 }, // 800g → 7.5g/dia
+    { peso: 1000, gpd: 8.0 }, // 1kg → 8g/dia
+    { peso: 1300, gpd: 8.5 } // 1.3kg → 8.5g/dia
+];
+
+function obterGPD(pesoMedioGramas) {
+    if (pesoMedioGramas <= 0) return 0.05;
+    
+    // Busca o valor na tabela ou interpola
+    for (let i = 0; i < tabelaGPD.length - 1; i++) {
+        const p1 = tabelaGPD[i].peso;
+        const p2 = tabelaGPD[i + 1].peso;
+        const gpd1 = tabelaGPD[i].gpd;
+        const gpd2 = tabelaGPD[i + 1].gpd;
+        
+        if (pesoMedioGramas >= p1 && pesoMedioGramas <= p2) {
+            // Interpolação linear
+            const fator = (pesoMedioGramas - p1) / (p2 - p1);
+            const gpd = gpd1 + (gpd2 - gpd1) * fator;
+            return parseFloat(gpd.toFixed(3));
+        }
+    }
+    
+    // Para pesos maiores que o último valor da tabela
+    if (pesoMedioGramas > tabelaGPD[tabelaGPD.length - 1].peso) {
+        const ultimo = tabelaGPD[tabelaGPD.length - 1];
+        const penultimo = tabelaGPD[tabelaGPD.length - 2];
+        // Extrapolação suave (diminui ganho para peixes muito grandes)
+        const incremento = (ultimo.gpd - penultimo.gpd) / (ultimo.peso - penultimo.peso);
+        let gpd = ultimo.gpd + incremento * (pesoMedioGramas - ultimo.peso);
+        gpd = Math.min(gpd, 9.5); // Limite máximo
+        return parseFloat(gpd.toFixed(3));
+    }
+    
+    return 0.5; // fallback seguro
+}
+
+function getCAEfetiva(pesoGramas, caSelecionado) {
+    if (pesoGramas <= 30) return 1.0;
+    return caSelecionado;
+}
+
+function tipoRacaoPorPeso(pesoGramas) {
+    if (pesoGramas <= 1) return "🍼 Pó (55% PB)";
+    if (pesoGramas <= 2) return "⚫ 0.8–1mm (45% PB)";
+    if (pesoGramas <= 6) return "🟤 1.3–1.5mm (45% PB)";
+    if (pesoGramas <= 15) return "🟠 1.8–2.3mm (40% PB)";
+    if (pesoGramas <= 50) return "🟡 2–3mm (36% PB)";
+    if (pesoGramas <= 250) return "🟢 4–6mm (32% PB)";
+    return "🔵 6–8mm (32% PB)";
+}
+
+// ==================== CÁLCULO DE RAÇÃO POR TANQUE ====================
+function calcularRacaoPorTanque() {
+    let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value);
+    let tanquesOcupados = [];
+    let lotes = loadData("lotes");
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let ultimaBiometria = null;
+                if (lote.biometrias && lote.biometrias.length) {
+                    ultimaBiometria = lote.biometrias[lote.biometrias.length - 1];
+                }
+                let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (lote.pesoMedioAlevino || 5);
+                tanquesOcupados.push({ num: tanque.num, qtdPeixes: tanque.qtdPeixes, pesoMedio: pesoMedio, loteId: lote.id });
+            }
+        }
+    }
+    if (tanquesOcupados.length === 0) { showMessage("Nenhum tanque ocupado no momento", true); return; }
+    let html = `<div class='card'><strong>📊 Cálculo de Ração por Tanque (CA: ${caSelecionado})</strong><hr>`;
+    let totalRacaoKg = 0;
+    for (let t of tanquesOcupados) {
+        let gpd = obterGPD(t.pesoMedio);
+        let ca = getCAEfetiva(t.pesoMedio, caSelecionado);
+        let ganhoBiomassaKg = (t.qtdPeixes * gpd) / 1000;
+        let racaoKg = ganhoBiomassaKg * ca;
+        totalRacaoKg += racaoKg;
+        let tipoRacao = tipoRacaoPorPeso(t.pesoMedio);
+        html += `<div style="margin-bottom: 12px; padding: 8px; background: #f8fafc; border-radius: 16px;">
+            <strong>🏞️ Tanque ${t.num}</strong> (Lote #${t.loteId})<br>
+            🐟 ${t.qtdPeixes} peixes | ⚖️ Peso médio: ${t.pesoMedio.toFixed(1)}g<br>
+            📈 GPD: ${gpd.toFixed(2)}g | CA: ${ca.toFixed(2)}<br>
+            🍽️ <strong>Ração recomendada: ${racaoKg.toFixed(2)} kg/dia</strong><br>
+            📦 Tipo: ${tipoRacao}<br>
+            <button onclick="aplicarRacaoTanque('${t.num}', ${racaoKg.toFixed(2)})" class="btn-sm" style="margin-top:6px;">✅ Lançar este consumo</button>
+        </div>`;
+    }
+    html += `<hr><strong>📦 TOTAL GERAL: ${totalRacaoKg.toFixed(2)} kg/dia</strong></div>`;
+    document.getElementById("tratosTanquesContainer").innerHTML = html;
+}
+
+function aplicarRacaoTanque(tanqueNum, kgRacao) {
+    let estoque = loadData("estoqueRacao");
+    let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
+    if (totalEstoque < kgRacao) { showMessage(`Estoque insuficiente! Disponível: ${totalEstoque.toFixed(1)}kg`, true); return false; }
+    let consumoRestante = kgRacao;
+    for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
+        if (estoque[i].kgTotal >= consumoRestante) { estoque[i].kgTotal -= consumoRestante; consumoRestante = 0; }
+        else { consumoRestante -= estoque[i].kgTotal; estoque[i].kgTotal = 0; }
+    }
+    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (info) {
+        let lotes = loadData("lotes");
+        let lote = lotes.find(l => l.id === info.loteId);
+        let tanque = lote.tanques.find(t => t.num === tanqueNum);
+        tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
+        saveData("lotes", lotes);
+    }
+    showMessage(`✅ ${kgRacao.toFixed(1)}kg registrado para o tanque ${tanqueNum}`);
+    renderEstoqueRacao();
+    renderConsumoDiario();
+    return true;
+}
+
+// ==================== SISTEMA DE TRATOS DIÁRIOS ====================
+let horariosTratos = [];
+
+function configurarTratos() {
+    let primeira = document.getElementById("horaPrimeiraRacao").value;
+    let ultima = document.getElementById("horaUltimaRacao").value;
+    let numTratos = parseInt(document.getElementById("numTratosPorDia").value);
+    if (!primeira || !ultima) { showMessage("Defina os horários da primeira e última ração", true); return; }
+    if (isNaN(numTratos) || numTratos < 1) { showMessage("Número de tratos inválido (mínimo 1)", true); return; }
+    if (numTratos > 50) { showMessage("Número máximo de tratos é 50", true); return; }
+    let inicio = new Date(`2000-01-01T${primeira}:00`);
+    let fim = new Date(`2000-01-01T${ultima}:00`);
+    if (fim <= inicio) { showMessage("Horário da última ração deve ser após a primeira", true); return; }
+    let diffHoras = (fim - inicio) / (1000 * 60 * 60);
+    let intervaloHoras = (numTratos > 1) ? diffHoras / (numTratos - 1) : 0;
+    horariosTratos = [];
+    for (let i = 0; i < numTratos; i++) {
+        let horario = new Date(inicio.getTime() + i * intervaloHoras * 60 * 60 * 1000);
+        let horaStr = horario.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        horariosTratos.push({ hora: horaStr, tratado: false, kgFornecidos: 0 });
+    }
+    let html = "<strong>📅 Horários dos Tratos:</strong><br>";
+    horariosTratos.forEach((t, idx) => {
+        html += `<span style="display:inline-block; background:#e2e8f0; padding:4px 12px; border-radius:20px; margin:4px;">${idx+1}º: ${t.hora}</span> `;
+    });
+    document.getElementById("horariosTratos").innerHTML = html;
+    showMessage(`${numTratos} tratos configurados entre ${primeira} e ${ultima}`);
+    padronizarTratosTodosTanques();
+}
+
+function padronizarTratosTodosTanques() {
+    if (horariosTratos.length === 0) { showMessage("Configure os horários dos tratos primeiro!", true); return; }
+    let lotes = loadData("lotes");
+    let tanquesAfetados = 0;
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let novosTratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
+                let tratosAntigos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                if (tratosAntigos.length > 0) {
+                    for (let i = 0; i < Math.min(novosTratos.length, tratosAntigos.length); i++) {
+                        if (tratosAntigos[i] && tratosAntigos[i].tratado) {
+                            novosTratos[i].tratado = true;
+                            novosTratos[i].kgFornecidos = tratosAntigos[i].kgFornecidos || 0;
+                        }
+                    }
+                }
+                localStorage.setItem(`tratos_${tanque.num}`, JSON.stringify(novosTratos));
+                tanquesAfetados++;
+            }
+        }
+    }
+    renderTratosTanques();
+    showMessage(`✅ ${tanquesAfetados} tanques padronizados com ${horariosTratos.length} tratos cada!`);
+}
+
+function renderTratosTanques() {
+    let tanquesOcupados = [];
+    let lotes = loadData("lotes");
+    let pesoCopo = parseFloat(document.getElementById("pesoCopo").value) || 2.5;
+    let suspensos = JSON.parse(localStorage.getItem("alimentacaoSuspensa")) || [];
+
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let ultimaBiometria = lote.biometrias && lote.biometrias.length
+                    ? lote.biometrias[lote.biometrias.length - 1] : null;
+                let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (lote.pesoMedioAlevino || 5);
+                let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
+                let gpd = obterGPD(pesoMedio);
+                let ca = getCAEfetiva(pesoMedio, caSelecionado);
+                let ganhoBiomassaKg = (tanque.qtdPeixes * gpd) / 1000;
+                let racaoDiariaRecomendada = ganhoBiomassaKg * ca;
+                let tratosSalvos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                if (tratosSalvos.length === 0 && horariosTratos.length > 0) {
+                    tratosSalvos = horariosTratos.map(t => ({ hora: t.hora, tratado: false, kgFornecidos: 0 }));
+                }
+                tanquesOcupados.push({
+                    num: tanque.num, qtdPeixes: tanque.qtdPeixes, pesoMedio, loteId: lote.id,
+                    gpd, ca, racaoDiariaRecomendada,
+                    tipoRacao: tipoRacaoPorPeso(pesoMedio), tratos: tratosSalvos,
+                    suspenso: suspensos.includes(tanque.num)
+                });
+            }
+        }
+    }
+
+    if (tanquesOcupados.length === 0) {
+        document.getElementById("tratosTanquesContainer").innerHTML =
+            "<div class=\'card\' style=\'text-align:center;color:var(--text3);padding:24px;\'>🏞️ Nenhum tanque ocupado</div>";
+        return;
+    }
+
+    // Preserve open state
+    let abertos = new Set();
+    document.querySelectorAll(".tank-details[id]").forEach(el => {
+        if (el.style.display !== "none") abertos.add(el.id);
+    });
+
+    let html = "";
+    for (let t of tanquesOcupados) {
+        let razaoPorTrato = horariosTratos.length > 0
+            ? t.racaoDiariaRecomendada / horariosTratos.length
+            : t.racaoDiariaRecomendada;
+        let coposPorTrato = pesoCopo > 0 ? (razaoPorTrato / pesoCopo).toFixed(1) : "—";
+        let totalKgForn   = t.tratos.reduce((s, tr) => s + (tr.kgFornecidos || 0), 0);
+        let faltaKg       = Math.max(0, t.racaoDiariaRecomendada - totalKgForn);
+        let todosTratados = t.tratos.length > 0 && t.tratos.every(tr => tr.tratado);
+        let progPct       = t.racaoDiariaRecomendada > 0
+            ? Math.min(100, (totalKgForn / t.racaoDiariaRecomendada) * 100) : 0;
+
+        let statusClass = t.suspenso ? "jejum" : (todosTratados ? "concluido" : "pendente");
+        let statusLabel = t.suspenso ? "⛔ Jejum" : (todosTratados ? "✅ Concluído" : "⏳ Pendente");
+        let barClass    = t.suspenso ? "jejum" : (todosTratados ? "done" : "");
+        let cardClass   = t.suspenso ? "suspended" : (todosTratados ? "done" : "");
+
+        let detailId  = `td_${t.num}`;
+        let chevronId = `chv_${t.num}`;
+        let isOpen    = abertos.has(detailId);
+
+        // Tratos list
+        let tratosHtml = "";
+        t.tratos.forEach((trato, idx) => {
+            let kgTrato = razaoPorTrato;
+            let done    = trato.tratado;
+            let rowCls  = t.suspenso ? "suspended" : (done ? "done-trato" : "");
+            let action  = "";
+            if (!t.suspenso) {
+                if (!done) {
+                    action = `<button onclick="registrarTrato(\'${t.num}\',${idx},${kgTrato.toFixed(2)})" class="btn-success btn-xs" style="margin:0;">✅ Fornecer</button>`;
+                } else {
+                    action = `<div style="display:flex;align-items:center;gap:5px;">
+                        <span style="font-size:.72rem;color:var(--green);font-weight:600;">✅ ${trato.kgFornecidos.toFixed(1)} kg</span>
+                        <button onclick="reverterTrato(\'${t.num}\',${idx},${trato.kgFornecidos.toFixed(2)})" class="btn-xs btn-amber" style="margin:0;">↩️</button>
+                    </div>`;
+                }
+            } else {
+                action = `<span style="font-size:.7rem;color:var(--purple);">⛔ Suspenso</span>`;
+            }
+            tratosHtml += `<div class="trato-item ${rowCls}">
+                <div>
+                    <div class="trato-label">${idx+1}º Trato — ${trato.hora}</div>
+                    <div class="trato-info">${kgTrato.toFixed(2)} kg · ${coposPorTrato} copos</div>
+                </div>
+                ${action}
+            </div>`;
+        });
+
+        let acoesBtns = !t.suspenso
+            ? `<button onclick="preencherTodosTratos(\'${t.num}\')" class="btn-sm btn-success" style="margin:0;">🎯 Todos pendentes</button>
+               <button onclick="resetarTratosTanqueRefatorado(\'${t.num}\')" class="btn-sm btn-outline" style="margin:0;">🔄 Resetar</button>
+               <button onclick="reverterDiaTanque(\'${t.num}\')" class="btn-xs btn-amber" style="margin:0;">↩️ Estornar dia</button>
+               <button onclick="suspenderAlimentacaoTanque(\'${t.num}\',\'Despesca\')" class="btn-xs btn-danger" style="margin:0;">⛔ Jejum</button>`
+            : `<button onclick="reativarAlimentacaoTanque(\'${t.num}\')" class="btn-sm btn-success" style="margin:0;">✅ Reativar</button>`;
+
+        html += `<div class="tank-card ${cardClass}">
+            <div class="tank-header" onclick="toggleTank(\'${t.num}\')">
+                <div class="tank-info">
+                    <div class="tank-name">🏞️ Tanque ${t.num}
+                        <small style="font-weight:500;color:var(--text3);font-size:.65rem;display:inline;margin-left:5px;">Lote #${t.loteId}</small>
+                    </div>
+                    <div class="tank-meta">${t.qtdPeixes} peixes · ${t.pesoMedio.toFixed(0)}g · ${t.tipoRacao}</div>
+                    <div class="tank-progress-wrap">
+                        <div class="tank-progress-bar">
+                            <div class="tank-progress-fill ${barClass}" style="width:${progPct.toFixed(1)}%"></div>
+                        </div>
+                        <div class="tank-progress-text">${totalKgForn.toFixed(1)} / ${t.racaoDiariaRecomendada.toFixed(1)} kg · faltam ${faltaKg.toFixed(1)} kg</div>
+                    </div>
+                </div>
+                <div class="tank-right">
+                    <span class="status-pill ${statusClass}">${statusLabel}</span>
+                    <span class="tank-chevron ${isOpen ? "open" : ""}" id="${chevronId}">▼</span>
+                </div>
+            </div>
+            <div class="tank-details" id="${detailId}" style="display:${isOpen ? "block" : "none"}">
+                <div style="font-size:.75rem;font-weight:600;color:var(--text2);margin-bottom:10px;">
+                    🍽️ ${t.racaoDiariaRecomendada.toFixed(2)} kg/dia · CA ${t.ca.toFixed(2)} · GPD ${t.gpd.toFixed(2)}g · Copo ${pesoCopo}kg
+                </div>
+                ${tratosHtml}
+                <div class="flex-row" style="margin-top:10px;">${acoesBtns}</div>
+            </div>
+        </div>`;
+    }
+    document.getElementById("tratosTanquesContainer").innerHTML = html;
+}
+
+function toggleTank(num) {
+    let det = document.getElementById("td_" + num);
+    let chv = document.getElementById("chv_" + num);
+    if (!det) return;
+    let opening = det.style.display === "none";
+    det.style.display = opening ? "block" : "none";
+    if (chv) chv.classList.toggle("open", opening);
+}
+
+
+// Substitua a função registrarTrato existente por esta:
+function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    if (tratos[tratoIndex] && tratos[tratoIndex].tratado) { showMessage("Este trato já foi fornecido hoje!", true); return; }
+    
+    let estoque = loadData("estoqueRacao");
+    let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
+    if (totalEstoque < kgRecomendado) { showMessage(`Estoque insuficiente! Disponível: ${totalEstoque.toFixed(1)}kg`, true); return; }
+    
+    let consumoRestante = kgRecomendado;
+    for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
+        if (estoque[i].kgTotal >= consumoRestante) { estoque[i].kgTotal -= consumoRestante; consumoRestante = 0; }
+        else { consumoRestante -= estoque[i].kgTotal; estoque[i].kgTotal = 0; }
+    }
+    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
+    
+    tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: true, kgFornecidos: kgRecomendado };
+    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+    
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (info) {
+        let lotes = loadData("lotes");
+        let lote = lotes.find(l => l.id === info.loteId);
+        let tanque = lote.tanques.find(t => t.num === tanqueNum);
+        tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRecomendado;
+        saveData("lotes", lotes);
+    }
+    
+    showMessage(`✅ Tanque ${tanqueNum} - Trato ${tratoIndex+1} fornecido: ${kgRecomendado.toFixed(1)}kg`);
+    renderEstoqueRacao();
+    renderConsumoDiario();
+    renderTratosTanques();
+    renderLotes(); // Atualiza custos
+    
+    // Verificar se foi o último trato
+    if (tratoIndex + 1 >= tratos.length || tratos[tratoIndex + 1]?.tratado) {
+        verificarTodosTanquesConcluidos();
+    }
+}
+
+function preencherTodosTratos(tanqueNum) {
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let info = getInfoTanqueOcupado(tanqueNum);
+    let racaoDiaria = 0;
+    if (info) {
+        let pesoMedio = info.lote.biometrias && info.lote.biometrias.length ?
+            info.lote.biometrias[info.lote.biometrias.length - 1].pesoMedio : (info.lote.pesoMedioAlevino || 5);
+        let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
+        let gpd = obterGPD(pesoMedio);
+        let ca = getCAEfetiva(pesoMedio, caSelecionado);
+        let ganhoBiomassaKg = (info.qtdPeixes * gpd) / 1000;
+        racaoDiaria = ganhoBiomassaKg * ca;
+    }
+    let kgPorTrato = racaoDiaria / tratos.length;
+    let estoque = loadData("estoqueRacao");
+    let totalNecessario = tratos.filter(t => !t.tratado).length * kgPorTrato;
+    let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
+    if (totalEstoque < totalNecessario) { showMessage(`Estoque insuficiente! Necessário: ${totalNecessario.toFixed(1)}kg`, true); return; }
+    for (let i = 0; i < tratos.length; i++) {
+        if (!tratos[i].tratado) {
+            let consumoRestante = kgPorTrato;
+            for (let j = 0; j < estoque.length && consumoRestante > 0; j++) {
+                if (estoque[j].kgTotal >= consumoRestante) { estoque[j].kgTotal -= consumoRestante; consumoRestante = 0; }
+                else { consumoRestante -= estoque[j].kgTotal; estoque[j].kgTotal = 0; }
+            }
+            tratos[i] = { ...tratos[i], tratado: true, kgFornecidos: kgPorTrato };
+        }
+    }
+    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
+    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+    if (info) {
+        let lotes = loadData("lotes");
+        let lote = lotes.find(l => l.id === info.loteId);
+        let tanque = lote.tanques.find(t => t.num === tanqueNum);
+        tanque.consumoRacao = (tanque.consumoRacao || 0) + totalNecessario;
+        saveData("lotes", lotes);
+    }
+    showMessage(`✅ Tanque ${tanqueNum} - Todos os tratos pendentes foram fornecidos!`);
+    renderEstoqueRacao();
+    renderConsumoDiario();
+    renderTratosTanques();
+}
+
+function fornecerUmTratoParaTodosTanques() {
+    let tanquesOcupados = [];
+    let lotes = loadData("lotes");
+    let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
+    let totalFornecido = 0;
+    let tanquesProcessados = 0;
+    let erros = [];
+    if (horariosTratos.length === 0) {
+        showMessage("Configure os horários dos tratos primeiro! Clique em 'Calcular Horários dos Tratos'", true);
+        return;
+    }
+    let numTratos = horariosTratos.length;
+    let estoque = loadData("estoqueRacao");
+    let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
+    if (totalEstoque <= 0) { showMessage("Estoque de ração vazio! Compre ração primeiro.", true); return; }
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let ultimaBiometria = null;
+                if (lote.biometrias && lote.biometrias.length) ultimaBiometria = lote.biometrias[lote.biometrias.length - 1];
+                let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (lote.pesoMedioAlevino || 5);
+                let gpd = obterGPD(pesoMedio);
+                let ca = getCAEfetiva(pesoMedio, caSelecionado);
+                let ganhoBiomassaKg = (tanque.qtdPeixes * gpd) / 1000;
+                let racaoDiariaRecomendada = ganhoBiomassaKg * ca;
+                tanquesOcupados.push({
+                    num: tanque.num, qtdPeixes: tanque.qtdPeixes, pesoMedio: pesoMedio,
+                    loteId: lote.id, racaoDiariaRecomendada: racaoDiariaRecomendada,
+                    tratos: JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || []
+                });
+            }
+        }
+    }
+    if (tanquesOcupados.length === 0) { showMessage("Nenhum tanque ocupado no momento", true); return; }
+    let totalKgNecessario = 0;
+    let tanquesParaProcessar = [];
+    for (let t of tanquesOcupados) {
+        let tratos = t.tratos;
+        if (tratos.length === 0 && horariosTratos.length > 0) {
+            tratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
+        }
+        let primeiroTratoIndex = tratos.findIndex(tr => tr.tratado === false);
+        if (primeiroTratoIndex !== -1) {
+            let kgPorTrato = t.racaoDiariaRecomendada / numTratos;
+            totalKgNecessario += kgPorTrato;
+            tanquesParaProcessar.push({ tanque: t, tratoIndex: primeiroTratoIndex, kgPorTrato: kgPorTrato, tratos: tratos });
+        }
+    }
+    if (tanquesParaProcessar.length === 0) { showMessage("Todos os tanques já receberam o primeiro trato hoje!", true); return; }
+    if (totalEstoque < totalKgNecessario) { showMessage(`Estoque insuficiente! Necessário: ${totalKgNecessario.toFixed(1)}kg, Disponível: ${totalEstoque.toFixed(1)}kg`, true); return; }
+    let estoqueAtual = [...estoque];
+    for (let item of tanquesParaProcessar) {
+        let t = item.tanque;
+        let kgPorTrato = item.kgPorTrato;
+        let primeiroTratoIndex = item.tratoIndex;
+        let tratos = item.tratos;
+        if (tratos[primeiroTratoIndex] && tratos[primeiroTratoIndex].tratado) continue;
+        let consumoRestante = kgPorTrato;
+        for (let i = 0; i < estoqueAtual.length && consumoRestante > 0; i++) {
+            if (estoqueAtual[i].kgTotal >= consumoRestante) { estoqueAtual[i].kgTotal -= consumoRestante; consumoRestante = 0; }
+            else { consumoRestante -= estoqueAtual[i].kgTotal; estoqueAtual[i].kgTotal = 0; }
+        }
+        if (consumoRestante > 0.01) { erros.push(`Tanque ${t.num}: faltou ${consumoRestante.toFixed(1)}kg no estoque`); continue; }
+        tratos[primeiroTratoIndex] = { ...tratos[primeiroTratoIndex], tratado: true, kgFornecidos: kgPorTrato, registradoEm: new Date().toLocaleString() };
+        localStorage.setItem(`tratos_${t.num}`, JSON.stringify(tratos));
+        let info = getInfoTanqueOcupado(t.num);
+        if (info) {
+            let lotesData = loadData("lotes");
+            let lote = lotesData.find(l => l.id === info.loteId);
+            if (lote) {
+                let tanque = lote.tanques.find(tq => tq.num === t.num);
+                if (tanque) tanque.consumoRacao = (tanque.consumoRacao || 0) + kgPorTrato;
+                saveData("lotes", lotesData);
+            }
+        }
+        totalFornecido += kgPorTrato;
+        tanquesProcessados++;
+    }
+    saveData("estoqueRacao", estoqueAtual.filter(item => item.kgTotal > 0));
+    renderEstoqueRacao();
+    renderConsumoDiario();
+    renderTratosTanques();
+    if (tanquesProcessados > 0) showMessage(`✅ ${tanquesProcessados} tanques receberam o primeiro trato! Total: ${totalFornecido.toFixed(1)}kg (média de ${(totalFornecido / tanquesProcessados).toFixed(2)}kg por tanque)`);
+    if (erros.length > 0) showMessage(`⚠️ Erros: ${erros.join('; ')}`, true);
+}
+
+// ==================== FUNÇÕES DE REVERSÃO ====================
+function reverterTrato(tanqueNum, tratoIndex, kgEstornar) {
+    if (!confirm(`Deseja estornar/reverter o trato ${tratoIndex+1} do tanque ${tanqueNum}?`)) return;
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    if (!tratos[tratoIndex] || !tratos[tratoIndex].tratado) { showMessage("Este trato não está marcado como fornecido!", true); return; }
+    let kgAtual = tratos[tratoIndex].kgFornecidos || 0;
+    if (kgEstornar > kgAtual + 0.01) { showMessage(`Não é possível estornar mais do que foi fornecido (${kgAtual.toFixed(2)}kg)`, true); return; }
+    let estoque = loadData("estoqueRacao");
+    estoque.push({ id: Date.now() + Math.random(), marca: `Estorno - Trato ${tratoIndex+1}`, pb: 32, pellet: "estornado", kgTotal: kgEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
+    let novoKgFornecido = kgAtual - kgEstornar;
+    if (novoKgFornecido <= 0.01) tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: false, kgFornecidos: 0 };
+    else tratos[tratoIndex] = { ...tratos[tratoIndex], kgFornecidos: novoKgFornecido };
+    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (info) {
+        let lotesData = loadData("lotes");
+        let lote = lotesData.find(l => l.id === info.loteId);
+        if (lote) {
+            let tanque = lote.tanques.find(t => t.num === tanqueNum);
+            if (tanque) tanque.consumoRacao = Math.max(0, (tanque.consumoRacao || 0) - kgEstornar);
+            saveData("lotes", lotesData);
+        }
+    }
+    saveData("estoqueRacao", estoque);
+    renderEstoqueRacao();
+    renderConsumoDiario();
+    renderTratosTanques();
+    showMessage(`🔄 Trato ${tratoIndex+1} do tanque ${tanqueNum} estornado! ${kgEstornar.toFixed(2)}kg retornados.`);
+}
+
+function reverterDiaTanque(tanqueNum) {
+    if (!confirm(`⚠️ ATENÇÃO: ESTORNAR TODOS os tratos do tanque ${tanqueNum}?`)) return;
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let kgTotalEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
+    if (kgTotalEstornar <= 0) { showMessage("Nenhum trato fornecido para estornar.", true); return; }
+    let estoque = loadData("estoqueRacao");
+    estoque.push({ id: Date.now() + Math.random(), marca: `Estorno total - Tanque ${tanqueNum}`, pb: 32, pellet: "estornado", kgTotal: kgTotalEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (info) {
+        let lotesData = loadData("lotes");
+        let lote = lotesData.find(l => l.id === info.loteId);
+        if (lote) {
+            let tanque = lote.tanques.find(t => t.num === tanqueNum);
+            if (tanque) tanque.consumoRacao = Math.max(0, (tanque.consumoRacao || 0) - kgTotalEstornar);
+            saveData("lotes", lotesData);
+        }
+    }
+    let novosTratos = tratos.map(t => ({ ...t, tratado: false, kgFornecidos: 0 }));
+    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(novosTratos));
+    saveData("estoqueRacao", estoque);
+    renderEstoqueRacao();
+    renderConsumoDiario();
+    renderTratosTanques();
+    showMessage(`🔄 Tanque ${tanqueNum}: ${kgTotalEstornar.toFixed(2)}kg estornados.`);
+}
+
+function suspenderAlimentacaoTanque(tanqueNum, justificativa = "") {
+    if (!confirm(`🐟 Suspender alimentação para o tanque ${tanqueNum}?`)) return;
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let kgTotalEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
+    if (kgTotalEstornar > 0) {
+        let estoque = loadData("estoqueRacao");
+        estoque.push({ id: Date.now() + Math.random(), marca: `Jejum - Tanque ${tanqueNum}`, pb: 32, pellet: "suspenso", kgTotal: kgTotalEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
+        saveData("estoqueRacao", estoque);
+        let info = getInfoTanqueOcupado(tanqueNum);
+        if (info) {
+            let lotesData = loadData("lotes");
+            let lote = lotesData.find(l => l.id === info.loteId);
+            if (lote) {
+                let tanque = lote.tanques.find(t => t.num === tanqueNum);
+                if (tanque) tanque.consumoRacao = Math.max(0, (tanque.consumoRacao || 0) - kgTotalEstornar);
+                saveData("lotes", lotesData);
+            }
+        }
+    }
+    let suspensos = JSON.parse(localStorage.getItem("alimentacaoSuspensa")) || [];
+    if (!suspensos.includes(tanqueNum)) suspensos.push(tanqueNum);
+    localStorage.setItem("alimentacaoSuspensa", JSON.stringify(suspensos));
+    let novosTratos = tratos.map(t => ({ ...t, tratado: false, kgFornecidos: 0, suspenso: true, suspensoJustificativa: justificativa || "Não informada", suspensoEm: new Date().toLocaleString() }));
+    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(novosTratos));
+    renderTratosTanques();
+    showMessage(`⛔ Alimentação do tanque ${tanqueNum} SUSPENSA! ${kgTotalEstornar.toFixed(2)}kg estornados.`);
+}
+
+function reativarAlimentacaoTanque(tanqueNum) {
+    if (!confirm(`Reativar a alimentação para o tanque ${tanqueNum}?`)) return;
+    let suspensos = JSON.parse(localStorage.getItem("alimentacaoSuspensa")) || [];
+    localStorage.setItem("alimentacaoSuspensa", JSON.stringify(suspensos.filter(t => t !== tanqueNum)));
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let novosTratos = tratos.map(t => ({ ...t, suspenso: false, suspensoJustificativa: null, suspensoEm: null }));
+    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(novosTratos));
+    renderTratosTanques();
+    showMessage(`✅ Alimentação do tanque ${tanqueNum} REATIVADA!`);
+}
+
+function resetarTratosTanqueRefatorado(tanqueNum) {
+    if (confirm(`Resetar todos os tratos do dia para o tanque ${tanqueNum}?\\n\\nA ração consumida será retornada ao estoque.`)) {
+        let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+        let kgEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
+        if (kgEstornar > 0) {
+            let estoque = loadData("estoqueRacao");
+            estoque.push({ id: Date.now() + Math.random(), marca: `Estorno - Reset Tanque ${tanqueNum}`, pb: 32, pellet: "estornado", kgTotal: kgEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
+            saveData("estoqueRacao", estoque);
+            let info = getInfoTanqueOcupado(tanqueNum);
+            if (info) {
+                let lotesData = loadData("lotes");
+                let lote = lotesData.find(l => l.id === info.loteId);
+                if (lote) {
+                    let tanque = lote.tanques.find(t => t.num === tanqueNum);
+                    if (tanque) tanque.consumoRacao = Math.max(0, (tanque.consumoRacao || 0) - kgEstornar);
+                    saveData("lotes", lotesData);
+                }
+            }
+            renderEstoqueRacao();
+        }
+        localStorage.removeItem(`tratos_${tanqueNum}`);
+        renderTratosTanques();
+        showMessage(`Tratos do tanque ${tanqueNum} resetados. ${kgEstornar.toFixed(1)}kg retornados ao estoque.`);
+    }
+}
+
+function resetarDiaTodosTanques() {
+    if (!confirm(`⚠️ ATENÇÃO! Resetar TODOS os tratos do dia em TODOS os tanques?\\n\\nA ração consumida será retornada ao estoque.`)) return;
+    let lotes = loadData("lotes");
+    let tanquesResetados = 0;
+    let kgTotalEstornado = 0;
+    let estoque = loadData("estoqueRacao");
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let tratos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                let kgTanque = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
+                if (kgTanque > 0) {
+                    kgTotalEstornado += kgTanque;
+                    let info = getInfoTanqueOcupado(tanque.num);
+                    if (info) {
+                        let loteEncontrado = lotes.find(l => l.id === info.loteId);
+                        if (loteEncontrado) {
+                            let tanqueLote = loteEncontrado.tanques.find(t => t.num === tanque.num);
+                            if (tanqueLote) tanqueLote.consumoRacao = Math.max(0, (tanqueLote.consumoRacao || 0) - kgTanque);
+                        }
+                    }
+                }
+                let novosTratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
+                localStorage.setItem(`tratos_${tanque.num}`, JSON.stringify(novosTratos));
+                tanquesResetados++;
+            }
+        }
+    }
+    if (kgTotalEstornado > 0) {
+        estoque.push({ id: Date.now() + Math.random(), marca: "Estorno - Reset Geral", pb: 32, pellet: "estornado", kgTotal: kgTotalEstornado, valorKg: 0, data: new Date().toLocaleDateString() });
+        saveData("estoqueRacao", estoque);
+    }
+    saveData("lotes", lotes);
+    renderEstoqueRacao();
+    renderConsumoDiario();
+    renderTratosTanques();
+    showMessage(`✅ ${tanquesResetados} tanques resetados! ${kgTotalEstornado.toFixed(1)}kg retornados ao estoque.`);
+}
+
+// ==================== ALIMENTAÇÃO E MORTALIDADE ====================
+function registrarAlimentacao() {
+    let tanqueNum = document.getElementById("alimTanque").value;
+    let kgRacao = parseFloat(document.getElementById("alimKg").value);
+    if(!tanqueNum || isNaN(kgRacao) || kgRacao <= 0) { showMessage("Tanque e kg válidos", true); return; }
+    let estoque = loadData("estoqueRacao");
+    let totalEstoque = estoque.reduce((s,i) => s + i.kgTotal, 0);
+    if(totalEstoque < kgRacao) { showMessage("Estoque insuficiente", true); return; }
+    let consumoRestante = kgRacao;
+    for(let i = 0; i < estoque.length && consumoRestante > 0; i++) {
+        if(estoque[i].kgTotal >= consumoRestante) { estoque[i].kgTotal -= consumoRestante; consumoRestante = 0; } 
+        else { consumoRestante -= estoque[i].kgTotal; estoque[i].kgTotal = 0; }
+    }
+    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if(info) {
+        let lotes = loadData("lotes");
+        let lote = lotes.find(l => l.id === info.loteId);
+        let tanque = lote.tanques.find(t => t.num === tanqueNum);
+        tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
+        saveData("lotes", lotes);
+    }
+    showMessage(`Consumo de ${kgRacao}kg registrado`);
+    renderEstoqueRacao();
+    renderConsumoDiario();
+}
+
+function registrarMortalidade() {
+    let tanqueNum = document.getElementById("mortTanque").value;
+    let mortos = parseInt(document.getElementById("mortQtde").value);
+    if (!tanqueNum || isNaN(mortos) || mortos <= 0) { showMessage("Dados inválidos", true); return; }
+    
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (!info) { showMessage("Tanque não ocupado", true); return; }
+    
+    let lotes = loadData("lotes");
+    let lote = lotes.find(l => l.id === info.loteId);
+    let tanque = lote.tanques.find(t => t.num === tanqueNum);
+    
+    if (tanque.qtdPeixes < mortos) { showMessage("Mortalidade maior que população", true); return; }
+    
+    // Registrar no lote
+    tanque.mortalidade = (tanque.mortalidade || 0) + mortos;
+    tanque.qtdPeixes -= mortos;
+    lote.qtdTotal -= mortos;
+    
+    // Registrar no histórico de mortalidade com data
+    let historico = loadData("historicoMortalidade") || [];
+    historico.push({
+        data: new Date().toISOString(),
+        dataFormatada: new Date().toLocaleString(),
+        tanque: tanqueNum,
+        loteId: info.loteId,
+        quantidade: mortos,
+        populacaoRestante: tanque.qtdPeixes,
+        motivo: document.getElementById("motivoMorte")?.value || "Não informado"
+    });
+    saveData("historicoMortalidade", historico);
+    
+    saveData("lotes", lotes);
+    showMessage(`⚠️ ${mortos} peixes mortos registrados em ${new Date().toLocaleDateString()}`);
+    
+    // Atualizar todas as interfaces
+    renderTanques();
+    renderLotes();
+    renderConsumoDiario();
+    atualizarDashboard();
+    
+    // Limpar campo
+    document.getElementById("mortQtde").value = "";
+}
+
+function renderConsumoDiario() {
+    let div = document.getElementById("consumoDiario");
+    let lotes = loadData("lotes");
+    let consumos = [];
+    lotes.forEach(l => l.tanques.forEach(t => { if(t.consumoRacao) consumos.push(`📊 Tanque ${t.num}: ${t.consumoRacao.toFixed(1)}kg`); }));
+    div.innerHTML = consumos.length ? `<div class='card'>${consumos.join('<br>')}</div>` : "<div class='card'>Nenhum consumo registrado</div>";
+}
+
+function mostrarAbaAlimentacao() {
+    document.getElementById("abaAlimentacao").style.display = "block";
+    document.getElementById("abaMortalidade").style.display = "none";
+    document.getElementById("tabAlimentacaoBtn").style.background = "#0a7ea4";
+    document.getElementById("tabMortalidadeBtn").style.background = "#c2410c";
+    atualizarSelectTanques("alimTanque", "ocupados");
+    atualizarSelectTanques("mortTanque", "ocupados");
+    if (horariosTratos.length === 0) configurarTratos();
+    else renderTratosTanques();
+}
+
+function mostrarAbaMortalidade() {
+    document.getElementById("abaAlimentacao").style.display = "none";
+    document.getElementById("abaMortalidade").style.display = "block";
+    document.getElementById("tabAlimentacaoBtn").style.background = "#4a5568";
+    document.getElementById("tabMortalidadeBtn").style.background = "#9a3412";
+    atualizarSelectTanques("mortTanque", "ocupados");
+}
+
+// ==================== VERIFICAÇÃO DE NOVO DIA ====================
+function verificarENovoDia() {
+    let ultimaData = localStorage.getItem("ultimaDataReset");
+    let hoje = new Date().toLocaleDateString();
+    if (ultimaData !== hoje) {
+        let lotes = loadData("lotes");
+        let tanquesResetados = 0;
+        for (let lote of lotes) {
+            for (let tanque of lote.tanques) {
+                if (tanque.qtdPeixes > 0) {
+                    let novosTratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
+                    localStorage.setItem(`tratos_${tanque.num}`, JSON.stringify(novosTratos));
+                    tanquesResetados++;
+                }
+            }
+        }
+        localStorage.setItem("ultimaDataReset", hoje);
+        if (tanquesResetados > 0) {
+            renderTratosTanques();
+            showMessage(`🌅 Novo dia! ${tanquesResetados} tanques preparados para nova alimentação.`);
+        }
+        return true;
+    }
+    return false;
+}
+
+function iniciarVerificacaoNovoDia() {
+    verificarENovoDia();
+    setInterval(() => verificarENovoDia(), 60000);
+}
+
+// ==================== BIOMETRIA MULTIAMOSTRAGEM ====================
+let amostrasTemp = [];
+
+function adicionarAmostra() {
+    let tanqueNum = document.getElementById("bioTanque").value;
+    let peso = parseFloat(document.getElementById("amostraPeso").value);
+    let qtde = parseInt(document.getElementById("amostraQtde").value);
+    if (!tanqueNum || tanqueNum === "") { showMessage("❌ Selecione um tanque primeiro", true); return; }
+    if (isNaN(peso) || peso <= 0) { showMessage("❌ Informe o peso total da amostra (kg)", true); return; }
+    if (isNaN(qtde) || qtde <= 0) { showMessage("❌ Informe a quantidade de peixes na amostra", true); return; }
+    amostrasTemp.push({ peso: peso, qtde: qtde });
+    renderAmostras();
+    document.getElementById("amostraPeso").value = "";
+    document.getElementById("amostraQtde").value = "";
+    showMessage(`✅ Amostra adicionada: ${qtde} peixes, ${peso.toFixed(2)}kg`);
+}
+
+function renderAmostras() {
+    let div = document.getElementById("listaAmostras");
+    if (!div) return;
+    if (amostrasTemp.length === 0) {
+        div.innerHTML = "<div class='card' style='text-align:center; color:#6b7280;'>Nenhuma amostra adicionada</div>";
+        return;
+    }
+    let totalPeixes = amostrasTemp.reduce((sum, a) => sum + a.qtde, 0);
+    let totalPeso = amostrasTemp.reduce((sum, a) => sum + a.peso, 0);
+    let pesoMedioPonderado = (totalPeso / totalPeixes) * 1000;
+    div.innerHTML = `
+        <div class='card' style="background:#f0fdf4; margin-bottom:8px;">
+            📊 <strong>Resumo das amostras:</strong><br>
+            🐟 Total de peixes amostrados: ${totalPeixes}<br>
+            ⚖️ Peso total das amostras: ${totalPeso.toFixed(2)} kg<br>
+            📏 Peso médio ponderado: ${pesoMedioPonderado.toFixed(1)} g
+        </div>
+        ${amostrasTemp.map((a, idx) => `
+            <div class='card' style="display:flex; justify-content:space-between; align-items:center; padding:8px;">
+                <span>🐟 ${a.qtde} peixes | ${a.peso.toFixed(2)} kg → média ${((a.peso / a.qtde) * 1000).toFixed(1)} g</span>
+                <button onclick="removerAmostra(${idx})" class="btn-danger btn-sm">🗑️</button>
+            </div>
+        `).join('')}
+    `;
+}
+
+function removerAmostra(index) {
+    amostrasTemp.splice(index, 1);
+    renderAmostras();
+    showMessage("Amostra removida");
+}
+
+function limparAmostras() {
+    if (amostrasTemp.length === 0) return;
+    if (confirm("Limpar todas as amostras?")) {
+        amostrasTemp = [];
+        renderAmostras();
+        showMessage("Amostras limpas");
+    }
+}
+
+function carregarInfoTanqueBiometria() {
+    let tanqueNum = document.getElementById("bioTanque").value;
+    let infoDiv = document.getElementById("bioInfoLote");
+    if (!tanqueNum || tanqueNum === "") { infoDiv.innerHTML = "Selecione um tanque ocupado"; return; }
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (!info) { infoDiv.innerHTML = "Tanque vazio."; return; }
+    let ultimaBio = null;
+    if (info.lote.biometrias && info.lote.biometrias.length) {
+        ultimaBio = info.lote.biometrias.slice().reverse().find(b => b.tanque === tanqueNum);
+    }
+    if (ultimaBio) {
+        infoDiv.innerHTML = `<strong>🐟 Lote #${info.loteId}</strong><br>
+        📊 População: ${info.qtdPeixes} peixes<br>
+        📏 Último peso médio: ${ultimaBio.pesoMedio.toFixed(0)} g<br>
+        ⚖️ Biomassa: ${ultimaBio.biomassa.toFixed(1)} kg<br>
+        📅 ${ultimaBio.data}`;
+    } else {
+        infoDiv.innerHTML = `<strong>🐟 Lote #${info.loteId}</strong><br>📊 População: ${info.qtdPeixes} peixes<br>⚖️ Sem biometria ainda.`;
+    }
+}
+
+function renderBiometrias() {
+    let lotes = loadData("lotes");
+    let div = document.getElementById("biometriasLista");
+    let items = [];
+    lotes.forEach(l => {
+        if (l.biometrias?.length) {
+            items.push(...l.biometrias.map(b => ({ ...b, loteId: l.id })));
+        }
+    });
+    if (!items.length) { div.innerHTML = "<div class='card'>Nenhuma biometria registrada</div>"; return; }
+    div.innerHTML = items.slice(-5).reverse().map(b => {
+        let amostrasInfo = "";
+        if (b.amostras && b.amostras.length) {
+            amostrasInfo = `<br>📊 ${b.amostras.length} amostra(s) | ${b.totalPeixesAmostrados} peixes amostrados`;
+        }
+        return `<div class='card'>🐟 Lote ${b.loteId} | ${b.data}<br>📏 Peso médio: ${b.pesoMedio.toFixed(0)}g | ⚖️ Biomassa: ${b.biomassa.toFixed(1)}kg${amostrasInfo}</div>`;
+    }).join('');
+}
+
+function calcularMediaAmostras() {
+    let tanqueNum = document.getElementById("bioTanque").value;
+    if (!tanqueNum || tanqueNum === "") { showMessage("❌ Selecione um tanque ocupado", true); return; }
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (!info) { showMessage("❌ Tanque não ocupado", true); return; }
+    if (amostrasTemp.length === 0) { showMessage("❌ Adicione pelo menos uma amostra", true); return; }
+    let totalPeixesAmostrados = amostrasTemp.reduce((sum, a) => sum + a.qtde, 0);
+    let totalPesoAmostras = amostrasTemp.reduce((sum, a) => sum + a.peso, 0);
+    let pesoMedioGramas = (totalPesoAmostras / totalPeixesAmostrados) * 1000;
+    let biomassa = (pesoMedioGramas / 1000) * info.qtdPeixes;
+    let lotes = loadData("lotes");
+    let lote = lotes.find(l => l.id === info.loteId);
+    if (!lote) return;
+    if (!lote.biometrias) lote.biometrias = [];
+    lote.biometrias.push({
+        data: new Date().toLocaleString(),
+        tanque: tanqueNum,
+        pesoMedio: pesoMedioGramas,
+        biomassa: biomassa,
+        amostras: [...amostrasTemp],
+        totalPeixesAmostrados: totalPeixesAmostrados,
+        totalPesoAmostras: totalPesoAmostras
+    });
+    let tanqueLote = lote.tanques.find(t => t.num === tanqueNum);
+    if (tanqueLote) {
+        tanqueLote.ultimoPesoMedio = pesoMedioGramas;
+        tanqueLote.ultimaBiomassa = biomassa;
+        tanqueLote.ultimaBiometriaData = new Date().toLocaleString();
+    }
+    let biomassaTotalLote = 0;
+    for (let t of lote.tanques) {
+        if (t.ultimaBiomassa) { biomassaTotalLote += t.ultimaBiomassa; }
+        else { biomassaTotalLote += (lote.pesoMedioAlevino / 1000) * t.qtdPeixes; }
+    }
+    lote.biomassaAtual = biomassaTotalLote;
+    saveData("lotes", lotes);
+    let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
+    let gpd = obterGPD(pesoMedioGramas);
+    let ca = getCAEfetiva(pesoMedioGramas, caSelecionado);
+    let ganhoBiomassaKg = (info.qtdPeixes * gpd) / 1000;
+    let novaRacaoDiaria = ganhoBiomassaKg * ca;
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    if (tratos.length > 0 && horariosTratos.length > 0) {
+        let novoKgPorTrato = novaRacaoDiaria / horariosTratos.length;
+        for (let i = 0; i < tratos.length; i++) {
+            if (!tratos[i].tratado) {
+                tratos[i].kgRecomendado = novoKgPorTrato;
+            }
+        }
+        localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+    }
+    showMessage(`✅ BIOMETRIA ATUALIZADA!\n\n📊 Tanque ${tanqueNum}:\n• Peso médio: ${pesoMedioGramas.toFixed(0)} g\n• Biomassa: ${biomassa.toFixed(1)} kg\n• Nova ração diária: ${novaRacaoDiaria.toFixed(2)} kg\n• ${horariosTratos.length} tratos de ${(novaRacaoDiaria / horariosTratos.length).toFixed(2)} kg cada`);
+    renderBiometrias();
+    renderLotes();
+    renderTratosTanques();
+    limparAmostras();
+    atualizarSelectTanques("bioTanque", "ocupados");
+    carregarInfoTanqueBiometria();
+}
+
+// ==================== MODELOS DE RAÇÃO ====================
+let itensCarrada = [];
+
+function adicionarModeloRacao() {
+    let marca = document.getElementById("novaMarcaModelo").value.trim();
+    let pellet = document.getElementById("novoPelletModelo").value.trim();
+    let proteina = parseFloat(document.getElementById("novaPbModelo").value);
+    let pesoSaco = parseFloat(document.getElementById("novaPesoModelo").value);
+    if (!marca) { showMessage("❌ Informe a marca da ração", true); return; }
+    if (!pellet) { showMessage("❌ Informe o tipo de pellet", true); return; }
+    if (isNaN(proteina) || proteina <= 0) proteina = 32;
+    if (isNaN(pesoSaco) || pesoSaco <= 0) pesoSaco = 25;
+    let modelos = loadData("modelosRacao");
+    if (modelos.some(m => m.marca.toLowerCase() === marca.toLowerCase() && m.pellet.toLowerCase() === pellet.toLowerCase())) {
+        showMessage("❌ Modelo já existe para esta marca e pellet", true);
+        return;
+    }
+    modelos.push({ id: Date.now(), marca, pellet, proteina, pesoSaco });
+    saveData("modelosRacao", modelos);
+    renderModelosRacao();
+    document.getElementById("novaMarcaModelo").value = "";
+    document.getElementById("novoPelletModelo").value = "";
+    document.getElementById("novaPbModelo").value = "";
+    document.getElementById("novaPesoModelo").value = "25";
+    showMessage(`✅ Modelo ${marca} (${pellet}) adicionado com sucesso!`);
+}
+
+function renderModelosRacao() {
+    let modelos = loadData("modelosRacao");
+    let div = document.getElementById("listaModelosRacao");
+    let select = document.getElementById("selectModeloRacao");
+    if (!div || !select) { console.error("Elementos não encontrados"); return; }
+    if (!modelos.length) {
+        div.innerHTML = "<div class='card' style='background:#fef2f2;'>⚠️ Nenhum modelo cadastrado. Adicione marcas e tipos fixos acima.</div>";
+        select.innerHTML = '<option value="">-- Nenhum modelo disponível --</option>';
+        return;
+    }
+    div.innerHTML = modelos.map(m => `
+        <div class="modelo-item" style="background:#f8fafc; border-radius:20px; padding:8px 12px; margin:6px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; border:1px solid #e2e8f0;">
+            <div><strong style="color:#0a7ea4;">${m.marca}</strong> <small>${m.pellet} | PB ${m.proteina}% | Saco ${m.pesoSaco}kg</small></div>
+            <button class="btn-danger btn-sm" onclick="excluirModeloRacao(${m.id})">🗑️</button>
+        </div>
+    `).join('');
+    select.innerHTML = '<option value="">-- Selecione um modelo para pré-preencher --</option>' + modelos.map(m => `<option value="${m.id}">${m.marca} - ${m.pellet} (PB ${m.proteina}%, ${m.pesoSaco}kg/saco)</option>`).join('');
+}
+
+function excluirModeloRacao(id) {
+    if (confirm("Remover este modelo de ração?")) {
+        let modelos = loadData("modelosRacao");
+        saveData("modelosRacao", modelos.filter(m => m.id !== id));
+        renderModelosRacao();
+        showMessage("✅ Modelo removido");
+    }
+}
+
+function carregarModeloParaCompra() {
+    let select = document.getElementById("selectModeloRacao");
+    let modeloId = parseInt(select.value);
+    if (!modeloId) {
+        document.getElementById("marcaR").value = "";
+        document.getElementById("pbR").value = "";
+        document.getElementById("pelletR").value = "";
+        document.getElementById("pesoR").value = "";
+        return;
+    }
+    let modelos = loadData("modelosRacao");
+    let modelo = modelos.find(m => m.id === modeloId);
+    if (modelo) {
+        document.getElementById("marcaR").value = modelo.marca;
+        document.getElementById("pbR").value = modelo.proteina;
+        document.getElementById("pelletR").value = modelo.pellet;
+        document.getElementById("pesoR").value = modelo.pesoSaco;
+        document.getElementById("qtdR").value = "";
+        document.getElementById("valorR").value = "";
+        showMessage(`✅ Modelo "${modelo.marca}" carregado! Agora informe quantidade e preço.`);
+    } else {
+        showMessage("❌ Modelo não encontrado", true);
+    }
+}
+
+function addItemCarrada() {
+    let marca = document.getElementById("marcaR").value.trim();
+    let pb = parseFloat(document.getElementById("pbR").value);
+    let pellet = document.getElementById("pelletR").value.trim();
+    let peso = parseFloat(document.getElementById("pesoR").value);
+    let qtd = parseInt(document.getElementById("qtdR").value);
+    let valor = parseFloat(document.getElementById("valorR").value);
+    if (!marca) { showMessage("❌ Preencha a marca", true); return; }
+    if (!pellet) { showMessage("❌ Preencha o tipo de pellet", true); return; }
+    if (isNaN(peso) || peso <= 0) { showMessage("❌ Peso do saco inválido", true); return; }
+    if (isNaN(qtd) || qtd <= 0) { showMessage("❌ Quantidade de sacos deve ser maior que zero", true); return; }
+    if (isNaN(valor) || valor <= 0) { showMessage("❌ Valor do saco inválido", true); return; }
+    itensCarrada.push({ marca, pb: pb || 0, pellet, peso, qtd, valor });
+    renderItensCarrada();
+    document.getElementById("qtdR").value = "";
+    document.getElementById("valorR").value = "";
+    showMessage(`✅ Item ${marca} (${pellet}, ${qtd} sacos) adicionado à carrada`);
+}
+
+function renderItensCarrada() {
+    let div = document.getElementById("itensCarrada");
+    if (!itensCarrada.length) { div.innerHTML = ""; return; }
+    let totalSacos = itensCarrada.reduce((a, i) => a + i.qtd, 0);
+    let totalValor = itensCarrada.reduce((a, i) => a + (i.qtd * i.valor), 0);
+    div.innerHTML = `<div class='card' style="background:#f0fdf4;">
+        <strong>🛒 Itens da compra atual:</strong><br>
+        📦 Total: ${totalSacos} sacos | 💰 Total: R$ ${totalValor.toFixed(2)}<br>
+        <hr style="margin:8px 0;">
+        ${itensCarrada.map((i, idx) => 
+            `${idx+1}. ${i.marca} | ${i.pellet} | ${i.qtd} sacos x R$ ${i.valor.toFixed(2)} = R$ ${(i.qtd * i.valor).toFixed(2)}
+            <button onclick="removerItemCarrada(${idx})" class="btn-danger btn-sm" style="margin-left:8px;">🗑️</button>`
+        ).join('<br>')}
+        <br><button class="btn-outline btn-sm" onclick="limparCarrada()" style="margin-top:8px;">🗑️ Limpar carrada</button>
+    </div>`;
+}
+
+function removerItemCarrada(index) {
+    itensCarrada.splice(index, 1);
+    renderItensCarrada();
+    showMessage("Item removido da carrada");
+}
+
+function limparCarrada() {
+    itensCarrada = [];
+    renderItensCarrada();
+    showMessage("🛒 Carrada limpa");
+}
+
+function finalizarCarrada() {
+    if (itensCarrada.length === 0) { showMessage("❌ Adicione pelo menos um item à carrada", true); return; }
+    let frete = parseFloat(document.getElementById("freteTotal").value) || 0;
+    let totalSacos = itensCarrada.reduce((a, i) => a + i.qtd, 0);
+    let fretePorSaco = totalSacos > 0 ? frete / totalSacos : 0;
+    let estoque = loadData("estoqueRacao");
+    let itensAdicionados = 0;
+    for (let i of itensCarrada) {
+        let custoPorSaco = i.valor + fretePorSaco;
+        let custoKg = custoPorSaco / i.peso;
+        let kgTotal = i.qtd * i.peso;
+        estoque.push({ id: Date.now() + Math.random() + i, marca: i.marca, pb: i.pb, pellet: i.pellet, kgTotal: kgTotal, valorKg: custoKg, data: new Date().toLocaleDateString(), quantidadeSacos: i.qtd, pesoPorSaco: i.peso });
+        itensAdicionados++;
+    }
+    saveData("estoqueRacao", estoque);
+    itensCarrada = [];
+    document.getElementById("freteTotal").value = "";
+    renderItensCarrada();
+    renderEstoqueRacao();
+    atualizarDashboard();
+    showMessage(`✅ Compra finalizada! ${itensAdicionados} itens adicionados ao estoque.`);
+}
+
+function renderEstoqueRacao() {
+    let estoque = loadData("estoqueRacao");
+    let div = document.getElementById("estoqueRacao");
+    if (!estoque.length) { div.innerHTML = "<div class='card'>📦 Estoque vazio. Compre ração para começar.</div>"; return; }
+    let totalKg = estoque.reduce((s, i) => s + i.kgTotal, 0);
+    let totalItens = estoque.length;
+    div.innerHTML = `<div class='card' style="background:#f0f9ff;">
+        <strong>📊 Resumo do Estoque</strong><br>
+        📦 Total: ${totalKg.toFixed(1)} kg | 🏷️ ${totalItens} lotes
+    </div>` + estoque.map(i => `<div class='card'>🥣 <strong>${i.marca}</strong> | ${i.pellet} | PB ${i.pb}%<br>
+        📦 ${i.kgTotal.toFixed(1)}kg | 💰 R$ ${i.valorKg.toFixed(2)}/kg<br>
+        📅 ${i.data} | ${i.quantidadeSacos || '?'} sacos de ${i.pesoPorSaco || i.kgTotal / (i.quantidadeSacos || 1)}kg
+        <button onclick="removerItemEstoque(${i.id})" class="btn-danger btn-sm" style="float:right;">🗑️</button>
+    </div>`).join('');
+}
+
+function removerItemEstoque(id) {
+    if (confirm("Remover este item do estoque?")) {
+        let estoque = loadData("estoqueRacao");
+        saveData("estoqueRacao", estoque.filter(i => i.id !== id));
+        renderEstoqueRacao();
+        showMessage("Item removido do estoque");
+    }
+}
+
+// ==================== MÃO DE OBRA ====================
+function addColaborador() { 
+    let nome = document.getElementById("cnome").value.trim();
+    let tipo = document.getElementById("ctipo").value;
+    let valor = parseFloat(document.getElementById("cvalor").value);
+    if(!nome || isNaN(valor) || valor <= 0) { showMessage("Nome e valor válidos", true); return; }
+    let colabs = loadData("colab"); 
+    colabs.push({ id: Date.now(), nome, tipo, valorBase: valor }); 
+    saveData("colab", colabs); 
+    renderColab(); 
+    document.getElementById("cnome").value = "";
+    document.getElementById("cvalor").value = "";
+    showMessage("Colaborador adicionado");
+}
+
+function renderColab() { 
+    let colaboradores = loadData("colab"); 
+    let adiantamentos = loadData("adiantamentos") || [];
+    let div = document.getElementById("colabLista"); 
+    if(!colaboradores.length) { div.innerHTML = "<div class='card'>Nenhum colaborador</div>"; return; }
+    div.innerHTML = colaboradores.map(col => {
+        let totalAdiant = adiantamentos.filter(a => a.idColab === col.id).reduce((s,a) => s + a.valor, 0);
+        return `<div class='card'><strong>${col.nome}</strong> (ID: ${col.id}) | ${col.tipo} | Base: R$ ${col.valorBase.toFixed(2)} | Vales: R$ ${totalAdiant.toFixed(2)}<button onclick="excluirColab(${col.id})" class="btn-danger btn-sm" style="float:right">🗑️</button></div>`;
+    }).join(''); 
+}
+
+function excluirColab(id){ saveData("colab", loadData("colab").filter(c => c.id !== id)); renderColab(); showMessage("Removido"); }
+
+function addAdiantamento(){ 
+    let idColab = parseInt(document.getElementById("adIdColab").value);
+    let valor = parseFloat(document.getElementById("adValor").value);
+    if(isNaN(idColab) || isNaN(valor) || valor <= 0) { showMessage("ID e valor válidos", true); return; }
+    if(!loadData("colab").some(c => c.id === idColab)) { showMessage("ID não encontrado", true); return; }
+    let adiant = loadData("adiantamentos"); 
+    adiant.push({ idColab, valor, data: new Date().toLocaleDateString() }); 
+    saveData("adiantamentos", adiant); 
+    showMessage("Vale registrado");
+    renderColab();
+}
+
+// ==================== RELATÓRIOS ====================
+function relCustosDetalhados() {
+    let lotes = loadData("lotes");
+    let html = `<div class='card'><strong>💰 RELATÓRIO DE CUSTOS DETALHADO</strong><hr>`;
+    let custoTotalGeral = 0;
+    let biomassaTotalGeral = 0;
+    
+    for (let l of lotes) {
+        let consumoTotal = calcularConsumoRacaoLote(l);
+        let biomassaTotal = calcularBiomassaTotalLote(l);
+        let ca = calcularCALote(l);
+        let custos = calcularCustoPorKGLote(l);
+        let custoRacao = calcularCustoRacaoLote(l);
+        
+        custoTotalGeral += custos.custoTotal;
+        biomassaTotalGeral += biomassaTotal;
+        
+        html += `<div style="margin-bottom:16px; padding:8px; background:#f0f9ff; border-radius:16px;">
+            <strong>🐟 LOTE #${l.id}</strong><br>
+            📅 ${l.dataEstocagem} | Fornecedor: ${l.fornecedor}<br>
+            📦 Biomassa: ${biomassaTotal.toFixed(2)} kg | 🌾 Consumo ração: ${consumoTotal.toFixed(2)} kg<br>
+            📈 CA: ${ca.toFixed(2)} | 💰 Custo total: R$ ${custos.custoTotal.toFixed(2)}<br>
+            💰 Custo por kg: <strong>R$ ${custos.custoPorKg.toFixed(2)}/kg</strong><br>
+            <details><summary style="cursor:pointer;">📋 Detalhamento por tanque</summary>`;
+        
+        for (let t of l.tanques) {
+            let custoTanque = calcularCustoTanque(l, t.num);
+            html += `<div style="margin-left:16px; padding:4px;">• ${t.num}: ${t.qtdPeixes} peixes | ${(t.consumoRacao || 0).toFixed(2)} kg ração | R$ ${custoTanque.custoPorKg.toFixed(2)}/kg</div>`;
+        }
+        
+        html += `</details></div>`;
+    }
+    
+    let custoMedioGeral = biomassaTotalGeral > 0 ? custoTotalGeral / biomassaTotalGeral : 0;
+    html += `<hr><strong>📊 RESUMO GERAL:</strong><br>
+    📦 Biomassa total: ${biomassaTotalGeral.toFixed(2)} kg<br>
+    💰 Custo total geral: R$ ${custoTotalGeral.toFixed(2)}<br>
+    ⚖️ Custo médio por kg: <strong>R$ ${custoMedioGeral.toFixed(2)}/kg</strong>
+    </div>`;
+    
+    document.getElementById("resultadoRel").innerHTML = html;
+}
+function relProducao() { let lotes = loadData("lotes"); let totalPeixes = lotes.reduce((s,l) => s + l.qtdTotal,0); document.getElementById("resultadoRel").innerHTML = `<div class='card'><strong>📈 Produção</strong><br>🐟 ${totalPeixes} peixes<br>📦 ${lotes.length} lotes</div>`; }
+function relCustos() { let lotes = loadData("lotes"); document.getElementById("resultadoRel").innerHTML = `<div class='card'><strong>💰 Custos</strong><br>🎣 Alevinos: R$ ${lotes.reduce((s,l)=>s+l.valorAlevinos,0).toFixed(2)}</div>`; }
+function relMortalidade() {
+    let lotes = loadData("lotes");
+    let tanquesOcupados = [];
+    
+    // Coletar todos os tanques com histórico
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            tanquesOcupados.push({
+                num: tanque.num,
+                loteId: lote.id,
+                lote: lote,
+                mortalidade: tanque.mortalidade || 0,
+                qtdInicial: tanque.qtdPeixes + (tanque.mortalidade || 0)
+            });
+        }
+    }
+    
+    // Coletar todas as mortalidades registradas (se houver histórico específico)
+    let historicoMortalidade = loadData("historicoMortalidade") || [];
+    
+    let html = `
+        <div class='card'>
+            <strong>📉 RELATÓRIO DE MORTALIDADE</strong>
+            <hr>
+            <div class="flex-row">
+                <select id="mortalidadeTipo" style="flex:1;" onchange="atualizarGraficoMortalidade()">
+                    <option value="geral">📊 Geral (Todos os tanques)</option>
+                    <option value="tanque">🏞️ Por Tanque</option>
+                    <option value="lote">🐟 Por Lote</option>
+                </select>
+                <select id="mortalidadeItem" style="flex:2;" onchange="atualizarGraficoMortalidade()">
+                    <option value="">-- Selecione --</option>
+    `;
+    
+    // Opções para Tanques
+    for (let t of tanquesOcupados) {
+        html += `<option value="tanque_${t.num}_${t.loteId}">🏞️ Tanque ${t.num} (Lote #${t.loteId})</option>`;
+    }
+    
+    // Opções para Lotes
+    for (let lote of lotes) {
+        let totalMortos = lote.tanques.reduce((sum, t) => sum + (t.mortalidade || 0), 0);
+        html += `<option value="lote_${lote.id}">🐟 Lote #${lote.id} (${totalMortos} mortos)</option>`;
+    }
+    
+    html += `</select>
+            </div>
+            <div class="flex-row">
+                <select id="mortalidadePeriodo" style="flex:1;" onchange="atualizarGraficoMortalidade()">
+                    <option value="todos">📅 Todo período</option>
+                    <option value="30">📆 Últimos 30 dias</option>
+                    <option value="60">📆 Últimos 60 dias</option>
+                    <option value="90">📆 Últimos 90 dias</option>
+                </select>
+                <select id="mortalidadeAgrupamento" style="flex:1;" onchange="atualizarGraficoMortalidade()">
+                    <option value="dia">📅 Por dia</option>
+                    <option value="semana">📊 Por semana</option>
+                    <option value="mes">📆 Por mês</option>
+                </select>
+            </div>
+            <canvas id="mortalidadeChart" style="max-height: 300px; width:100%; margin-top:16px;"></canvas>
+            <div id="mortalidadeStats" style="margin-top:16px; font-size:0.8rem;"></div>
+            <div id="mortalidadeTabela" style="margin-top:16px; max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    `;
+    
+    document.getElementById("resultadoRel").innerHTML = html;
+    
+    // Inicializar gráfico
+    window.mortalidadeChartInstance = null;
+    if (document.getElementById("mortalidadeItem").options.length > 1) {
+        document.getElementById("mortalidadeItem").selectedIndex = 1;
+        atualizarGraficoMortalidade();
+    } else {
+        atualizarGraficoMortalidade();
+    }
+}
+
+function atualizarGraficoMortalidade() {
+    let tipo = document.getElementById("mortalidadeTipo").value;
+    let itemValue = document.getElementById("mortalidadeItem").value;
+    let periodo = parseInt(document.getElementById("mortalidadePeriodo").value);
+    let agrupamento = document.getElementById("mortalidadeAgrupamento").value;
+    
+    let lotes = loadData("lotes");
+    let historicoMortalidade = loadData("historicoMortalidade") || [];
+    let dadosMortes = [];
+    let titulo = "";
+    let cor = "#c2410c";
+    let totalMortos = 0;
+    let taxaMortalidade = 0;
+    
+    // Se não tem histórico, gerar dados simulados baseados nas mortalidades registradas
+    if (historicoMortalidade.length === 0) {
+        historicoMortalidade = gerarHistoricoMortalidadeSimulado(lotes);
+    }
+    
+    // Filtrar por tipo
+    if (tipo === "geral") {
+        dadosMortes = historicoMortalidade;
+        titulo = "Mortalidade Geral - Todos os Tanques";
+        totalMortos = dadosMortes.reduce((sum, d) => sum + d.quantidade, 0);
+        
+        let totalPeixes = lotes.reduce((sum, l) => sum + l.qtdTotal, 0);
+        taxaMortalidade = totalPeixes > 0 ? (totalMortos / totalPeixes) * 100 : 0;
+        
+    } else if (tipo === "tanque" && itemValue && itemValue.startsWith("tanque_")) {
+        let parts = itemValue.split("_");
+        let tanqueNum = parts[1];
+        let loteId = parseInt(parts[2]);
+        dadosMortes = historicoMortalidade.filter(d => d.tanque === tanqueNum && d.loteId === loteId);
+        titulo = `Mortalidade - Tanque ${tanqueNum} (Lote #${loteId})`;
+        totalMortos = dadosMortes.reduce((sum, d) => sum + d.quantidade, 0);
+        
+        let lote = lotes.find(l => l.id === loteId);
+        let tanque = lote?.tanques.find(t => t.num === tanqueNum);
+        let populacao = tanque ? tanque.qtdPeixes + totalMortos : 1;
+        taxaMortalidade = populacao > 0 ? (totalMortos / populacao) * 100 : 0;
+        
+    } else if (tipo === "lote" && itemValue && itemValue.startsWith("lote_")) {
+        let loteId = parseInt(itemValue.split("_")[1]);
+        dadosMortes = historicoMortalidade.filter(d => d.loteId === loteId);
+        titulo = `Mortalidade - Lote #${loteId}`;
+        totalMortos = dadosMortes.reduce((sum, d) => sum + d.quantidade, 0);
+        
+        let lote = lotes.find(l => l.id === loteId);
+        let populacao = lote ? lote.qtdTotal + totalMortos : 1;
+        taxaMortalidade = populacao > 0 ? (totalMortos / populacao) * 100 : 0;
+    }
+    
+    // Filtrar por período
+    if (!isNaN(periodo)) {
+        let dataLimite = new Date();
+        dataLimite.setDate(dataLimite.getDate() - periodo);
+        dadosMortes = dadosMortes.filter(d => new Date(d.data) >= dataLimite);
+    }
+    
+    // Agrupar dados
+    let dadosAgrupados = agruparDadosMortalidade(dadosMortes, agrupamento);
+    
+    // Obter dados de clima (simulados ou reais via API)
+    let dadosClima = obterDadosClimaParaDatas(dadosAgrupados.map(d => d.periodo));
+    
+    if (dadosAgrupados.length === 0) {
+        document.getElementById("mortalidadeStats").innerHTML = "<div class='card' style='background:#fef2f2;'>⚠️ Nenhum registro de mortalidade encontrado para o período selecionado.</div>";
+        document.getElementById("mortalidadeTabela").innerHTML = "";
+        if (window.mortalidadeChartInstance) {
+            window.mortalidadeChartInstance.destroy();
+            window.mortalidadeChartInstance = null;
+        }
+        return;
+    }
+    
+    // Calcular estatísticas
+    let maxMortes = Math.max(...dadosAgrupados.map(d => d.total));
+    let mediaMortes = dadosAgrupados.reduce((sum, d) => sum + d.total, 0) / dadosAgrupados.length;
+    let picoData = dadosAgrupados.find(d => d.total === maxMortes)?.periodo || "N/A";
+    let melhorPeriodo = dadosAgrupados.find(d => d.total === Math.min(...dadosAgrupados.map(d => d.total)))?.periodo || "N/A";
+    
+    let statsHtml = `
+        <div class='card' style="background:#f0f9ff;">
+            <strong>📊 ESTATÍSTICAS DE MORTALIDADE</strong><br>
+            🐟 Total de mortes: <strong>${totalMortos}</strong> peixes<br>
+            📉 Taxa de mortalidade: <strong>${taxaMortalidade.toFixed(2)}%</strong><br>
+            📅 Período analisado: ${dadosAgrupados.length} ${agrupamento === 'dia' ? 'dias' : (agrupamento === 'semana' ? 'semanas' : 'meses')}<br>
+            ⚠️ Pico de mortalidade: <strong>${maxMortes}</strong> peixes em ${picoData}<br>
+            ✅ Melhor período: <strong>${melhorPeriodo}</strong> (${Math.min(...dadosAgrupados.map(d => d.total))} mortes)<br>
+            📈 Média por período: <strong>${mediaMortes.toFixed(1)}</strong> mortes
+        </div>
+    `;
+    document.getElementById("mortalidadeStats").innerHTML = statsHtml;
+    
+    // Renderizar gráfico
+    let ctx = document.getElementById('mortalidadeChart').getContext('2d');
+    if (window.mortalidadeChartInstance) {
+        window.mortalidadeChartInstance.destroy();
+    }
+    
+    // Criar datasets
+    let datasets = [{
+        label: 'Mortalidade (peixes)',
+        data: dadosAgrupados.map(d => d.total),
+        borderColor: cor,
+        backgroundColor: cor + '40',
+        borderWidth: 3,
+        pointRadius: 6,
+        pointHoverRadius: 10,
+        pointBackgroundColor: cor,
+        pointBorderColor: 'white',
+        tension: 0.3,
+        fill: true,
+        yAxisID: 'y'
+    }];
+    
+    // Adicionar linha de temperatura se disponível
+    if (dadosClima.temperaturas && dadosClima.temperaturas.length > 0) {
+        datasets.push({
+            label: '🌡️ Temperatura (°C)',
+            data: dadosClima.temperaturas,
+            borderColor: '#f59e0b',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 3,
+            pointBackgroundColor: '#f59e0b',
+            tension: 0.2,
+            yAxisID: 'y1'
+        });
+    }
+    
+    // Adicionar linha de chuva se disponível
+    if (dadosClima.chuvas && dadosClima.chuvas.length > 0) {
+        datasets.push({
+            label: '🌧️ Chuva (mm)',
+            data: dadosClima.chuvas,
+            borderColor: '#3b82f6',
+            backgroundColor: '#3b82f620',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: '#3b82f6',
+            tension: 0.2,
+            fill: true,
+            yAxisID: 'y2'
+        });
+    }
+    
+    window.mortalidadeChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dadosAgrupados.map(d => d.periodo),
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            let valor = context.raw;
+                            if (label.includes('Temperatura')) return `🌡️ ${valor.toFixed(1)}°C`;
+                            if (label.includes('Chuva')) return `🌧️ ${valor.toFixed(1)} mm`;
+                            return `📉 ${label}: ${valor} peixes`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Mortalidade (peixes)'
+                    },
+                    beginAtZero: true,
+                    position: 'left'
+                },
+                y1: {
+                    title: {
+                        display: true,
+                        text: 'Temperatura (°C)'
+                    },
+                    position: 'right',
+                    beginAtZero: false,
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                },
+                y2: {
+                    title: {
+                        display: true,
+                        text: 'Chuva (mm)'
+                    },
+                    position: 'right',
+                    beginAtZero: true,
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    display: dadosClima.chuvas && dadosClima.chuvas.length > 0
+                }
+            }
+        }
+    });
+    
+    // Tabela detalhada
+    let tabelaHtml = `<table style="width:100%; font-size:0.7rem; border-collapse:collapse;">
+        <tr style="background:#e2e8f0; position:sticky; top:0;">
+            <th style="padding:8px;">Período</th>
+            <th style="padding:8px;">Mortes</th>
+            <th style="padding:8px;">Estação</th>
+            <th style="padding:8px;">🌡️ Temp</th>
+            <th style="padding:8px;">🌧️ Chuva</th>
+            <th style="padding:8px;">Análise</th>
+        </tr>`;
+    
+    for (let i = 0; i < dadosAgrupados.length; i++) {
+        let d = dadosAgrupados[i];
+        let estacao = obterEstacaoAno(d.periodo);
+        let temperatura = dadosClima.temperaturas?.[i] || 'N/A';
+        let chuva = dadosClima.chuvas?.[i] || 'N/A';
+        let analise = '';
+        
+        if (d.total > mediaMortes * 1.5) {
+            analise = '🔴 CRÍTICO - Acima da média';
+        } else if (d.total > mediaMortes) {
+            analise = '🟠 ALERTA - Acima da média';
+        } else if (d.total === 0) {
+            analise = '✅ PERFEITO - Zero mortalidade';
+        } else if (d.total < mediaMortes * 0.5) {
+            analise = '🟢 BOM - Abaixo da média';
+        } else {
+            analise = '⚪ NORMAL';
+        }
+        
+        let tempHtml = temperatura !== 'N/A' ? `${temperatura.toFixed(1)}°C` : 'N/A';
+        let chuvaHtml = chuva !== 'N/A' ? `${chuva.toFixed(1)}mm` : 'N/A';
+        
+        tabelaHtml += `<tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:8px;">${d.periodo}</td>
+            <td style="padding:8px; font-weight:bold; color:${d.total > mediaMortes ? '#c2410c' : '#15803d'};">${d.total}</td>
+            <td style="padding:8px;">${estacao.icone} ${estacao.nome}</td>
+            <td style="padding:8px;">${tempHtml}</td>
+            <td style="padding:8px;">${chuvaHtml}</td>
+            <td style="padding:8px;">${analise}</td>
+        </tr>`;
+    }
+    tabelaHtml += `</table>`;
+    
+    document.getElementById("mortalidadeTabela").innerHTML = `
+        <div class='card'>
+            <strong>📋 REGISTRO DETALHADO</strong>
+            <div style="max-height: 300px; overflow-y: auto;">${tabelaHtml}</div>
+        </div>
+    `;
+}
+
+function agruparDadosMortalidade(dados, agrupamento) {
+    let agrupados = new Map();
+    
+    for (let d of dados) {
+        let data = new Date(d.data);
+        let chave;
+        
+        if (agrupamento === 'dia') {
+            chave = data.toLocaleDateString('pt-BR');
+        } else if (agrupamento === 'semana') {
+            let semana = obterNumeroSemana(data);
+            chave = `Semana ${semana} - ${data.getFullYear()}`;
+        } else {
+            chave = `${data.toLocaleString('pt-BR', { month: 'long' })}/${data.getFullYear()}`;
+        }
+        
+        if (!agrupados.has(chave)) {
+            agrupados.set(chave, { periodo: chave, total: 0, data: data });
+        }
+        agrupados.get(chave).total += d.quantidade;
+    }
+    
+    let resultado = Array.from(agrupados.values());
+    resultado.sort((a, b) => new Date(a.data) - new Date(b.data));
+    
+    return resultado;
+}
+
+function obterNumeroSemana(date) {
+    let d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    let dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    let yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function obterEstacaoAno(dataStr) {
+    let data = new Date(dataStr);
+    let mes = data.getMonth() + 1;
+    let dia = data.getDate();
+    
+    if ((mes === 12 && dia >= 22) || (mes === 1) || (mes === 2) || (mes === 3 && dia <= 20)) {
+        return { nome: 'Verão', icone: '☀️', cor: '#f59e0b' };
+    } else if ((mes === 3 && dia >= 21) || (mes === 4) || (mes === 5) || (mes === 6 && dia <= 20)) {
+        return { nome: 'Outono', icone: '🍂', cor: '#d97706' };
+    } else if ((mes === 6 && dia >= 21) || (mes === 7) || (mes === 8) || (mes === 9 && dia <= 22)) {
+        return { nome: 'Inverno', icone: '❄️', cor: '#3b82f6' };
+    } else {
+        return { nome: 'Primavera', icone: '🌸', cor: '#10b981' };
+    }
+}
+
+function obterDadosClimaParaDatas(periodos) {
+    // Simulação de dados de clima baseados na época do ano
+    // Em produção, isso poderia ser substituído por uma API real como OpenWeatherMap
+    let temperaturas = [];
+    let chuvas = [];
+    
+    for (let periodo of periodos) {
+        let data = new Date(periodo);
+        let mes = data.getMonth();
+        let estacao = obterEstacaoAno(periodo);
+        
+        // Temperatura simulada por estação
+        let tempBase;
+        switch (estacao.nome) {
+            case 'Verão': tempBase = 28 + (Math.random() * 4 - 2); break;
+            case 'Outono': tempBase = 22 + (Math.random() * 3 - 1.5); break;
+            case 'Inverno': tempBase = 18 + (Math.random() * 3 - 1.5); break;
+            default: tempBase = 24 + (Math.random() * 3 - 1.5); break;
+        }
+        temperaturas.push(parseFloat(tempBase.toFixed(1)));
+        
+        // Chuva simulada (mm) - mais chuva no verão e primavera
+        let chuvaBase;
+        if (estacao.nome === 'Verão') chuvaBase = 150 + Math.random() * 100;
+        else if (estacao.nome === 'Primavera') chuvaBase = 100 + Math.random() * 80;
+        else if (estacao.nome === 'Outono') chuvaBase = 80 + Math.random() * 60;
+        else chuvaBase = 40 + Math.random() * 50;
+        chuvas.push(parseFloat(chuvaBase.toFixed(1)));
+    }
+    
+    return { temperaturas, chuvas };
+}
+
+function gerarHistoricoMortalidadeSimulado(lotes) {
+    let historico = [];
+    let dataAtual = new Date();
+    
+    // Gerar registros simulados para os últimos 90 dias
+    for (let i = 0; i < 90; i++) {
+        let data = new Date();
+        data.setDate(dataAtual.getDate() - i);
+        
+        for (let lote of lotes) {
+            for (let tanque of lote.tanques) {
+                if (tanque.mortalidade && tanque.mortalidade > 0) {
+                    // Distribuir as mortalidades ao longo do tempo
+                    let mortesPorDia = Math.floor(tanque.mortalidade / 30);
+                    if (mortesPorDia > 0 && i % 7 === 0) {
+                        historico.push({
+                            data: data.toISOString(),
+                            tanque: tanque.num,
+                            loteId: lote.id,
+                            quantidade: Math.max(1, Math.floor(mortesPorDia * (Math.random() * 2)))
+                        });
+                    }
+                }
+            }
+        }
+    }
+    
+    // Adicionar alguns picos simulados
+    let picos = [
+        { diasAtras: 15, quantidade: 25, motivo: "Onda de calor" },
+        { diasAtras: 45, quantidade: 18, motivo: "Chuva intensa" },
+        { diasAtras: 75, quantidade: 12, motivo: "Frente fria" }
+    ];
+    
+    for (let pico of picos) {
+        let dataPico = new Date();
+        dataPico.setDate(dataAtual.getDate() - pico.diasAtras);
+        for (let lote of lotes) {
+            for (let tanque of lote.tanques) {
+                historico.push({
+                    data: dataPico.toISOString(),
+                    tanque: tanque.num,
+                    loteId: lote.id,
+                    quantidade: pico.quantidade,
+                    motivo: pico.motivo
+                });
+            }
+        }
+    }
+    
+    saveData("historicoMortalidade", historico);
+    return historico;
+}
+
+// Função para registrar mortalidade com data
+function registrarMortalidadeComData() {
+    let tanqueNum = document.getElementById("mortTanque").value;
+    let mortos = parseInt(document.getElementById("mortQtde").value);
+    if(!tanqueNum || isNaN(mortos) || mortos <= 0) { showMessage("Dados inválidos", true); return; }
+    
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if(!info) { showMessage("Tanque não ocupado", true); return; }
+    
+    let lotes = loadData("lotes");
+    let lote = lotes.find(l => l.id === info.loteId);
+    let tanque = lote.tanques.find(t => t.num === tanqueNum);
+    
+    if(tanque.qtdPeixes < mortos) { showMessage("Mortalidade maior que população", true); return; }
+    
+    // Registrar no lote
+    tanque.mortalidade = (tanque.mortalidade || 0) + mortos;
+    tanque.qtdPeixes -= mortos;
+    lote.qtdTotal -= mortos;
+    
+    // Registrar no histórico com data
+    let historico = loadData("historicoMortalidade") || [];
+    historico.push({
+        data: new Date().toISOString(),
+        tanque: tanqueNum,
+        loteId: info.loteId,
+        quantidade: mortos,
+        temperatura: null, // Poderia buscar de API real
+        chuva: null
+    });
+    saveData("historicoMortalidade", historico);
+    
+    saveData("lotes", lotes);
+    showMessage(`${mortos} peixes mortos registrados em ${new Date().toLocaleDateString()}`);
+    renderTanques();
+    renderLotes();
+}
+function relEstoqueCompleto() { renderEstoqueRacao(); document.getElementById("resultadoRel").innerHTML = document.getElementById("estoqueRacao").innerHTML; }
+function relFinanceiroFolha() { let cols = loadData("colab"); let adiant = loadData("adiantamentos")||[]; let totalFolha = cols.reduce((s,c) => s + (c.tipo==='mensal'?c.valorBase:c.valorBase*22),0); let totalAdiant = adiant.reduce((s,a)=>s+a.valor,0); document.getElementById("resultadoRel").innerHTML = `<div class='card'><strong>👥 Folha</strong><br>💰 Folha: R$ ${totalFolha.toFixed(2)}<br>💸 Vales: R$ ${totalAdiant.toFixed(2)}</div>`; }
+function relCurvaCrescimento() {
+    let lotes = loadData("lotes");
+    let tanquesOcupados = [];
+    
+    // Coletar tanques ocupados
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                tanquesOcupados.push({
+                    num: tanque.num,
+                    loteId: lote.id,
+                    lote: lote
+                });
+            }
+        }
+    }
+    
+    let html = `
+        <div class='card'>
+            <strong>📈 CURVA DE CRESCIMENTO</strong>
+            <hr>
+            <div class="flex-row">
+                <select id="curvaTipo" style="flex:1;" onchange="atualizarCurva()">
+                    <option value="tanque">📊 Por Tanque</option>
+                    <option value="lote">🐟 Por Lote</option>
+                </select>
+                <select id="curvaParametro" style="flex:1;" onchange="atualizarCurva()">
+                    <option value="peso">⚖️ Peso Médio (g)</option>
+                    <option value="biomassa">📦 Biomassa (kg)</option>
+                </select>
+            </div>
+            <select id="curvaItem" style="width:100%;" onchange="atualizarCurva()">
+                <option value="">-- Selecione um tanque ou lote --</option>
+    `;
+    
+    // Opções para Tanques
+    for (let t of tanquesOcupados) {
+        html += `<option value="tanque_${t.num}_${t.loteId}">🏞️ Tanque ${t.num} (Lote #${t.loteId})</option>`;
+    }
+    
+    // Opções para Lotes
+    for (let lote of lotes) {
+        let qtdTanques = lote.tanques.filter(t => t.qtdPeixes > 0).length;
+        html += `<option value="lote_${lote.id}">🐟 Lote #${lote.id} (${qtdTanques} tanques ativos)</option>`;
+    }
+    
+    html += `</select>
+            <canvas id="curvaChart" style="max-height: 300px; width:100%; margin-top:16px;"></canvas>
+            <div id="curvaDados" style="margin-top:16px; font-size:0.8rem;"></div>
+        </div>
+    `;
+    
+    document.getElementById("resultadoRel").innerHTML = html;
+    
+    // Inicializar gráfico vazio
+    window.curvaChartInstance = null;
+    if (document.getElementById("curvaItem").options.length > 1) {
+        document.getElementById("curvaItem").selectedIndex = 1;
+        atualizarCurva();
+    }
+}
+
+function atualizarCurva() {
+    let tipo = document.getElementById("curvaTipo").value;
+    let parametro = document.getElementById("curvaParametro").value;
+    let itemValue = document.getElementById("curvaItem").value;
+    
+    if (!itemValue) return;
+    
+    let lotes = loadData("lotes");
+    let dados = [];
+    let titulo = "";
+    let cor = "#0a7ea4";
+    
+    if (tipo === "tanque") {
+        // Formato: tanque_T01_123456
+        let parts = itemValue.split("_");
+        let tanqueNum = parts[1];
+        let loteId = parseInt(parts[2]);
+        let lote = lotes.find(l => l.id === loteId);
+        
+        if (lote) {
+            // Filtrar biometrias apenas deste tanque
+            let biometrias = (lote.biometrias || []).filter(b => b.tanque === tanqueNum);
+            biometrias.sort((a, b) => new Date(a.data) - new Date(b.data));
+            
+            for (let bio of biometrias) {
+                let valor = parametro === 'peso' ? bio.pesoMedio : bio.biomassa;
+                dados.push({
+                    data: formatarDataBio(bio.data),
+                    valor: valor,
+                    detalhes: bio
+                });
+            }
+            titulo = `Tanque ${tanqueNum} (Lote #${loteId}) - ${parametro === 'peso' ? 'Peso Médio' : 'Biomassa'}`;
+            cor = "#0a7ea4";
+            
+            // Exibir informações do tanque
+            let tanque = lote.tanques.find(t => t.num === tanqueNum);
+            let infoHtml = `<strong>📊 Informações do Tanque ${tanqueNum}</strong><br>
+            🐟 População atual: ${tanque.qtdPeixes} peixes<br>
+            ⚖️ Peso médio atual: ${tanque.ultimoPesoMedio ? tanque.ultimoPesoMedio.toFixed(0) : (lote.pesoMedioAlevino || 0)} g<br>
+            📦 Biomassa atual: ${tanque.ultimaBiomassa ? tanque.ultimaBiomassa.toFixed(1) : ((lote.pesoMedioAlevino/1000)*tanque.qtdPeixes).toFixed(1)} kg<br>
+            📅 Data estocagem: ${lote.dataEstocagem || 'N/A'}<br>
+            📈 Total de biometrias: ${dados.length}`;
+            document.getElementById("curvaDados").innerHTML = `<div class='card' style="background:#f0f9ff;">${infoHtml}</div>`;
+        }
+        
+    } else {
+        // Por Lote - soma todos os tanques
+        let loteId = parseInt(itemValue.split("_")[1]);
+        let lote = lotes.find(l => l.id === loteId);
+        
+        if (lote) {
+            // Agrupar biometrias por data (média ponderada por tanque)
+            let biometriasPorData = new Map();
+            
+            for (let bio of (lote.biometrias || [])) {
+                let dataKey = bio.data;
+                if (!biometriasPorData.has(dataKey)) {
+                    biometriasPorData.set(dataKey, []);
+                }
+                biometriasPorData.get(dataKey).push(bio);
+            }
+            
+            let datas = Array.from(biometriasPorData.keys()).sort();
+            
+            for (let data of datas) {
+                let bios = biometriasPorData.get(data);
+                if (parametro === 'peso') {
+                    // Média ponderada por quantidade de peixes
+                    let somaPeso = 0;
+                    let totalPeixes = 0;
+                    for (let bio of bios) {
+                        let tanque = lote.tanques.find(t => t.num === bio.tanque);
+                        let qtdPeixes = tanque ? tanque.qtdPeixes : 0;
+                        somaPeso += bio.pesoMedio * qtdPeixes;
+                        totalPeixes += qtdPeixes;
+                    }
+                    let valor = totalPeixes > 0 ? somaPeso / totalPeixes : bios[0].pesoMedio;
+                    dados.push({ data: formatarDataBio(data), valor: valor });
+                } else {
+                    // Soma biomassa
+                    let somaBiomassa = bios.reduce((sum, bio) => sum + bio.biomassa, 0);
+                    dados.push({ data: formatarDataBio(data), valor: somaBiomassa });
+                }
+            }
+            
+            titulo = `Lote #${loteId} - ${parametro === 'peso' ? 'Peso Médio' : 'Biomassa Total'}`;
+            cor = "#15803d";
+            
+            // Calcular biomassa total atual
+            let biomassaAtual = 0;
+            for (let t of lote.tanques) {
+                if (t.ultimaBiomassa) biomassaAtual += t.ultimaBiomassa;
+                else biomassaAtual += (lote.pesoMedioAlevino / 1000) * t.qtdPeixes;
+            }
+            
+            let infoHtml = `<strong>📊 Informações do Lote #${loteId}</strong><br>
+            📅 Data estocagem: ${lote.dataEstocagem || 'N/A'}<br>
+            📍 Origem: ${lote.cidadeOrigem || 'N/A'}<br>
+            🏞️ Tanques ativos: ${lote.tanques.filter(t => t.qtdPeixes > 0).length}<br>
+            🐟 População total: ${lote.qtdTotal} peixes<br>
+            📦 Biomassa total atual: ${biomassaAtual.toFixed(1)} kg<br>
+            📈 Total de biometrias registradas: ${(lote.biometrias || []).length}<br>
+            <hr>
+            <details><summary style="cursor:pointer;">📋 Tanques deste lote</summary>
+            ${lote.tanques.filter(t => t.qtdPeixes > 0).map(t => `
+                <div style="padding:4px 0;">• ${t.num}: ${t.qtdPeixes} peixes | ${t.ultimoPesoMedio ? t.ultimoPesoMedio.toFixed(0)+'g' : (lote.pesoMedioAlevino||0)+'g'} | ${t.ultimaBiomassa ? t.ultimaBiomassa.toFixed(1)+'kg' : 'sem bio'}</div>
+            `).join('')}
+            </details>`;
+            document.getElementById("curvaDados").innerHTML = `<div class='card' style="background:#f0fdf4;">${infoHtml}</div>`;
+        }
+    }
+    
+    if (dados.length === 0) {
+        document.getElementById("curvaDados").innerHTML += "<div class='card' style='background:#fef2f2; margin-top:8px;'>⚠️ Nenhuma biometria registrada para este item ainda. Realize biometrias para ver a curva de crescimento.</div>";
+        if (window.curvaChartInstance) {
+            window.curvaChartInstance.destroy();
+            window.curvaChartInstance = null;
+        }
+        return;
+    }
+    
+    // Renderizar gráfico
+    let ctx = document.getElementById('curvaChart').getContext('2d');
+    if (window.curvaChartInstance) {
+        window.curvaChartInstance.destroy();
+    }
+    
+    window.curvaChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dados.map(d => d.data),
+            datasets: [{
+                label: titulo,
+                data: dados.map(d => d.valor),
+                borderColor: cor,
+                backgroundColor: cor + '20',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointBackgroundColor: cor,
+                pointBorderColor: 'white',
+                tension: 0.2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let valor = context.raw;
+                            let unidade = parametro === 'peso' ? 'g' : 'kg';
+                            return `${context.dataset.label}: ${valor.toFixed(1)} ${unidade}`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: parametro === 'peso' ? 'Peso Médio (g)' : 'Biomassa (kg)'
+                    },
+                    beginAtZero: true
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Data da Biometria'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Tabela de dados
+    let tabelaHtml = `<table style="width:100%; font-size:0.7rem; margin-top:12px; border-collapse:collapse;">
+        <tr style="background:#e2e8f0;"><th style="padding:6px;">Data</th><th style="padding:6px;">${parametro === 'peso' ? 'Peso Médio (g)' : 'Biomassa (kg)'}</th><th style="padding:6px;">Variação</th></tr>`;
+    
+    for (let i = 0; i < dados.length; i++) {
+        let variacao = '';
+        if (i > 0) {
+            let delta = dados[i].valor - dados[i - 1].valor;
+            let sinal = delta >= 0 ? '📈' : '📉';
+            variacao = `${sinal} ${delta.toFixed(1)}`;
+        }
+        tabelaHtml += `<tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:6px;">${dados[i].data}</td>
+            <td style="padding:6px; font-weight:bold;">${dados[i].valor.toFixed(1)}</td>
+            <td style="padding:6px;">${variacao}</td>
+        </tr>`;
+    }
+    tabelaHtml += `</table>`;
+    
+    document.getElementById("curvaDados").innerHTML += `<div style="margin-top:16px; max-height:200px; overflow-y:auto;">${tabelaHtml}</div>`;
+}
+
+function formatarDataBio(dataStr) {
+    // Tenta extrair data no formato DD/MM/YYYY, HH:MM:SS ou ISO
+    if (!dataStr) return 'N/A';
+    let parts = dataStr.split(',');
+    if (parts.length > 0) {
+        let dataPart = parts[0].trim();
+        let dataParts = dataPart.split('/');
+        if (dataParts.length === 3) {
+            return `${dataParts[1]}/${dataParts[0]}`;
+        }
+    }
+    let iso = new Date(dataStr);
+    if (!isNaN(iso.getTime())) {
+        return `${iso.getDate()}/${iso.getMonth()+1}`;
+    }
+    return dataStr.substring(0, 5);
+}function relTanques() { let tanques = loadData("tanques"); let lotes = loadData("lotes"); let html = `<div class='card'><strong>🏞️ Ocupação</strong><br>`; tanques.forEach(t => { let ocupante = lotes.find(l => l.tanques.some(tq => tq.num === t.num)); html += `<br>📌 ${t.num}: ${ocupante ? `🐟 Lote #${ocupante.id}` : "✅ Disponível"}`; }); html += `</div>`; document.getElementById("resultadoRel").innerHTML = html; }
+function relConsumoRacao() { let lotes = loadData("lotes"); let consumoTotal = lotes.reduce((s,l)=>s+l.tanques.reduce((a,t)=>a+(t.consumoRacao||0),0),0); document.getElementById("resultadoRel").innerHTML = `<div class='card'><strong>🌾 Consumo</strong><br>📊 Total: ${consumoTotal.toFixed(1)}kg</div>`; }
+function relBiomassaDetalhada() {
+    let lotes = loadData("lotes");
+    let html = lotes.map(l => {
+        let ultimaBio = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length - 1].biomassa : (l.biomassaInicial || 0);
+        let ganho = ultimaBio - (l.biomassaInicial || 0);
+        return `<div class='card'><strong>Lote #${l.id}</strong><br>📍 ${l.cidadeOrigem}<br>⚖️ Biomassa inicial: ${(l.biomassaInicial || 0).toFixed(1)}kg<br>⚖️ Biomassa atual: ${ultimaBio.toFixed(1)}kg<br>📈 Ganho de biomassa: ${ganho.toFixed(1)}kg</div>`;
+    }).join('');
+    document.getElementById("resultadoRel").innerHTML = html || "<div class='card'>Nenhum lote</div>";
+}
+
+function atualizarDashboard() {
+    let lotes   = loadData("lotes");
+    let estoque = loadData("estoqueRacao");
+    let colabs  = loadData("colab");
+    let totalPeixes = lotes.reduce((s,l)=>s+l.qtdTotal, 0);
+    let totalRacao  = estoque.reduce((s,i)=>s+i.kgTotal, 0);
+    let setEl = (id, v) => { let el = document.getElementById(id); if (el) el.textContent = v; };
+    setEl("dashPeixes",  totalPeixes.toLocaleString("pt-BR"));
+    setEl("dashLotes",   lotes.length);
+    setEl("dashRacao",   totalRacao.toFixed(0) + " kg");
+    setEl("dashColabs",  colabs.length);
+    // Header badge
+    let hb = document.getElementById("headerBadge");
+    if (hb) hb.textContent = "🐟 " + totalPeixes.toLocaleString("pt-BR") + " peixes";
+}
+
+function seedExemplo() {
+    if(loadData("tanques").length === 0) saveData("tanques", [{ id: 1001, num: "T01", vol: 50, malha: "Fina 5mm", material: "Geomembrana" },{ id: 1002, num: "T02", vol: 80, malha: "Média 10mm", material: "PVC" }]);
+    if(loadData("modelosRacao").length === 0){
+        saveData("modelosRacao", [
+            {id:100, marca:"Supra", pellet:"4-6mm", proteina:32, pesoSaco:25},
+            {id:101, marca:"Guabi", pellet:"6-8mm", proteina:35, pesoSaco:25},
+            {id:102, marca:"Purina", pellet:"pó", proteina:30, pesoSaco:25},
+            {id:103, marca:"Tilápia Top", pellet:"1.3-1.5mm", proteina:34, pesoSaco:25}
+        ]);
+    }
+    if(loadData("lotes").length === 0) saveData("lotes", [{ id: 2001, qtdTotal: 2000, valorAlevinos: 1200, custoUnitario: 0.6, fornecedor: "Bom Peixe", dataEstocagem: "2025-03-01", tanques: [{ num: "T01", qtdPeixes: 2000, mortalidade: 0, consumoRacao: 50 }], biometrias: [] }]);
+    if(loadData("estoqueRacao").length === 0) saveData("estoqueRacao", [{ id: 3001, marca: "Supra", pb: 32, pellet: "4-6mm", kgTotal: 300, valorKg: 3.8, data: "2025-03-10" }]);
+    if(loadData("colab").length === 0) saveData("colab", [{ id: 4001, nome: "João Silva", tipo: "mensal", valorBase: 2200 }]);
+    if(loadData("adiantamentos").length === 0) saveData("adiantamentos", []);
+}
+
+// ==================== CLASSIFICAÇÃO E REPICAGEM ====================
+let destinosRepicagem = [];
+
+function carregarInfoOrigem() {
+    let tanqueNum = document.getElementById("origemTanque").value;
+    let infoDiv = document.getElementById("infoOrigem");
+    if (!tanqueNum || tanqueNum === "") { infoDiv.innerHTML = "Selecione um tanque ocupado"; return; }
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (!info) { infoDiv.innerHTML = "Tanque vazio."; return; }
+    let ultimaBio = null;
+    if (info.lote.biometrias && info.lote.biometrias.length) {
+        ultimaBio = info.lote.biometrias.slice().reverse().find(b => b.tanque === tanqueNum);
+    }
+    let pesoMedio = ultimaBio ? ultimaBio.pesoMedio.toFixed(0) : (info.lote.pesoMedioAlevino || 5);
+    let biomassa = ultimaBio ? ultimaBio.biomassa : ((info.lote.pesoMedioAlevino / 1000) * info.qtdPeixes);
+    infoDiv.innerHTML = `<strong>🐟 Lote #${info.loteId}</strong><br>
+    📊 População: ${info.qtdPeixes} peixes<br>
+    ⚖️ Peso médio: ${pesoMedio} g<br>
+    📦 Biomassa: ${biomassa.toFixed(1)} kg<br>
+    📌 Disponível para transferência: ${info.qtdPeixes} peixes`;
+}
+
+// Obter tanques disponíveis (vazios)
+function getTanquesDisponiveis() {
+    let tanques = loadData("tanques");
+    return tanques.filter(t => !isTanqueOcupado(t.num));
+}
+
+function adicionarDestino() {
+    let tanquesDisponiveis = getTanquesDisponiveis();
+    if (tanquesDisponiveis.length === 0) {
+        showMessage("❌ Nenhum tanque disponível para receber peixes", true);
+        return;
+    }
+    
+    destinosRepicagem.push({
+        id: Date.now() + Math.random(),
+        tanque: "",
+        quantidade: 0,
+        pesoMedio: 0,
+        biomassa: 0
+    });
+    renderAreaRepicagem();
+}
+
+function removerDestino(id) {
+    destinosRepicagem = destinosRepicagem.filter(d => d.id !== id);
+    renderAreaRepicagem();
+}
+
+function renderAreaRepicagem() {
+    let div = document.getElementById("areaRepicagem");
+    let tanquesDisponiveis = getTanquesDisponiveis();
+    
+    if (destinosRepicagem.length === 0) {
+        div.innerHTML = "<small>Clique em 'Adicionar Tanque de Destino' para começar.</small>";
+        return;
+    }
+    
+    div.innerHTML = destinosRepicagem.map((dest, idx) => `
+        <div style="background:#f1f5f9; padding:12px; border-radius:16px; margin:8px 0;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong>Destino ${idx+1}</strong>
+                <button onclick="removerDestino(${dest.id})" class="btn-danger btn-sm">🗑️</button>
+            </div>
+            <select id="destTanque_${dest.id}" onchange="atualizarDestino(${dest.id}, 'tanque', this.value)" style="margin:4px 0;">
+                <option value="">-- Selecione o tanque de destino --</option>
+                ${tanquesDisponiveis.map(t => `<option value="${t.num}" ${dest.tanque === t.num ? 'selected' : ''}>${t.num} (${t.vol}m³) - Disponível</option>`).join('')}
+            </select>
+            <div class="flex-row">
+                <input type="number" id="destQtd_${dest.id}" placeholder="Quantidade de peixes" step="1" style="flex:1;" value="${dest.quantidade || ''}" onchange="atualizarDestino(${dest.id}, 'quantidade', parseFloat(this.value))">
+                <input type="number" id="destPeso_${dest.id}" placeholder="Peso médio (g)" step="0.1" style="flex:1;" value="${dest.pesoMedio || ''}" onchange="atualizarDestino(${dest.id}, 'pesoMedio', parseFloat(this.value))">
+            </div>
+            <small>Biomassa: <strong id="destBiomassa_${dest.id}">${dest.biomassa ? dest.biomassa.toFixed(2) : '0'}</strong> kg</small>
+        </div>
+    `).join('');
+}
+
+function atualizarDestino(id, campo, valor) {
+    let index = destinosRepicagem.findIndex(d => d.id === id);
+    if (index !== -1) {
+        destinosRepicagem[index][campo] = valor;
+        if (campo === 'quantidade' || campo === 'pesoMedio') {
+            let qtd = destinosRepicagem[index].quantidade || 0;
+            let pesoMedio = destinosRepicagem[index].pesoMedio || 0;
+            destinosRepicagem[index].biomassa = (qtd * pesoMedio) / 1000;
+            let biomassaSpan = document.getElementById(`destBiomassa_${id}`);
+            if (biomassaSpan) biomassaSpan.innerHTML = destinosRepicagem[index].biomassa.toFixed(2);
+        }
+    }
+}
+
+function executarClassificacao() {
+    let tanqueOrigem = document.getElementById("origemTanque").value;
+    if (!tanqueOrigem) { showMessage("❌ Selecione o tanque de origem", true); return; }
+    
+    let info = getInfoTanqueOcupado(tanqueOrigem);
+    if (!info) { showMessage("❌ Tanque de origem não ocupado", true); return; }
+    
+    let destinosValidos = destinosRepicagem.filter(d => d.tanque && d.quantidade > 0 && d.pesoMedio > 0);
+    if (destinosValidos.length === 0) {
+        showMessage("❌ Adicione pelo menos um destino válido (tanque, quantidade e peso médio)", true);
+        return;
+    }
+    
+    let totalTransferido = destinosValidos.reduce((sum, d) => sum + d.quantidade, 0);
+    let totalBiomassaTransferida = destinosValidos.reduce((sum, d) => sum + d.biomassa, 0);
+    
+    if (totalTransferido > info.qtdPeixes) {
+        showMessage(`❌ Total a transferir (${totalTransferido}) excede a população do tanque origem (${info.qtdPeixes})`, true);
+        return;
+    }
+    
+    for (let d of destinosValidos) {
+        if (isTanqueOcupado(d.tanque)) {
+            showMessage(`❌ Tanque ${d.tanque} já está ocupado!`, true);
+            return;
+        }
+    }
+    
+    let lotes = loadData("lotes");
+    let loteOrigem = lotes.find(l => l.id === info.loteId);
+    if (!loteOrigem) { showMessage("❌ Lote de origem não encontrado", true); return; }
+    
+    let tanqueOrigemObj = loteOrigem.tanques.find(t => t.num === tanqueOrigem);
+    let populacaoOriginal = tanqueOrigemObj.qtdPeixes;
+    let biomassaOriginalTanque = tanqueOrigemObj.ultimaBiomassa || ((loteOrigem.pesoMedioAlevino / 1000) * populacaoOriginal);
+    
+    // Remover peixes do tanque de origem
+    tanqueOrigemObj.qtdPeixes -= totalTransferido;
+    tanqueOrigemObj.consumoRacao = 0;
+    
+    // Recalcular biomassa do tanque de origem
+    if (tanqueOrigemObj.ultimoPesoMedio) {
+        tanqueOrigemObj.ultimaBiomassa = (tanqueOrigemObj.ultimoPesoMedio / 1000) * tanqueOrigemObj.qtdPeixes;
+    }
+    
+    // Se o tanque de origem ficou vazio, remover do lote
+    if (tanqueOrigemObj.qtdPeixes <= 0) {
+        loteOrigem.tanques = loteOrigem.tanques.filter(t => t.num !== tanqueOrigem);
+    }
+    
+    // Atualizar quantidade total do lote
+    loteOrigem.qtdTotal -= totalTransferido;
+    
+    // Recalcular biomassa total do lote
+    let novaBiomassaTotal = 0;
+    for (let t of loteOrigem.tanques) {
+        if (t.ultimaBiomassa) {
+            novaBiomassaTotal += t.ultimaBiomassa;
+        } else {
+            novaBiomassaTotal += (loteOrigem.pesoMedioAlevino / 1000) * t.qtdPeixes;
+        }
+    }
+    loteOrigem.biomassaAtual = novaBiomassaTotal;
+    
+    // Para cada destino, adicionar ao MESMO lote de origem
+    for (let d of destinosValidos) {
+        let pesoMedio = d.pesoMedio;
+        let biomassa = d.biomassa;
+        let quantidade = d.quantidade;
+        
+        // Verificar se o tanque já existe no lote
+        let tanqueDestinoExistente = loteOrigem.tanques.find(t => t.num === d.tanque);
+        
+        if (tanqueDestinoExistente) {
+            // Tanque já existe no lote - adicionar peixes
+            let populacaoAtual = tanqueDestinoExistente.qtdPeixes;
+            let pesoMedioAtual = tanqueDestinoExistente.ultimoPesoMedio || loteOrigem.pesoMedioAlevino;
+            let novoPesoMedio = (populacaoAtual * pesoMedioAtual + quantidade * pesoMedio) / (populacaoAtual + quantidade);
+            
+            tanqueDestinoExistente.qtdPeixes += quantidade;
+            tanqueDestinoExistente.ultimoPesoMedio = novoPesoMedio;
+            tanqueDestinoExistente.ultimaBiomassa = (tanqueDestinoExistente.ultimaBiomassa || 0) + biomassa;
+            tanqueDestinoExistente.ultimaBiometriaData = new Date().toLocaleString();
+        } else {
+            // Criar novo tanque no lote
+            loteOrigem.tanques.push({
+                num: d.tanque,
+                qtdPeixes: quantidade,
+                mortalidade: 0,
+                consumoRacao: 0,
+                ultimoPesoMedio: pesoMedio,
+                ultimaBiomassa: biomassa,
+                ultimaBiometriaData: new Date().toLocaleString()
+            });
+        }
+        
+        // Registrar biometria no lote
+        if (!loteOrigem.biometrias) loteOrigem.biometrias = [];
+        loteOrigem.biometrias.push({
+            data: new Date().toLocaleString(),
+            tanque: d.tanque,
+            pesoMedio: pesoMedio,
+            biomassa: biomassa,
+            observacao: `Transferência do tanque ${tanqueOrigem}`
+        });
+        
+        // Criar tratos para o novo tanque
+        if (horariosTratos.length > 0) {
+            let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
+            let gpd = obterGPD(pesoMedio);
+            let ca = getCAEfetiva(pesoMedio, caSelecionado);
+            let ganhoBiomassaKg = (quantidade * gpd) / 1000;
+            let racaoDiariaRecomendada = ganhoBiomassaKg * ca;
+            let kgPorTrato = racaoDiariaRecomendada / horariosTratos.length;
+            
+            let novosTratos = horariosTratos.map(ht => ({
+                hora: ht.hora,
+                tratado: false,
+                kgFornecidos: 0,
+                kgRecomendado: kgPorTrato
+            }));
+            localStorage.setItem(`tratos_${d.tanque}`, JSON.stringify(novosTratos));
+        }
+    }
+    
+    // Salvar alterações
+    saveData("lotes", lotes);
+    
+    // Registrar no histórico
+    let historico = loadData("historicoClassificacoes") || [];
+    historico.unshift({
+        id: Date.now(),
+        data: new Date().toLocaleString(),
+        tanqueOrigem: tanqueOrigem,
+        loteId: info.loteId,
+        populacaoOriginal: populacaoOriginal,
+        biomassaOriginal: biomassaOriginalTanque,
+        restanteOrigem: tanqueOrigemObj.qtdPeixes,
+        destinos: destinosValidos.map(d => ({
+            tanque: d.tanque,
+            quantidade: d.quantidade,
+            pesoMedio: d.pesoMedio,
+            biomassa: d.biomassa
+        })),
+        totalPeixes: totalTransferido,
+        totalBiomassa: totalBiomassaTransferida
+    });
+    saveData("historicoClassificacoes", historico);
+    
+    // ========== ATUALIZAR TODAS AS INTERFACES ==========
+    // Limpar campos
+    destinosRepicagem = [];
+    renderAreaRepicagem();
+    renderHistoricoClassificacoes();
+    
+    // Forçar atualização completa da tela
+    renderTanques(); // Atualiza lista de tanques
+    renderLotes(); // Atualiza lista de lotes
+    renderTratosTanques(); // Atualiza tratos
+    renderConsumoDiario(); // Atualiza consumo diário
+    atualizarDashboard(); // Atualiza painel rápido
+    renderBiometrias(); // Atualiza biometrias
+    
+    // Atualizar selects
+    atualizarSelectTanques("origemTanque", "ocupados");
+    atualizarSelectTanques("bioTanque", "ocupados");
+    atualizarSelectTanques("alimTanque", "ocupados");
+    atualizarSelectTanques("mortTanque", "ocupados");
+    
+    // Recarregar informações de origem
+    carregarInfoOrigem();
+    
+    // Limpar campos de quantidade e peso médio dos destinos
+    for (let d of destinosValidos) {
+        let qtdInput = document.getElementById(`destQtd_${d.id}`);
+        let pesoInput = document.getElementById(`destPeso_${d.id}`);
+        if (qtdInput) qtdInput.value = "";
+        if (pesoInput) pesoInput.value = "";
+    }
+    
+    showMessage(`✅ Transferência concluída! ${totalTransferido} peixes transferidos para ${destinosValidos.length} tanques.\nTodos os peixes continuam no mesmo lote #${info.loteId}.`);
+    
+    // Se o tanque de origem foi esvaziado completamente, recarregar a página de classificação
+    if (tanqueOrigemObj.qtdPeixes <= 0) {
+        setTimeout(() => {
+            inicializarClassificacao();
+        }, 500);
+    }
+}
+
+function renderHistoricoClassificacoes() {
+    let historico = loadData("historicoClassificacoes") || [];
+    let div = document.getElementById("historicoClassificacoes");
+    
+    if (historico.length === 0) {
+        div.innerHTML = "<div class='card'>Nenhuma transferência registrada</div>";
+        return;
+    }
+    
+    div.innerHTML = historico.map(h => `
+        <div class='card' style="margin-bottom:8px;">
+            <strong>📅 ${h.data}</strong><br>
+            📤 Origem: ${h.tanqueOrigem} (Lote #${h.loteId})<br>
+            📊 População original: ${h.populacaoOriginal} peixes | Restante: ${h.restanteOrigem} peixes<br>
+            🐟 Total transferido: ${h.totalPeixes} peixes | ⚖️ ${h.totalBiomassa.toFixed(2)} kg<br>
+            🎯 Destinos:<br>
+            ${h.destinos.map(d => `&nbsp;&nbsp;• ${d.tanque}: ${d.quantidade} peixes (${d.pesoMedio.toFixed(0)}g, ${d.biomassa.toFixed(2)} kg)`).join('<br>')}
+        </div>
+    `).join('');
+}
+
+function inicializarClassificacao() {
+    atualizarSelectTanques("origemTanque", "ocupados");
+    carregarInfoOrigem();
+    renderAreaRepicagem();
+    renderHistoricoClassificacoes();
+}
+
+// ==================== NAVEGAÇÃO E INIT ====================
+function nav(sectionId) { 
+    document.querySelectorAll(".container > div").forEach(div => div.classList.add("hidden")); 
+    document.getElementById(sectionId).classList.remove("hidden"); 
+    if(sectionId === "menu") atualizarDashboard(); 
+    if(sectionId === "biometria") { 
+        atualizarSelectTanques("bioTanque", "ocupados"); 
+        renderBiometrias(); 
+        limparAmostras();
+        let bioSelect = document.getElementById("bioTanque"); 
+        bioSelect.onchange = function() { carregarInfoTanqueBiometria(); limparAmostras(); }; 
+        carregarInfoTanqueBiometria(); 
+    }
+    if(sectionId === "racao") { renderModelosRacao(); renderEstoqueRacao(); }
+    if (sectionId === "alimentacao") {
+        atualizarSelectTanques("alimTanque", "ocupados");
+        atualizarSelectTanques("mortTanque", "ocupados");
+        renderConsumoDiario();
+        mostrarAbaAlimentacao();
+    }
+    if(sectionId === "lotes") { renderLotes(); atualizarSelectTanques("lTanquesSelect", "distribuicao"); }
+    if(sectionId === "tanques") renderTanques();
+    if(sectionId === "mao") renderColab();
+    if(sectionId === "classificacao") { inicializarClassificacao(); }
+}
+// ==================== CÁLCULO DE CUSTOS ====================
+
+// Calcular consumo total de ração de um lote (todos os tanques, atuais e antigos)
+function calcularConsumoRacaoLote(lote) {
+    let consumoTotal = 0;
+    if (lote.tanques) {
+        for (let tanque of lote.tanques) {
+            consumoTotal += tanque.consumoRacao || 0;
+        }
+    }
+    // Também somar consumo de tanques que já foram desativados (se houver histórico)
+    if (lote.consumoRacaoHistorico) {
+        consumoTotal += lote.consumoRacaoHistorico;
+    }
+    return consumoTotal;
+}
+
+// Calcular biomassa total atual do lote
+function calcularBiomassaTotalLote(lote) {
+    let biomassaTotal = 0;
+    if (lote.tanques) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                if (tanque.ultimaBiomassa) {
+                    biomassaTotal += tanque.ultimaBiomassa;
+                } else {
+                    biomassaTotal += (lote.pesoMedioAlevino / 1000) * tanque.qtdPeixes;
+                }
+            }
+        }
+    }
+    return biomassaTotal;
+}
+
+// Calcular Custo de Ração do Lote
+function calcularCustoRacaoLote(lote) {
+    let consumoTotal = calcularConsumoRacaoLote(lote);
+    // Buscar preço médio da ração no histórico de compras
+    let estoque = loadData("estoqueRacao");
+    let precoMedioKg = 0;
+    let totalKg = 0;
+    let totalCusto = 0;
+    
+    for (let item of estoque) {
+        totalKg += item.kgTotal;
+        totalCusto += item.kgTotal * item.valorKg;
+    }
+    if (totalKg > 0) precoMedioKg = totalCusto / totalKg;
+    
+    return consumoTotal * precoMedioKg;
+}
+
+// Calcular Custo por Kg do Lote
+function calcularCustoPorKGLote(lote) {
+    let custoAlevinos = lote.valorAlevinos || 0;
+    let custoRacao = calcularCustoRacaoLote(lote);
+    let custoTotal = custoAlevinos + custoRacao;
+    let biomassaTotal = calcularBiomassaTotalLote(lote);
+    
+    if (biomassaTotal > 0) {
+        return { custoTotal: custoTotal, custoPorKg: custoTotal / biomassaTotal };
+    }
+    return { custoTotal: custoTotal, custoPorKg: 0 };
+}
+
+// Calcular CA (Conversão Alimentar) do Lote
+function calcularCALote(lote) {
+    let consumoRacao = calcularConsumoRacaoLote(lote);
+    let biomassaInicial = lote.biomassaInicial || 0;
+    let biomassaAtual = calcularBiomassaTotalLote(lote);
+    let ganhoBiomassa = biomassaAtual - biomassaInicial;
+    
+    if (ganhoBiomassa > 0) {
+        return consumoRacao / ganhoBiomassa;
+    }
+    return 0;
+}
+
+// Calcular custo por kg de um tanque específico
+function calcularCustoTanque(lote, tanqueNum) {
+    let tanque = lote.tanques.find(t => t.num === tanqueNum);
+    if (!tanque) return { custoTotal: 0, custoPorKg: 0, consumoRacao: 0, biomassa: 0 };
+    
+    let consumoRacao = tanque.consumoRacao || 0;
+    let biomassa = tanque.ultimaBiomassa || 0;
+    
+    // Custo proporcional de alevinos (baseado na porcentagem de peixes)
+    let proporcaoPeixes = tanque.qtdPeixes / lote.qtdTotal;
+    let custoAlevinosProporcional = (lote.valorAlevinos || 0) * proporcaoPeixes;
+    
+    // Custo proporcional de ração (baseado no consumo)
+    let consumoTotalLote = calcularConsumoRacaoLote(lote);
+    let proporcaoRacao = consumoTotalLote > 0 ? consumoRacao / consumoTotalLote : 0;
+    let custoRacaoTotal = calcularCustoRacaoLote(lote);
+    let custoRacaoProporcional = custoRacaoTotal * proporcaoRacao;
+    
+    let custoTotal = custoAlevinosProporcional + custoRacaoProporcional;
+    let custoPorKg = biomassa > 0 ? custoTotal / biomassa : 0;
+    
+    return {
+        custoTotal: custoTotal,
+        custoPorKg: custoPorKg,
+        consumoRacao: consumoRacao,
+        biomassa: biomassa,
+        quantidadePeixes: tanque.qtdPeixes
+    };
+}
+
+// Registrar consumo de ração no lote (chamar quando alimentação é registrada)
+function registrarConsumoNoLote(tanqueNum, kgRacao) {
+    let lotes = loadData("lotes");
+    for (let lote of lotes) {
+        let tanque = lote.tanques.find(t => t.num === tanqueNum);
+        if (tanque) {
+            tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
+            saveData("lotes", lotes);
+            break;
+        }
+    }
+}
+// ==================== FUNÇÃO PARA CONCLUIR O DIA ====================
+function concluirDiaAlimentacao() {
+    if (!confirm(`⚠️ ATENÇÃO! Isso irá FINALIZAR o dia de alimentação.\n\n• Todos os tratos pendentes serão CANCELADOS\n• O consumo registrado será consolidado nos lotes\n• Os tratos serão resetados para o novo dia\n\nTem certeza que deseja concluir o dia?`)) {
+        return;
+    }
+    
+    let lotes = loadData("lotes");
+    let totalConsumoDia = 0;
+    let tanquesProcessados = 0;
+    let consumosPorTanque = [];
+    
+    // Coletar consumo do dia de cada tanque
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let tratos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                let consumoDia = 0;
+                
+                for (let trato of tratos) {
+                    if (trato.tratado) {
+                        consumoDia += trato.kgFornecidos || 0;
+                    }
+                }
+                
+                if (consumoDia > 0) {
+                    totalConsumoDia += consumoDia;
+                    tanquesProcessados++;
+                    consumosPorTanque.push({
+                        tanque: tanque.num,
+                        loteId: lote.id,
+                        consumo: consumoDia
+                    });
+                    
+                    // Já está registrado no lote pela função registrarTrato
+                    // Mas garantimos que está salvo
+                }
+            }
+        }
+    }
+    
+    if (tanquesProcessados === 0) {
+        showMessage("❌ Nenhum consumo registrado hoje para finalizar.", true);
+        return;
+    }
+    
+    // Registrar no histórico de dias
+    let historicoDias = loadData("historicoDiasAlimentacao") || [];
+    historicoDias.unshift({
+        id: Date.now(),
+        data: new Date().toLocaleString(),
+        dataCompleta: new Date().toISOString(),
+        totalConsumo: totalConsumoDia,
+        tanquesAlimentados: tanquesProcessados,
+        consumos: consumosPorTanque
+    });
+    saveData("historicoDiasAlimentacao", historicoDias);
+    
+    // Resetar tratos para o novo dia
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let novosTratos = horariosTratos.map(ht => ({
+                    hora: ht.hora,
+                    tratado: false,
+                    kgFornecidos: 0,
+                    kgRecomendado: 0
+                }));
+                localStorage.setItem(`tratos_${tanque.num}`, JSON.stringify(novosTratos));
+            }
+        }
+    }
+    
+    // Atualizar interfaces
+    renderTratosTanques();
+    renderLotes(); // Atualiza custos e consumo
+    renderConsumoDiario();
+    atualizarDashboard();
+    
+    showMessage(`✅ DIA CONCLUÍDO! Total consumido: ${totalConsumoDia.toFixed(2)} kg em ${tanquesProcessados} tanques.\nOs tratos foram resetados para o novo dia.`);
+}
+
+// ==================== FUNÇÃO PARA VERIFICAR SE É O ÚLTIMO TRATO ====================
+function verificarUltimoTrato(tanqueNum, tratoIndex, kgRecomendado) {
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let proximoTratoIndex = tratoIndex + 1;
+    
+    // Verificar se este é o último trato (próximo não existe ou já está tratado)
+    let isUltimo = (proximoTratoIndex >= tratos.length) ||
+        (tratos[proximoTratoIndex] && tratos[proximoTratoIndex].tratado);
+    
+    if (isUltimo) {
+        if (confirm(`🍽️ Este é o ÚLTIMO TRATO do dia para o tanque ${tanqueNum}!\n\nDeseja fornecer este trato e finalizar o dia de alimentação deste tanque?\n\nKg a fornecer: ${kgRecomendado.toFixed(2)}kg`)) {
+            // Registrar o trato
+            registrarTrato(tanqueNum, tratoIndex, kgRecomendado);
+            
+            // Verificar se todos os tanques já terminaram o dia
+            verificarTodosTanquesConcluidos();
+            return true;
+        } else {
+            showMessage(`Trato não fornecido. O tanque ${tanqueNum} ainda tem pendências.`);
+            return false;
+        }
+    }
+    
+    // Não é o último, registrar normalmente
+    registrarTrato(tanqueNum, tratoIndex, kgRecomendado);
+    return true;
+}
+
+// ==================== VERIFICAR SE TODOS OS TANQUES JÁ CONCLUÍRAM ====================
+function verificarTodosTanquesConcluidos() {
+    let lotes = loadData("lotes");
+    let todosConcluidos = true;
+    let tanquesPendentes = [];
+    
+    for (let lote of lotes) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let tratos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                let temPendente = tratos.some(t => !t.tratado);
+                if (temPendente) {
+                    todosConcluidos = false;
+                    tanquesPendentes.push(tanque.num);
+                }
+            }
+        }
+    }
+    
+    if (todosConcluidos && tanquesPendentes.length === 0) {
+        if (confirm(`🎉 TODOS OS TANQUES concluíram os tratos do dia!\n\nDeseja finalizar o dia de alimentação agora?\n\nIsso irá consolidar os registros e preparar para amanhã.`)) {
+            concluirDiaAlimentacao();
+        }
+    } else if (tanquesPendentes.length > 0 && tanquesPendentes.length <= 3) {
+        showMessage(`⚠️ Ainda faltam tratos nos tanques: ${tanquesPendentes.join(', ')}`);
+    }
+}
+
+// ==================== FUNÇÃO PARA REGISTRAR CONSUMO MANUAL ====================
+function registrarAlimentacaoComConclusao() {
+    let tanqueNum = document.getElementById("alimTanque").value;
+    let kgRacao = parseFloat(document.getElementById("alimKg").value);
+    
+    if (!tanqueNum || isNaN(kgRacao) || kgRacao <= 0) {
+        showMessage("Tanque e kg válidos", true);
+        return;
+    }
+    
+    let info = getInfoTanqueOcupado(tanqueNum);
+    if (!info) {
+        showMessage("Tanque não ocupado", true);
+        return;
+    }
+    
+    // Verificar se o tanque tem tratos configurados
+    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let ultimoTratoNaoTratado = tratos.findIndex(t => !t.tratado);
+    let isUltimo = (ultimoTratoNaoTratado === tratos.length - 1);
+    
+    if (isUltimo && tratos.length > 0) {
+        if (confirm(`🍽️ Este é o ÚLTIMO TRATO do dia para o tanque ${tanqueNum}!\n\nDeseja registrar ${kgRacao}kg e finalizar o dia deste tanque?`)) {
+            // Registrar consumo
+            let estoque = loadData("estoqueRacao");
+            let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
+            if (totalEstoque < kgRacao) {
+                showMessage("Estoque insuficiente", true);
+                return;
+            }
+            
+            let consumoRestante = kgRacao;
+            for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
+                if (estoque[i].kgTotal >= consumoRestante) {
+                    estoque[i].kgTotal -= consumoRestante;
+                    consumoRestante = 0;
+                } else {
+                    consumoRestante -= estoque[i].kgTotal;
+                    estoque[i].kgTotal = 0;
+                }
+            }
+            saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
+            
+            let lotes = loadData("lotes");
+            let lote = lotes.find(l => l.id === info.loteId);
+            let tanque = lote.tanques.find(t => t.num === tanqueNum);
+            tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
+            saveData("lotes", lotes);
+            
+            // Marcar todos os tratos pendentes como fornecidos
+            for (let i = 0; i < tratos.length; i++) {
+                if (!tratos[i].tratado) {
+                    tratos[i] = { ...tratos[i], tratado: true, kgFornecidos: kgRacao / (tratos.length - i) };
+                }
+            }
+            localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+            
+            showMessage(`✅ Consumo de ${kgRacao}kg registrado. Dia finalizado para o tanque ${tanqueNum}`);
+            renderEstoqueRacao();
+            renderConsumoDiario();
+            renderTratosTanques();
+            renderLotes();
+            
+            verificarTodosTanquesConcluidos();
+            return;
+        }
+    }
+    
+    // Não é o último, registrar normalmente
+    registrarAlimentacao();
+}
+
+function toggleRelGroup(headerEl) {
+    let body    = headerEl.nextElementSibling;
+    let chevron = headerEl.querySelector(".rel-group-chevron");
+    if (!body) return;
+    let opening = !body.classList.contains("open");
+    body.classList.toggle("open", opening);
+    if (chevron) chevron.classList.toggle("open", opening);
+}
+
+function init() {
+    seedExemplo();
+    renderTanques();
+    renderLotes();
+    renderColab();
+    renderEstoqueRacao();
+    atualizarDashboard();
+    nav("menu");
+    iniciarVerificacaoNovoDia();
+}
+
+window.init = init;
+window.nav = nav;
+window.addTanque = addTanque;
+window.excluirTanque = excluirTanque;
+window.liberarTanque = liberarTanque;
+window.addMultiplosTanques = addMultiplosTanques;
+window.addLote = addLote;
+window.excluirLote = excluirLote;
+window.registrarBiometria = calcularMediaAmostras;
+window.carregarInfoTanqueBiometria = carregarInfoTanqueBiometria;
+window.registrarAlimentacao = registrarAlimentacao;
+window.registrarMortalidade = registrarMortalidade;
+window.addItemCarrada = addItemCarrada;
+window.finalizarCarrada = finalizarCarrada;
+window.limparCarrada = limparCarrada;
+window.addColaborador = addColaborador;
+window.excluirColab = excluirColab;
+window.addAdiantamento = addAdiantamento;
+window.adicionarModeloRacao = adicionarModeloRacao;
+window.excluirModeloRacao = excluirModeloRacao;
+window.carregarModeloParaCompra = carregarModeloParaCompra;
+window.relProducao = relProducao;
+window.relCustos = relCustos;
+window.relMortalidade = relMortalidade;
+window.relEstoqueCompleto = relEstoqueCompleto;
+window.relFinanceiroFolha = relFinanceiroFolha;
+window.relCurvaCrescimento = relCurvaCrescimento;
+window.relTanques = relTanques;
+window.relConsumoRacao = relConsumoRacao;
+window.relBiomassaDetalhada = relBiomassaDetalhada;
+window.calcularRacaoPorTanque = calcularRacaoPorTanque;
+window.aplicarRacaoTanque = aplicarRacaoTanque;
+window.mostrarAbaAlimentacao = mostrarAbaAlimentacao;
+window.mostrarAbaMortalidade = mostrarAbaMortalidade;
+window.configurarTratos = configurarTratos;
+window.fornecerUmTratoParaTodosTanques = fornecerUmTratoParaTodosTanques;
+window.registrarTrato = registrarTrato;
+window.preencherTodosTratos = preencherTodosTratos;
+window.reverterTrato = reverterTrato;
+window.reverterDiaTanque = reverterDiaTanque;
+window.suspenderAlimentacaoTanque = suspenderAlimentacaoTanque;
+window.reativarAlimentacaoTanque = reativarAlimentacaoTanque;
+window.resetarTratosTanque = resetarTratosTanqueRefatorado;
+window.resetarDiaTodosTanques = resetarDiaTodosTanques;
+window.padronizarTratosTodosTanques = padronizarTratosTodosTanques;
+window.inicializarClassificacao = inicializarClassificacao;
+window.adicionarDestino = adicionarDestino;
+window.adicionarAmostra = adicionarAmostra;
+window.calcularMediaAmostras = calcularMediaAmostras;
+window.limparAmostras = limparAmostras;
+window.relCustosDetalhados = relCustosDetalhados;
+window.calcularCustoPorKGLote = calcularCustoPorKGLote;
+window.calcularCALote = calcularCALote;
+window.concluirDiaAlimentacao = concluirDiaAlimentacao;
+window.verificarTodosTanquesConcluidos = verificarTodosTanquesConcluidos;
+window.registrarAlimentacaoComConclusao = registrarAlimentacaoComConclusao;
+window.relCurvaCrescimento = relCurvaCrescimento;
+window.atualizarCurva = atualizarCurva;
+window.removerAmostra = removerAmostra;
+window.toggleTank = toggleTank;
+window.toggleRelGroup = toggleRelGroup;
+window.removerItemCarrada = removerItemCarrada;
+window.removerItemEstoque = removerItemEstoque;
+window.removerDestino = removerDestino;
+window.atualizarDestino = atualizarDestino;
+window.carregarInfoOrigem = carregarInfoOrigem;
+window.executarClassificacao = executarClassificacao;
+window.formatarDataBio = formatarDataBio;
+window.relMortalidade = relMortalidade;
+window.atualizarGraficoMortalidade = atualizarGraficoMortalidade;
+window.registrarMortalidadeComData = registrarMortalidadeComData;
+init();
+</script>
+</body>
+</html>
