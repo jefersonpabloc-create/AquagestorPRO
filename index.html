@@ -238,7 +238,21 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
 .stat-cell strong{display:block;font-size:.85rem;color:var(--text)}
 .stat-cell span{color:var(--text3);font-size:.68rem}
 
-/* RESPONSIVE */
+/* PISCICULTURA SWITCHER */
+.pisc-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.pisc-modal{background:var(--surf);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:20px 16px 32px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;animation:slideUp .22s var(--ease)}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.pisc-modal-title{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.pisc-item{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-md);margin:7px 0;gap:8px;cursor:pointer;transition:all .15s}
+.pisc-item:hover{border-color:var(--blue);background:var(--blue-xl)}
+.pisc-item.active{border-color:var(--blue);background:var(--blue-l)}
+.pisc-item-name{font-weight:700;font-size:.9rem}
+.pisc-item-sub{font-size:.7rem;color:var(--text3);margin-top:2px}
+.pisc-badge{background:var(--blue);color:#fff;border-radius:10px;padding:2px 8px;font-size:.65rem;font-weight:700}
+.danger-zone{background:#fff1f2;border:1.5px solid #fca5a5;border-radius:var(--r-lg);padding:14px;margin:10px 0}
+.danger-zone-title{color:var(--red);font-weight:800;font-size:.85rem;margin-bottom:6px}
+
 @media(max-width:480px){
   .menu-btn .m-ico{font-size:1.3rem}
   .menu-btn{font-size:.62rem;padding:12px 3px}
@@ -262,7 +276,7 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
       <h1>🐟 AquaGestor PRO</h1>
       <p>ERP completo para Piscicultura</p>
     </div>
-    <div class="header-badge" id="headerBadge">🐟 — peixes</div>
+    <div class="header-badge" id="headerBadge" onclick="abrirGerenciadorPisciculturas()" style="cursor:pointer;">🐟 — peixes</div>
   </div>
 </header>
 
@@ -746,12 +760,223 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
     </div>
 </div>
 
+<div id="piscModal" style="display:none;" class="pisc-modal-overlay" onclick="fecharGerenciadorPisciculturas(event)">
+  <div class="pisc-modal" onclick="event.stopPropagation()">
+    <div class="pisc-modal-title">🏭 Minhas Pisciculturas</div>
+    <div id="piscLista"></div>
+    <div style="margin-top:12px;">
+      <div id="formNovaPisc" class="form-collapse">
+        <div class="card" style="border-left:3px solid var(--green);margin:4px 0 10px;">
+          <div class="field"><label>Nome da nova piscicultura</label><input type="text" id="novaPiscNome" placeholder="Ex: Fazenda Boa Vista" maxlength="40"></div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="criarNovaPiscicultura()" class="btn-success" style="flex:1;">🚀 Criar e Acessar</button>
+            <button onclick="document.getElementById('formNovaPisc').classList.remove('open')" class="btn-outline btn-sm">✕</button>
+          </div>
+        </div>
+      </div>
+      <button onclick="document.getElementById('formNovaPisc').classList.toggle('open')" class="btn-success" style="width:100%;margin-bottom:8px;">➕ Nova Piscicultura</button>
+    </div>
+    <div class="danger-zone" style="margin-top:14px;">
+      <div class="danger-zone-title">⚠️ Zona de Perigo</div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:10px;">Apaga TODOS os dados da piscicultura atual (tanques, lotes, estoque, biometrias, colaboradores, compras). Irreversível!</p>
+      <button onclick="resetarDadosPiscicultura()" class="btn-danger" style="width:100%;">🗑️ Resetar esta Piscicultura</button>
+    </div>
+    <button onclick="fecharGerenciadorPisciculturas()" class="btn-outline" style="width:100%;margin-top:10px;">✕ Fechar</button>
+  </div>
+</div>
+
 <div id="toastMessage" class="message"></div>
 
 <script>
+// ==================== SISTEMA MULTI-PISCICULTURA ====================
+// Cada piscicultura tem seu próprio prefixo de chave no localStorage
+
+function getPisciculturasLista() {
+    try { return JSON.parse(localStorage.getItem('__pisciculturas__')) || []; } catch(e) { return []; }
+}
+function setPisciculturasLista(lista) { localStorage.setItem('__pisciculturas__', JSON.stringify(lista)); }
+
+function getPiscAtiva() {
+    let id = localStorage.getItem('__piscAtiva__') || 'default';
+    return id;
+}
+
+function setPiscAtiva(id) {
+    localStorage.setItem('__piscAtiva__', id);
+    // Atualiza o prefixo de armazenamento
+    window.__piscPrefix__ = id === 'default' ? '' : id + '__';
+}
+
+// Prefixo das chaves do localStorage da piscicultura ativa
+function pKey(key) {
+    return (window.__piscPrefix__ || '') + key;
+}
+
+// Inicializar sistema de pisciculturas
+function initPisciculturas() {
+    let lista = getPisciculturasLista();
+    let ativa = getPiscAtiva();
+    // Garantir que a piscicultura default existe
+    if (!lista.find(p => p.id === 'default')) {
+        lista.unshift({ id: 'default', nome: 'Piscicultura Principal', criadaEm: new Date().toLocaleDateString() });
+        setPisciculturasLista(lista);
+    }
+    setPiscAtiva(ativa);
+    atualizarHeaderPisc();
+}
+
+function atualizarHeaderPisc() {
+    let lista = getPisciculturasLista();
+    let ativa = getPiscAtiva();
+    let pisc = lista.find(p => p.id === ativa);
+    let badge = document.getElementById('headerBadge');
+    if (badge && pisc) badge.textContent = '🏭 ' + pisc.nome;
+}
+
+function criarNovaPiscicultura() {
+    let nome = document.getElementById('novaPiscNome').value.trim();
+    if (!nome) { showMessage('Digite um nome para a piscicultura', true); return; }
+    let lista = getPisciculturasLista();
+    let id = 'pisc_' + Date.now();
+    lista.push({ id, nome, criadaEm: new Date().toLocaleDateString() });
+    setPisciculturasLista(lista);
+    document.getElementById('novaPiscNome').value = '';
+    document.getElementById('formNovaPisc').classList.remove('open');
+    // Seed inicial para a nova
+    let prefOld = window.__piscPrefix__;
+    window.__piscPrefix__ = id + '__';
+    seedExemplo();
+    window.__piscPrefix__ = prefOld;
+    trocarParaPiscicultura(id);
+}
+
+function trocarParaPiscicultura(id) {
+    setPiscAtiva(id);
+    fecharGerenciadorPisciculturas();
+    // Re-inicializar tudo
+    renderTanques();
+    renderLotes();
+    renderColab();
+    renderEstoqueRacao();
+    atualizarDashboard();
+    atualizarHeaderPisc();
+    renderGerenciadorPisciculturas();
+    nav('menu');
+    showMessage('✅ Piscicultura trocada!');
+}
+
+function excluirPiscicultura(id) {
+    if (id === 'default') { showMessage('Não é possível excluir a piscicultura principal', true); return; }
+    let lista = getPisciculturasLista();
+    let pisc = lista.find(p => p.id === id);
+    if (!confirm(`Excluir "${pisc ? pisc.nome : id}" e TODOS os seus dados? Esta ação é irreversível!`)) return;
+    // Remover todas as chaves dessa piscicultura do localStorage
+    let prefix = id + '__';
+    Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k));
+    setPisciculturasLista(lista.filter(p => p.id !== id));
+    // Se era a ativa, voltar para default
+    if (getPiscAtiva() === id) trocarParaPiscicultura('default');
+    else renderGerenciadorPisciculturas();
+    showMessage('Piscicultura excluída');
+}
+
+function resetarDadosPiscicultura() {
+    let ativa = getPiscAtiva();
+    let lista = getPisciculturasLista();
+    let pisc = lista.find(p => p.id === ativa) || { nome: 'Principal' };
+    if (!confirm(`⚠️ ATENÇÃO MÁXIMA!\n\nIsso vai apagar TODOS os dados de "${pisc.nome}":\n• Tanques\n• Lotes de peixe\n• Biometrias\n• Estoque de ração\n• Compras\n• Colaboradores\n• Histórico de alimentação\n• Tratos\n\nEsta ação é IRREVERSÍVEL!\n\nDigite OK para confirmar.`)) return;
+    let confirma = prompt('Digite "RESETAR" para confirmar o apagamento total:');
+    if (confirma !== 'RESETAR') { showMessage('Operação cancelada', true); return; }
+
+    let prefix = ativa === 'default' ? '' : ativa + '__';
+    let keysParaRemover = [
+        'tanques','lotes','estoqueRacao','colab','adiantamentos','modelosRacao',
+        'historicoMortalidade','historicoDiasAlimentacao','alimentacaoSuspensa',
+        'historicoClassificacoes','ultimaDataReset'
+    ];
+    // Remover chaves prefixadas
+    keysParaRemover.forEach(k => localStorage.removeItem(prefix + k));
+    // Remover tratos (chaves dinâmicas)
+    Object.keys(localStorage).filter(k => k.startsWith(prefix + 'tratos_')).forEach(k => localStorage.removeItem(k));
+    // Se default, também sem prefixo (backward compat)
+    if (ativa === 'default') {
+        keysParaRemover.forEach(k => localStorage.removeItem(k));
+        Object.keys(localStorage).filter(k => k.startsWith('tratos_')).forEach(k => localStorage.removeItem(k));
+    }
+    fecharGerenciadorPisciculturas();
+    seedExemplo();
+    renderTanques(); renderLotes(); renderColab(); renderEstoqueRacao(); atualizarDashboard();
+    nav('menu');
+    showMessage('✅ Piscicultura resetada com sucesso!');
+}
+
+function abrirGerenciadorPisciculturas() {
+    document.getElementById('piscModal').style.display = 'flex';
+    renderGerenciadorPisciculturas();
+}
+function fecharGerenciadorPisciculturas(e) {
+    if (e && e.target !== document.getElementById('piscModal')) return;
+    document.getElementById('piscModal').style.display = 'none';
+}
+
+function renderGerenciadorPisciculturas() {
+    let lista = getPisciculturasLista();
+    let ativa = getPiscAtiva();
+    let div = document.getElementById('piscLista');
+    if (!div) return;
+    div.innerHTML = lista.map(p => {
+        let isAtiva = p.id === ativa;
+        let nTanques = 0, nLotes = 0;
+        try {
+            let pref = p.id === 'default' ? '' : p.id + '__';
+            nTanques = (JSON.parse(localStorage.getItem(pref + 'tanques')) || []).length;
+            nLotes = (JSON.parse(localStorage.getItem(pref + 'lotes')) || []).length;
+        } catch(e) {}
+        return `<div class="pisc-item ${isAtiva?'active':''}" onclick="${isAtiva?'':` trocarParaPiscicultura('${p.id}')`}">
+            <div>
+                <div class="pisc-item-name">🏭 ${p.nome} ${isAtiva?'<span class="pisc-badge">ATIVA</span>':''}</div>
+                <div class="pisc-item-sub">📅 ${p.criadaEm} · ${nTanques} tanques · ${nLotes} lotes</div>
+            </div>
+            ${!isAtiva && p.id !== 'default' ? `<button onclick="event.stopPropagation();excluirPiscicultura('${p.id}')" class="btn-danger btn-xs" style="margin:0;flex-shrink:0;">🗑️</button>` : ''}
+        </div>`;
+    }).join('');
+}
+
 // ==================== AUXILIARES ====================
-function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-function loadData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
+function saveData(key, data) { localStorage.setItem(pKey(key), JSON.stringify(data)); }
+function loadData(key) { 
+    // Tentar com prefixo da piscicultura ativa primeiro
+    let val = localStorage.getItem(pKey(key));
+    // Fallback para chave sem prefixo (compatibilidade com dados antigos da default)
+    if (val === null && getPiscAtiva() === 'default') val = localStorage.getItem(key);
+    try { return JSON.parse(val) || []; } catch(e) { return []; }
+}
+
+// Helpers para tratos (chaves dinâmicas por tanque)
+function tLoad(tanqueNum) {
+    let key = pKey('tratos_' + tanqueNum);
+    let val = localStorage.getItem(key);
+    if (val === null && getPiscAtiva() === 'default') val = localStorage.getItem('tratos_' + tanqueNum);
+    try { return JSON.parse(val) || []; } catch(e) { return []; }
+}
+function tSave(tanqueNum, data) { localStorage.setItem(pKey('tratos_' + tanqueNum), JSON.stringify(data)); }
+function tRemove(tanqueNum) { localStorage.removeItem(pKey('tratos_' + tanqueNum)); }
+
+// alimentacaoSuspensa
+function loadSuspensos() {
+    let val = localStorage.getItem(pKey('alimentacaoSuspensa'));
+    if (val === null && getPiscAtiva() === 'default') val = localStorage.getItem('alimentacaoSuspensa');
+    try { return JSON.parse(val) || []; } catch(e) { return []; }
+}
+function saveSuspensos(data) { localStorage.setItem(pKey('alimentacaoSuspensa'), JSON.stringify(data)); }
+
+// ultimaDataReset
+function getUltimaDataReset() {
+    let val = localStorage.getItem(pKey('ultimaDataReset'));
+    if (!val && getPiscAtiva() === 'default') val = localStorage.getItem('ultimaDataReset');
+    return val;
+}
+function setUltimaDataReset(d) { localStorage.setItem(pKey('ultimaDataReset'), d); }
 
 function showMessage(msg, isError = false) {
     const toast = document.getElementById('toastMessage');
@@ -1358,7 +1583,7 @@ function padronizarTratosTodosTanques() {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
                 let novosTratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
-                let tratosAntigos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                let tratosAntigos = tLoad(tanque.num);
                 if (tratosAntigos.length > 0) {
                     for (let i = 0; i < Math.min(novosTratos.length, tratosAntigos.length); i++) {
                         if (tratosAntigos[i] && tratosAntigos[i].tratado) {
@@ -1367,7 +1592,7 @@ function padronizarTratosTodosTanques() {
                         }
                     }
                 }
-                localStorage.setItem(`tratos_${tanque.num}`, JSON.stringify(novosTratos));
+                tSave(tanque.num, novosTratos);
                 tanquesAfetados++;
             }
         }
@@ -1380,7 +1605,7 @@ function renderTratosTanques() {
     let tanquesOcupados = [];
     let lotes = loadData("lotes");
     let pesoCopo = parseFloat(document.getElementById("pesoCopo").value) || 2.5;
-    let suspensos = JSON.parse(localStorage.getItem("alimentacaoSuspensa")) || [];
+    let suspensos = loadSuspensos();
 
     for (let lote of lotes) {
         for (let tanque of lote.tanques) {
@@ -1393,7 +1618,7 @@ function renderTratosTanques() {
                 let ca = getCAEfetiva(pesoMedio, caSelecionado);
                 let ganhoBiomassaKg = (tanque.qtdPeixes * gpd) / 1000;
                 let racaoDiariaRecomendada = ganhoBiomassaKg * ca;
-                let tratosSalvos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                let tratosSalvos = tLoad(tanque.num);
                 if (tratosSalvos.length === 0 && horariosTratos.length > 0) {
                     tratosSalvos = horariosTratos.map(t => ({ hora: t.hora, tratado: false, kgFornecidos: 0 }));
                 }
@@ -1537,7 +1762,7 @@ function extrairDiametroPellet(tipoRacao) {
 // Na função registrarTrato, substitua a parte do registro de consumo:
 
 function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let tratos = tLoad(tanqueNum);
     if (tratos[tratoIndex] && tratos[tratoIndex].tratado) {
         showMessage("Este trato já foi fornecido hoje!", true);
         return;
@@ -1621,7 +1846,7 @@ function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
     saveData("lotes", lotes);
     
     tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: true, kgFornecidos: kgRecomendado };
-    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+    tSave(tanqueNum, tratos);
     
     // Calcular custo real do consumo
     let custoReal = detalhesConsumo.reduce((sum, d) => sum + d.custoTotal, 0);
@@ -1638,7 +1863,7 @@ function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
 }
 
 function preencherTodosTratos(tanqueNum) {
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let tratos = tLoad(tanqueNum);
     let info = getInfoTanqueOcupado(tanqueNum);
     let racaoDiaria = 0;
     if (info) {
@@ -1676,7 +1901,7 @@ function preencherTodosTratos(tanqueNum) {
         }
     }
     saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
-    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+    tSave(tanqueNum, tratos);
     if (info) {
         let lotes = loadData("lotes");
         let lote = lotes.find(l => l.id === info.loteId);
@@ -1718,7 +1943,7 @@ function fornecerUmTratoParaTodosTanques() {
                 tanquesOcupados.push({
                     num: tanque.num, qtdPeixes: tanque.qtdPeixes, pesoMedio: pesoMedio,
                     loteId: lote.id, racaoDiariaRecomendada: racaoDiariaRecomendada,
-                    tratos: JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || []
+                    tratos: tLoad(tanque.num)
                 });
             }
         }
@@ -1764,7 +1989,7 @@ function fornecerUmTratoParaTodosTanques() {
         }
         if (consumoRestante > 0.01) { erros.push(`Tanque ${t.num}: faltou ${consumoRestante.toFixed(1)}kg no estoque`); continue; }
         tratos[primeiroTratoIndex] = { ...tratos[primeiroTratoIndex], tratado: true, kgFornecidos: kgPorTrato, registradoEm: new Date().toLocaleString() };
-        localStorage.setItem(`tratos_${t.num}`, JSON.stringify(tratos));
+        tSave(t.num, tratos);
         let info = getInfoTanqueOcupado(t.num);
         if (info) {
             let lotesData = loadData("lotes");
@@ -1789,7 +2014,7 @@ function fornecerUmTratoParaTodosTanques() {
 // ==================== FUNÇÕES DE REVERSÃO ====================
 function reverterTrato(tanqueNum, tratoIndex, kgEstornar) {
     if (!confirm(`Deseja estornar/reverter o trato ${tratoIndex+1} do tanque ${tanqueNum}?`)) return;
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let tratos = tLoad(tanqueNum);
     if (!tratos[tratoIndex] || !tratos[tratoIndex].tratado) { showMessage("Este trato não está marcado como fornecido!", true); return; }
     let kgAtual = tratos[tratoIndex].kgFornecidos || 0;
     if (kgEstornar > kgAtual + 0.01) { showMessage(`Não é possível estornar mais do que foi fornecido (${kgAtual.toFixed(2)}kg)`, true); return; }
@@ -1798,7 +2023,7 @@ function reverterTrato(tanqueNum, tratoIndex, kgEstornar) {
     let novoKgFornecido = kgAtual - kgEstornar;
     if (novoKgFornecido <= 0.01) tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: false, kgFornecidos: 0 };
     else tratos[tratoIndex] = { ...tratos[tratoIndex], kgFornecidos: novoKgFornecido };
-    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+    tSave(tanqueNum, tratos);
     let info = getInfoTanqueOcupado(tanqueNum);
     if (info) {
         let lotesData = loadData("lotes");
@@ -1818,7 +2043,7 @@ function reverterTrato(tanqueNum, tratoIndex, kgEstornar) {
 
 function reverterDiaTanque(tanqueNum) {
     if (!confirm(`⚠️ ATENÇÃO: ESTORNAR TODOS os tratos do tanque ${tanqueNum}?`)) return;
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let tratos = tLoad(tanqueNum);
     let kgTotalEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
     if (kgTotalEstornar <= 0) { showMessage("Nenhum trato fornecido para estornar.", true); return; }
     let estoque = loadData("estoqueRacao");
@@ -1834,7 +2059,7 @@ function reverterDiaTanque(tanqueNum) {
         }
     }
     let novosTratos = tratos.map(t => ({ ...t, tratado: false, kgFornecidos: 0 }));
-    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(novosTratos));
+    tSave(tanqueNum, novosTratos);
     saveData("estoqueRacao", estoque);
     renderEstoqueRacao();
     renderConsumoDiario();
@@ -1844,7 +2069,7 @@ function reverterDiaTanque(tanqueNum) {
 
 function suspenderAlimentacaoTanque(tanqueNum, justificativa = "") {
     if (!confirm(`🐟 Suspender alimentação para o tanque ${tanqueNum}?`)) return;
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let tratos = tLoad(tanqueNum);
     let kgTotalEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
     if (kgTotalEstornar > 0) {
         let estoque = loadData("estoqueRacao");
@@ -1861,29 +2086,29 @@ function suspenderAlimentacaoTanque(tanqueNum, justificativa = "") {
             }
         }
     }
-    let suspensos = JSON.parse(localStorage.getItem("alimentacaoSuspensa")) || [];
+    let suspensos = loadSuspensos();
     if (!suspensos.includes(tanqueNum)) suspensos.push(tanqueNum);
-    localStorage.setItem("alimentacaoSuspensa", JSON.stringify(suspensos));
+    saveSuspensos(suspensos);
     let novosTratos = tratos.map(t => ({ ...t, tratado: false, kgFornecidos: 0, suspenso: true, suspensoJustificativa: justificativa || "Não informada", suspensoEm: new Date().toLocaleString() }));
-    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(novosTratos));
+    tSave(tanqueNum, novosTratos);
     renderTratosTanques();
     showMessage(`⛔ Alimentação do tanque ${tanqueNum} SUSPENSA! ${kgTotalEstornar.toFixed(2)}kg estornados.`);
 }
 
 function reativarAlimentacaoTanque(tanqueNum) {
     if (!confirm(`Reativar a alimentação para o tanque ${tanqueNum}?`)) return;
-    let suspensos = JSON.parse(localStorage.getItem("alimentacaoSuspensa")) || [];
-    localStorage.setItem("alimentacaoSuspensa", JSON.stringify(suspensos.filter(t => t !== tanqueNum)));
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let suspensos = loadSuspensos();
+    saveSuspensos(suspensos.filter(t => t !== tanqueNum));
+    let tratos = tLoad(tanqueNum);
     let novosTratos = tratos.map(t => ({ ...t, suspenso: false, suspensoJustificativa: null, suspensoEm: null }));
-    localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(novosTratos));
+    tSave(tanqueNum, novosTratos);
     renderTratosTanques();
     showMessage(`✅ Alimentação do tanque ${tanqueNum} REATIVADA!`);
 }
 
 function resetarTratosTanqueRefatorado(tanqueNum) {
     if (confirm(`Resetar todos os tratos do dia para o tanque ${tanqueNum}?\\n\\nA ração consumida será retornada ao estoque.`)) {
-        let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+        let tratos = tLoad(tanqueNum);
         let kgEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
         if (kgEstornar > 0) {
             let estoque = loadData("estoqueRacao");
@@ -1901,7 +2126,7 @@ function resetarTratosTanqueRefatorado(tanqueNum) {
             }
             renderEstoqueRacao();
         }
-        localStorage.removeItem(`tratos_${tanqueNum}`);
+        tRemove(tanqueNum);
         renderTratosTanques();
         showMessage(`Tratos do tanque ${tanqueNum} resetados. ${kgEstornar.toFixed(1)}kg retornados ao estoque.`);
     }
@@ -1916,7 +2141,7 @@ function resetarDiaTodosTanques() {
     for (let lote of lotes) {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
-                let tratos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                let tratos = tLoad(tanque.num);
                 let kgTanque = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
                 if (kgTanque > 0) {
                     kgTotalEstornado += kgTanque;
@@ -1930,7 +2155,7 @@ function resetarDiaTodosTanques() {
                     }
                 }
                 let novosTratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
-                localStorage.setItem(`tratos_${tanque.num}`, JSON.stringify(novosTratos));
+                tSave(tanque.num, novosTratos);
                 tanquesResetados++;
             }
         }
@@ -2057,7 +2282,7 @@ function mostrarAbaMortalidade() {
 
 // ==================== VERIFICAÇÃO DE NOVO DIA ====================
 function verificarENovoDia() {
-    let ultimaData = localStorage.getItem("ultimaDataReset");
+    let ultimaData = getUltimaDataReset();
     let hoje = new Date().toLocaleDateString();
     if (ultimaData !== hoje) {
         let lotes = loadData("lotes");
@@ -2066,12 +2291,12 @@ function verificarENovoDia() {
             for (let tanque of lote.tanques) {
                 if (tanque.qtdPeixes > 0) {
                     let novosTratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
-                    localStorage.setItem(`tratos_${tanque.num}`, JSON.stringify(novosTratos));
+                    tSave(tanque.num, novosTratos);
                     tanquesResetados++;
                 }
             }
         }
-        localStorage.setItem("ultimaDataReset", hoje);
+        setUltimaDataReset(hoje);
         if (tanquesResetados > 0) {
             renderTratosTanques();
             showMessage(`🌅 Novo dia! ${tanquesResetados} tanques preparados para nova alimentação.`);
@@ -2225,7 +2450,7 @@ function calcularMediaAmostras() {
     let ca = getCAEfetiva(pesoMedioGramas, caSelecionado);
     let ganhoBiomassaKg = (info.qtdPeixes * gpd) / 1000;
     let novaRacaoDiaria = ganhoBiomassaKg * ca;
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let tratos = tLoad(tanqueNum);
     if (tratos.length > 0 && horariosTratos.length > 0) {
         let novoKgPorTrato = novaRacaoDiaria / horariosTratos.length;
         for (let i = 0; i < tratos.length; i++) {
@@ -2233,7 +2458,7 @@ function calcularMediaAmostras() {
                 tratos[i].kgRecomendado = novoKgPorTrato;
             }
         }
-        localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+        tSave(tanqueNum, tratos);
     }
     showMessage(`✅ BIOMETRIA ATUALIZADA!\n\n📊 Tanque ${tanqueNum}:\n• Peso médio: ${pesoMedioGramas.toFixed(0)} g\n• Biomassa: ${biomassa.toFixed(1)} kg\n• Nova ração diária: ${novaRacaoDiaria.toFixed(2)} kg\n• ${horariosTratos.length} tratos de ${(novaRacaoDiaria / horariosTratos.length).toFixed(2)} kg cada`);
     renderBiometrias();
@@ -2383,7 +2608,7 @@ function finalizarCarrada() {
         let custoPorSaco = i.valor + fretePorSaco;
         let custoKg = custoPorSaco / i.peso;
         let kgTotal = i.qtd * i.peso;
-        estoque.push({ id: Date.now() + Math.random() + i, marca: i.marca, pb: i.pb, pellet: i.pellet, kgTotal: kgTotal, valorKg: custoKg, data: new Date().toLocaleDateString(), quantidadeSacos: i.qtd, pesoPorSaco: i.peso });
+        estoque.push({ id: Date.now() + Math.random() * 1000 + itensAdicionados, marca: i.marca, pb: i.pb, pellet: i.pellet, kgTotal: kgTotal, valorKg: custoKg, data: new Date().toLocaleDateString(), quantidadeSacos: i.qtd, pesoPorSaco: i.peso });
         itensAdicionados++;
     }
     saveData("estoqueRacao", estoque);
@@ -2398,29 +2623,65 @@ function finalizarCarrada() {
 function renderEstoqueRacao() {
     let estoque = loadData("estoqueRacao");
     let div = document.getElementById("estoqueRacao");
+    if (!div) return;
     if (!estoque.length) { div.innerHTML = "<div class='card'>📦 Estoque vazio. Compre ração para começar.</div>"; return; }
+    // Garantir que todos têm IDs válidos
+    let changed = false;
+    estoque = estoque.map((item, idx) => {
+        if (!item.id || isNaN(Number(item.id)) || String(item.id).includes('[object')) {
+            changed = true;
+            return { ...item, id: Date.now() + idx + Math.floor(Math.random()*1000) };
+        }
+        return item;
+    });
+    if (changed) saveData("estoqueRacao", estoque);
     let totalKg = estoque.reduce((s, i) => s + i.kgTotal, 0);
     let totalItens = estoque.length;
     div.innerHTML = `<div class='card' style="background:#f0f9ff;">
         <strong>📊 Resumo do Estoque</strong><br>
         📦 Total: ${totalKg.toFixed(1)} kg | 🏷️ ${totalItens} lotes
-    </div>` + estoque.map(i => `<div class='card'>🥣 <strong>${i.marca}</strong> | ${i.pellet} | PB ${i.pb}%<br>
-        📦 ${i.kgTotal.toFixed(1)}kg | 💰 R$ ${i.valorKg.toFixed(2)}/kg<br>
-        📅 ${i.data} | ${i.quantidadeSacos || '?'} sacos de ${i.pesoPorSaco || i.kgTotal / (i.quantidadeSacos || 1)}kg
-        <button onclick="removerItemEstoque(${i.id})" class="btn-danger btn-sm" style="float:right;">🗑️</button>
-    </div>`).join('');
+    </div>` + estoque.map((i, idx) => {
+        let safeId = String(i.id).replace(/['"]/g,'');
+        return `<div class='card' style="position:relative;padding-right:60px;">
+        <div>🥣 <strong>${i.marca||'—'}</strong> | ${i.pellet||'—'} | PB ${i.pb||0}%<br>
+        📦 ${i.kgTotal.toFixed(1)}kg | 💰 R$ ${(i.valorKg||0).toFixed(2)}/kg<br>
+        📅 ${i.data||'—'} | ${i.quantidadeSacos||'?'} sacos de ${(i.pesoPorSaco||0)}kg</div>
+        <button onclick="removerItemEstoqueIdx(${idx})" class="btn-danger btn-xs" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);margin:0;">🗑️</button>
+    </div>`;
+    }).join('');
 }
 
 function removerItemEstoque(id) {
     if (confirm("Remover este item do estoque?")) {
         let estoque = loadData("estoqueRacao");
-        saveData("estoqueRacao", estoque.filter(i => i.id !== id));
+        // Comparação robusta: tenta por id numérico e string
+        let novo = estoque.filter(i => String(i.id) !== String(id) && i.id !== id && Number(i.id) !== Number(id));
+        // Se nenhum foi removido (IDs iguais), tenta por índice
+        if (novo.length === estoque.length) {
+            let idx = estoque.findIndex(i => String(i.id) === String(id) || Number(i.id) === Number(id));
+            if (idx !== -1) { estoque.splice(idx, 1); novo = estoque; }
+        }
+        saveData("estoqueRacao", novo);
         renderEstoqueRacao();
-        showMessage("Item removido do estoque");
+        showMessage("✅ Item removido do estoque");
     }
 }
 
-// ==================== MÃO DE OBRA ====================
+function removerItemEstoqueIdx(idx) {
+    if (confirm("Remover este item do estoque?")) {
+        let estoque = loadData("estoqueRacao");
+        if (idx >= 0 && idx < estoque.length) {
+            estoque.splice(idx, 1);
+            saveData("estoqueRacao", estoque);
+            renderEstoqueRacao();
+            showMessage("✅ Item removido do estoque");
+        } else {
+            showMessage("❌ Item não encontrado", true);
+        }
+    }
+}
+
+window.removerItemEstoqueIdx = removerItemEstoqueIdx;
 function addColaborador() { 
     let nome = document.getElementById("cnome").value.trim();
     let tipo = document.getElementById("ctipo").value;
@@ -3376,7 +3637,7 @@ function atualizarDashboard() {
     for (let l of lotes) {
         for (let t of l.tanques) {
             if (t.qtdPeixes <= 0) continue;
-            let tratos = JSON.parse(localStorage.getItem("tratos_"+t.num)) || [];
+            let tratos = tLoad(t.num);
             for (let tr of tratos) {
                 if (tr.tratado) consumoHoje += tr.kgFornecidos || 0;
             }
@@ -3676,7 +3937,7 @@ function executarClassificacao() {
                 kgFornecidos: 0,
                 kgRecomendado: kgPorTrato
             }));
-            localStorage.setItem(`tratos_${d.tanque}`, JSON.stringify(novosTratos));
+            tSave(d.tanque, novosTratos);
         }
     }
     
@@ -3963,7 +4224,7 @@ function concluirDiaAlimentacao() {
     for (let lote of lotes) {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
-                let tratos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                let tratos = tLoad(tanque.num);
                 let consumoDia = 0;
                 
                 for (let trato of tratos) {
@@ -4015,7 +4276,7 @@ function concluirDiaAlimentacao() {
                     kgFornecidos: 0,
                     kgRecomendado: 0
                 }));
-                localStorage.setItem(`tratos_${tanque.num}`, JSON.stringify(novosTratos));
+                tSave(tanque.num, novosTratos);
             }
         }
     }
@@ -4031,7 +4292,7 @@ function concluirDiaAlimentacao() {
 
 // ==================== FUNÇÃO PARA VERIFICAR SE É O ÚLTIMO TRATO ====================
 function verificarUltimoTrato(tanqueNum, tratoIndex, kgRecomendado) {
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let tratos = tLoad(tanqueNum);
     let proximoTratoIndex = tratoIndex + 1;
     
     // Verificar se este é o último trato (próximo não existe ou já está tratado)
@@ -4066,7 +4327,7 @@ function verificarTodosTanquesConcluidos() {
     for (let lote of lotes) {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
-                let tratos = JSON.parse(localStorage.getItem(`tratos_${tanque.num}`)) || [];
+                let tratos = tLoad(tanque.num);
                 let temPendente = tratos.some(t => !t.tratado);
                 if (temPendente) {
                     todosConcluidos = false;
@@ -4102,7 +4363,7 @@ function registrarAlimentacaoComConclusao() {
     }
     
     // Verificar se o tanque tem tratos configurados
-    let tratos = JSON.parse(localStorage.getItem(`tratos_${tanqueNum}`)) || [];
+    let tratos = tLoad(tanqueNum);
     let ultimoTratoNaoTratado = tratos.findIndex(t => !t.tratado);
     let isUltimo = (ultimoTratoNaoTratado === tratos.length - 1);
     
@@ -4140,7 +4401,7 @@ function registrarAlimentacaoComConclusao() {
                     tratos[i] = { ...tratos[i], tratado: true, kgFornecidos: kgRacao / (tratos.length - i) };
                 }
             }
-            localStorage.setItem(`tratos_${tanqueNum}`, JSON.stringify(tratos));
+            tSave(tanqueNum, tratos);
             
             showMessage(`✅ Consumo de ${kgRacao}kg registrado. Dia finalizado para o tanque ${tanqueNum}`);
             renderEstoqueRacao();
@@ -4229,6 +4490,7 @@ function toggleFormLote() {
 }
 
 function init() {
+    initPisciculturas();
     seedExemplo();
     renderTanques();
     renderLotes();
@@ -4305,6 +4567,13 @@ window.toggleFormTanque = toggleFormTanque;
 window.toggleFormLote = toggleFormLote;
 window.toggleFormRacao = toggleFormRacao;
 window.toggleFormAlim = toggleFormAlim;
+window.abrirGerenciadorPisciculturas = abrirGerenciadorPisciculturas;
+window.fecharGerenciadorPisciculturas = fecharGerenciadorPisciculturas;
+window.criarNovaPiscicultura = criarNovaPiscicultura;
+window.trocarParaPiscicultura = trocarParaPiscicultura;
+window.excluirPiscicultura = excluirPiscicultura;
+window.resetarDadosPiscicultura = resetarDadosPiscicultura;
+window.renderGerenciadorPisciculturas = renderGerenciadorPisciculturas;
 window.removerItemCarrada = removerItemCarrada;
 window.removerItemEstoque = removerItemEstoque;
 window.removerDestino = removerDestino;
