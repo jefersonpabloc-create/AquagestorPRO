@@ -128,9 +128,71 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
 .scroll-list .card:first-child{border-radius:var(--r-lg) var(--r-lg) 0 0}
 .scroll-list .card:last-child{border-bottom:none;border-radius:0 0 var(--r-lg) var(--r-lg)}
 
+/* TANK CONSUMPTION HISTORY */
+.tanque-hist-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-md);margin:8px 0;overflow:hidden;transition:box-shadow .15s}
+.tanque-hist-card.despescado{background:#fafafa;border-color:#e2e8f0}
+.tanque-hist-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;gap:8px;flex-wrap:wrap;transition:background .12s}
+.tanque-hist-header:hover{background:var(--surf2)}
+.tanque-hist-badge{font-size:.68rem;padding:2px 9px;border-radius:20px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.tanque-hist-badge.ativo{background:var(--green-l);color:var(--green)}
+.tanque-hist-badge.despescado{background:#f1f5f9;color:#64748b}
+.tanque-hist-body{display:none;border-top:1.5px solid var(--border)}
+.tanque-hist-body.open{display:block}
+.tanque-hist-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:0;background:var(--surf2);border-bottom:1px solid var(--border)}
+.tanque-hist-stat{padding:8px 14px;font-size:.73rem;color:var(--text2);display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--border)}
+.tanque-hist-stat:nth-child(even){border-right:none}
+.tanque-hist-stat strong{font-size:.88rem;color:var(--text);font-weight:800}
+.racao-section-title{padding:8px 14px 4px;font-size:.65rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);background:#fff}
+.racao-tipo-row{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--surf3);gap:8px;flex-wrap:wrap;background:#fff}
+.racao-tipo-row:last-of-type{border-bottom:none}
+.racao-tipo-nome{font-size:.78rem;font-weight:700;color:var(--text);flex:1;min-width:0}
+.racao-tipo-vals{display:flex;gap:12px;flex-shrink:0}
+.racao-tipo-val{display:flex;flex-direction:column;align-items:flex-end}
+.racao-tipo-val span{color:var(--text3);font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.racao-tipo-val strong{color:var(--text);font-weight:800;font-size:.8rem}
+.racao-tipo-val strong.green{color:var(--green)}
+.timeline-toggle{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;font-size:.72rem;font-weight:700;color:var(--blue);cursor:pointer;background:var(--blue-xl);border-top:1px solid var(--border);user-select:none}
+.timeline-toggle:hover{background:#dbeafe}
+.timeline-toggle .chv{transition:transform .2s;display:inline-block}
+.timeline-toggle.open .chv{transform:rotate(180deg)}
+.timeline-body{display:none}
+.timeline-body.open{display:block}
+.timeline-row{display:grid;grid-template-columns:88px 1fr auto auto;align-items:center;padding:5px 14px;border-bottom:1px solid var(--surf3);font-size:.72rem;gap:6px}
+.timeline-row:last-child{border-bottom:none}
+.timeline-row:nth-child(odd){background:var(--surf2)}
+.timeline-row .t-tipo{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timeline-row .t-kg{font-weight:700;color:var(--text);text-align:right}
+.timeline-row .t-val{color:var(--green);font-weight:700;text-align:right}
+
 /* TOAST */
-.message{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;color:#fff;padding:11px 20px;border-radius:50px;font-size:.8rem;font-weight:600;z-index:9999;opacity:0;transition:opacity .22s var(--ease),transform .22s var(--ease);pointer-events:none;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+.message{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(18px);background:#1e293b;color:#fff;padding:13px 22px 13px 18px;border-radius:50px;font-size:.82rem;font-weight:600;z-index:9999;opacity:0;transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;max-width:92vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 10px 36px rgba(0,0,0,.32);display:flex;align-items:center;gap:10px}
 .message.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.message.success{background:linear-gradient(135deg,#0f766e,#15803d)}
+.message.error{background:linear-gradient(135deg,#b91c1c,#c2410c)}
+
+/* CUSTOM CONFIRM MODAL */
+.confirm-overlay{position:fixed;inset:0;background:rgba(10,20,40,.65);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .18s ease;backdrop-filter:blur(4px)}
+.confirm-box{background:#fff;border-radius:var(--r-lg);padding:0;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.28);animation:confirmSlide .22s var(--ease);overflow:hidden}
+@keyframes confirmSlide{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.confirm-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.confirm-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 10px;flex-shrink:0}
+.confirm-icon.danger{background:var(--red-l)}
+.confirm-icon.warn{background:var(--amber-l)}
+.confirm-icon.info{background:var(--blue-l)}
+.confirm-icon.success{background:var(--green-l)}
+.confirm-title{font-size:1rem;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px}
+.confirm-msg{font-size:.82rem;color:var(--text2);text-align:center;line-height:1.5;white-space:pre-line}
+.confirm-body{padding:16px 20px}
+.confirm-actions{display:flex;gap:10px;padding:0 20px 20px}
+.confirm-actions button{flex:1;border-radius:var(--r-xl);padding:12px;font-size:.85rem;font-weight:700;border:none;cursor:pointer;transition:all .16s var(--ease)}
+.confirm-btn-cancel{background:var(--surf3);color:var(--text2)}
+.confirm-btn-cancel:hover{background:var(--border)}
+.confirm-btn-ok{color:#fff}
+.confirm-btn-ok.danger{background:var(--red)}
+.confirm-btn-ok.warn{background:var(--amber)}
+.confirm-btn-ok.info{background:var(--blue)}
+.confirm-btn-ok.success{background:var(--green)}
+.confirm-btn-ok:hover{filter:brightness(1.1)}
 
 /* TANK ACCORDION */
 .tank-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r-lg);margin:8px 0;box-shadow:var(--sh-sm);overflow:hidden;transition:box-shadow .18s}
@@ -401,11 +463,12 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
                 <div class="card-title">🎣 Novo Lote de Alevinos</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                     <div class="field"><label>Qtd. total de peixes</label><input type="number" id="lqtd" placeholder="ex: 2000"></div>
-                    <div class="field"><label>Peso médio alevino (g)</label><input type="number" id="lpesoMedioAlevino" placeholder="ex: 5" step="0.1"></div>
+                    <div class="field"><label>Peso médio alevino (g)</label><input type="number" id="lpesoMedioAlevino" placeholder="ex: 5" step="0.1" oninput="atualizarTipoRacaoLote()"></div>
                     <div class="field"><label>Valor total alevinos (R$)</label><input type="number" id="lvalor" placeholder="ex: 1200.00" step="0.01"></div>
                     <div class="field"><label>Data de estocagem</label><input type="date" id="ldataEstocagem"></div>
                     <div class="field"><label>Fornecedor</label><input type="text" id="lfornecedor" placeholder="Nome do fornecedor"></div>
                     <div class="field"><label>Cidade de origem</label><input type="text" id="lcidadeOrigem" placeholder="Ex: Patos de Minas"></div>
+                    <div class="field" style="grid-column:1/-1"><label>🌾 Tipo de Ração Recomendado</label><input type="text" id="lTipoRacao" readonly placeholder="Calculado pelo peso do alevino" style="background:var(--blue-xl);cursor:default;font-weight:600;color:var(--blue);"></div>
                 </div>
                 <div class="field" style="margin-top:4px;">
                     <label>🏞️ Distribuir nos tanques (apenas disponíveis — segure Ctrl para múltiplos):</label>
@@ -785,6 +848,20 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
   </div>
 </div>
 
+<div id="confirmOverlay" class="confirm-overlay" style="display:none;">
+  <div class="confirm-box">
+    <div class="confirm-header">
+      <div id="confirmIcon" class="confirm-icon danger"></div>
+      <div id="confirmTitle" class="confirm-title"></div>
+      <div id="confirmMsg" class="confirm-msg"></div>
+    </div>
+    <div class="confirm-actions">
+      <button class="confirm-btn-cancel" id="confirmCancel">✕ Cancelar</button>
+      <button class="confirm-btn-ok danger" id="confirmOk">✔ Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toastMessage" class="message"></div>
 
 <script>
@@ -869,45 +946,47 @@ function excluirPiscicultura(id) {
     if (id === 'default') { showMessage('Não é possível excluir a piscicultura principal', true); return; }
     let lista = getPisciculturasLista();
     let pisc = lista.find(p => p.id === id);
-    if (!confirm(`Excluir "${pisc ? pisc.nome : id}" e TODOS os seus dados? Esta ação é irreversível!`)) return;
-    // Remover todas as chaves dessa piscicultura do localStorage
-    let prefix = id + '__';
-    Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k));
-    setPisciculturasLista(lista.filter(p => p.id !== id));
-    // Se era a ativa, voltar para default
-    if (getPiscAtiva() === id) trocarParaPiscicultura('default');
-    else renderGerenciadorPisciculturas();
-    showMessage('Piscicultura excluída');
+    showConfirm({
+        title: '⚠️ Excluir Piscicultura',
+        msg: `Excluir "${pisc ? pisc.nome : id}" e TODOS os seus dados?\n\nEsta ação é irreversível!`,
+        icon: '🗑️', type: 'danger', okLabel: '🗑️ Excluir Tudo',
+        onConfirm: () => {
+            let prefix = id + '__';
+            Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k));
+            setPisciculturasLista(lista.filter(p => p.id !== id));
+            if (getPiscAtiva() === id) trocarParaPiscicultura('default');
+            else renderGerenciadorPisciculturas();
+            showMessage('✅ Piscicultura excluída');
+        }
+    });
 }
 
 function resetarDadosPiscicultura() {
     let ativa = getPiscAtiva();
     let lista = getPisciculturasLista();
     let pisc = lista.find(p => p.id === ativa) || { nome: 'Principal' };
-    if (!confirm(`⚠️ ATENÇÃO MÁXIMA!\n\nIsso vai apagar TODOS os dados de "${pisc.nome}":\n• Tanques\n• Lotes de peixe\n• Biometrias\n• Estoque de ração\n• Compras\n• Colaboradores\n• Histórico de alimentação\n• Tratos\n\nEsta ação é IRREVERSÍVEL!\n\nDigite OK para confirmar.`)) return;
-    let confirma = prompt('Digite "RESETAR" para confirmar o apagamento total:');
-    if (confirma !== 'RESETAR') { showMessage('Operação cancelada', true); return; }
-
-    let prefix = ativa === 'default' ? '' : ativa + '__';
-    let keysParaRemover = [
-        'tanques','lotes','estoqueRacao','colab','adiantamentos','modelosRacao',
-        'historicoMortalidade','historicoDiasAlimentacao','alimentacaoSuspensa',
-        'historicoClassificacoes','ultimaDataReset'
-    ];
-    // Remover chaves prefixadas
-    keysParaRemover.forEach(k => localStorage.removeItem(prefix + k));
-    // Remover tratos (chaves dinâmicas)
-    Object.keys(localStorage).filter(k => k.startsWith(prefix + 'tratos_')).forEach(k => localStorage.removeItem(k));
-    // Se default, também sem prefixo (backward compat)
-    if (ativa === 'default') {
-        keysParaRemover.forEach(k => localStorage.removeItem(k));
-        Object.keys(localStorage).filter(k => k.startsWith('tratos_')).forEach(k => localStorage.removeItem(k));
-    }
-    fecharGerenciadorPisciculturas();
-    seedExemplo();
-    renderTanques(); renderLotes(); renderColab(); renderEstoqueRacao(); atualizarDashboard();
-    nav('menu');
-    showMessage('✅ Piscicultura resetada com sucesso!');
+    showConfirm({
+        title: '⛔ Resetar Piscicultura',
+        msg: `Isso vai apagar TODOS os dados de "${pisc.nome}":\n• Tanques, Lotes, Biometrias\n• Estoque de ração e Compras\n• Colaboradores e Tratos\n\nEsta ação é COMPLETAMENTE IRREVERSÍVEL!`,
+        icon: '☢️', type: 'danger', okLabel: '⚠️ Resetar Tudo',
+        onConfirm: () => {
+            let prefix = ativa === 'default' ? '' : ativa + '__';
+            let keysParaRemover = ['tanques','lotes','estoqueRacao','colab','adiantamentos','modelosRacao',
+                'historicoMortalidade','historicoDiasAlimentacao','alimentacaoSuspensa',
+                'historicoClassificacoes','ultimaDataReset'];
+            keysParaRemover.forEach(k => localStorage.removeItem(prefix + k));
+            Object.keys(localStorage).filter(k => k.startsWith(prefix + 'tratos_')).forEach(k => localStorage.removeItem(k));
+            if (ativa === 'default') {
+                keysParaRemover.forEach(k => localStorage.removeItem(k));
+                Object.keys(localStorage).filter(k => k.startsWith('tratos_')).forEach(k => localStorage.removeItem(k));
+            }
+            fecharGerenciadorPisciculturas();
+            seedExemplo();
+            renderTanques(); renderLotes(); renderColab(); renderEstoqueRacao(); atualizarDashboard();
+            nav('menu');
+            showMessage('✅ Piscicultura resetada com sucesso!');
+        }
+    });
 }
 
 function abrirGerenciadorPisciculturas() {
@@ -980,10 +1059,34 @@ function setUltimaDataReset(d) { localStorage.setItem(pKey('ultimaDataReset'), d
 
 function showMessage(msg, isError = false) {
     const toast = document.getElementById('toastMessage');
-    toast.textContent = msg;
-    toast.style.background = isError ? '#b91c1c' : '#0a7ea4';
+    // Pick icon
+    const icon = isError ? '❌' : '✅';
+    toast.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+    toast.className = 'message ' + (isError ? 'error' : 'success');
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2700);
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+let _confirmCallback = null;
+let _confirmCancel = null;
+
+function showConfirm({ title, msg, icon = '⚠️', type = 'warn', okLabel = '✔ Confirmar', cancelLabel = '✕ Cancelar', onConfirm, onCancel }) {
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmIcon').textContent = icon;
+    document.getElementById('confirmIcon').className = 'confirm-icon ' + type;
+    const okBtn = document.getElementById('confirmOk');
+    okBtn.textContent = okLabel;
+    okBtn.className = 'confirm-btn-ok ' + type;
+    document.getElementById('confirmCancel').textContent = cancelLabel;
+    _confirmCallback = () => { overlay.style.display = 'none'; if (onConfirm) onConfirm(); };
+    _confirmCancel  = () => { overlay.style.display = 'none'; if (onCancel) onCancel(); };
+    okBtn.onclick = _confirmCallback;
+    document.getElementById('confirmCancel').onclick = _confirmCancel;
+    overlay.onclick = (e) => { if (e.target === overlay) _confirmCancel(); };
+    overlay.style.display = 'flex';
 }
 
 function isTanqueOcupado(numTanque) {
@@ -1124,14 +1227,20 @@ function renderTanques() {
 
 function excluirTanque(id) {
     let tanques = loadData("tanques");
-    let tanque = tanques.find(t => t.id === id);
-    if (tanque && isTanqueOcupado(tanque.num)) {
-        showMessage("Não é possível excluir tanque ocupado. Libere primeiro.", true);
-        return;
-    }
-    saveData("tanques", tanques.filter(t => t.id !== id));
-    renderTanques();
-    showMessage("Tanque removido");
+    let t = tanques.find(t => t.id === id);
+    if (!t) return;
+    if (isTanqueOcupado(t.num)) { showMessage("Não é possível excluir tanque ocupado. Libere primeiro.", true); return; }
+    showConfirm({
+        title: 'Excluir Tanque',
+        msg: `Deseja remover permanentemente o tanque "${t.num}"?\nEsta ação não pode ser desfeita.`,
+        icon: '🗑️', type: 'danger', okLabel: '🗑️ Excluir',
+        onConfirm: () => {
+            let lista = loadData("tanques");
+            saveData("tanques", lista.filter(x => x.id !== id));
+            renderTanques();
+            showMessage(`✅ Tanque ${t.num} removido`);
+        }
+    });
 }
 
 function liberarTanque(numTanque) {
@@ -1150,19 +1259,31 @@ function liberarTanque(numTanque) {
     let lote = lotes[loteIndex];
     let tanqueRemovido = lote.tanques[tanqueIndex];
     let peixesRemovidos = tanqueRemovido.qtdPeixes;
-    if (confirm(`Despescar tanque ${numTanque}? Removerá ${peixesRemovidos} peixes do lote #${lote.id}.`)) {
-        lote.tanques.splice(tanqueIndex, 1);
-        lote.qtdTotal -= peixesRemovidos;
-        if (lote.tanques.length === 0 || lote.qtdTotal <= 0) {
-            lotes.splice(loteIndex, 1);
-            showMessage(`Lote #${lote.id} finalizado.`);
-        } else {
-            showMessage(`Tanque ${numTanque} liberado.`);
+    showConfirm({
+        title: '🎣 Despescar Tanque',
+        msg: `Despescar tanque ${numTanque}?\n\n${peixesRemovidos} peixes serão removidos do lote #${lote.id}.`,
+        icon: '🎣', type: 'warn', okLabel: '🎣 Despescar',
+        onConfirm: () => {
+            // Preservar o tanque no lote para histórico, apenas marcar como despescado
+            tanqueRemovido.despescado = true;
+            tanqueRemovido.dataDespesca = new Date().toLocaleDateString('pt-BR');
+            tanqueRemovido.qtdDespescada = peixesRemovidos;
+            tanqueRemovido.qtdPeixes = 0;
+            lote.qtdTotal -= peixesRemovidos;
+            // Se não há mais tanques ativos, encerrar o lote
+            let ativos = lote.tanques.filter(t => !t.despescado && t.qtdPeixes > 0);
+            if (ativos.length === 0) {
+                lote.encerrado = true;
+                lote.dataEncerramento = new Date().toLocaleDateString('pt-BR');
+                showMessage(`✅ Lote #${lote.id} encerrado. Histórico preservado.`);
+            } else {
+                showMessage(`✅ Tanque ${numTanque} despescado. Histórico preservado no lote.`);
+            }
+            saveData("lotes", lotes);
+            renderLotes();
+            renderTanques();
         }
-        saveData("lotes", lotes);
-        renderLotes();
-        renderTanques();
-    }
+    });
 }
 
 // ==================== LOTES ====================
@@ -1181,6 +1302,7 @@ function addLote() {
     
     let qtdPorTanque = Math.floor(qtd / tanquesSel.length);
     let biomassaInicial = isNaN(pesoMedioAlevino) ? 0 : (pesoMedioAlevino / 1000) * qtd;
+    let tipoRacao = tipoRacaoPorPeso(isNaN(pesoMedioAlevino) ? 5 : pesoMedioAlevino);
     
     let novoLote = {
         id: Date.now(),
@@ -1192,6 +1314,7 @@ function addLote() {
         pesoMedioAlevino: isNaN(pesoMedioAlevino) ? 0 : pesoMedioAlevino,
         dataEstocagem: dataEstocagem || new Date().toISOString().slice(0, 10),
         biomassaInicial: biomassaInicial,
+        tipoRacao: tipoRacao,
         tanques: tanquesSel.map(num => ({ num, qtdPeixes: qtdPorTanque, mortalidade: 0, consumoRacao: 0 })),
         biometrias: []
     };
@@ -1200,7 +1323,7 @@ function addLote() {
     saveData("lotes", lotes);
     renderLotes();
     renderTanques();
-    showMessage(`Lote #${novoLote.id} registrado | Biomassa inicial: ${biomassaInicial.toFixed(1)}kg`);
+    showMessage(`✅ Lote #${novoLote.id} registrado! Ração: ${tipoRacao} | Biomassa inicial: ${biomassaInicial.toFixed(1)}kg`);
     
     document.getElementById("lqtd").value = "";
     document.getElementById("lvalor").value = "";
@@ -1208,9 +1331,138 @@ function addLote() {
     document.getElementById("lcidadeOrigem").value = "";
     document.getElementById("lpesoMedioAlevino").value = "";
     document.getElementById("ldataEstocagem").value = "";
+    document.getElementById("lTipoRacao").value = "";
     // Close form
     let fm = document.getElementById("formLote");
     if (fm) fm.classList.remove("open");
+}
+
+function atualizarTipoRacaoLote() {
+    let peso = parseFloat(document.getElementById("lpesoMedioAlevino").value);
+    let campo = document.getElementById("lTipoRacao");
+    if (!isNaN(peso) && peso > 0) {
+        campo.value = tipoRacaoPorPeso(peso);
+    } else {
+        campo.value = "";
+    }
+}
+
+function toggleTanqueHist(cardId) {
+    let body = document.getElementById('thb_' + cardId);
+    if (!body) return;
+    body.classList.toggle('open');
+}
+
+function toggleTanqueTimeline(cardId) {
+    let body = document.getElementById('ttl_' + cardId);
+    let toggle = document.getElementById('ttlbtn_' + cardId);
+    if (!body) return;
+    body.classList.toggle('open');
+    if (toggle) toggle.classList.toggle('open');
+}
+
+function renderTanqueHistCard(t, lote) {
+    let isDespescado = !!t.despescado;
+    let cardId = `${lote.id}_${t.num}`.replace(/[^a-z0-9]/gi, '_');
+    let pesoMedio = t.ultimoPesoMedio || lote.pesoMedioAlevino || 0;
+    let custo = calcularCustoTanque(lote, t.num);
+
+    // ── Agrupamento por tipo de ração ──────────────────────────────────
+    let porTipo = {};
+    let totalKg = 0, totalCusto = 0;
+    if (t.consumoDetalhado && t.consumoDetalhado.length > 0) {
+        for (let c of t.consumoDetalhado) {
+            let chave = c.tipo || c.tipoRacao || 'Não identificado';
+            if (!porTipo[chave]) porTipo[chave] = { kg: 0, custo: 0, valorKg: c.valorPorKg || 0 };
+            porTipo[chave].kg     += c.kg || 0;
+            porTipo[chave].custo  += c.custoTotal || 0;
+            if (c.valorPorKg && c.valorPorKg > porTipo[chave].valorKg) porTipo[chave].valorKg = c.valorPorKg;
+            totalKg   += c.kg || 0;
+            totalCusto += c.custoTotal || 0;
+        }
+    }
+    let tiposHTML = Object.entries(porTipo).length > 0
+        ? `<div class="racao-section-title">📊 Consumo por tipo de ração</div>
+           ${Object.entries(porTipo).map(([tipo, d]) => {
+               let pct = totalKg > 0 ? ((d.kg / totalKg) * 100).toFixed(0) : 0;
+               let custoKg = d.kg > 0 ? d.custo / d.kg : 0;
+               return `<div class="racao-tipo-row">
+                   <div class="racao-tipo-nome">${tipo}<br><span style="font-size:.65rem;color:var(--text3);font-weight:500;">${pct}% do total</span></div>
+                   <div class="racao-tipo-vals">
+                       <div class="racao-tipo-val"><span>Quantidade</span><strong>${d.kg.toFixed(2)} kg</strong></div>
+                       <div class="racao-tipo-val"><span>Custo total</span><strong class="green">R$ ${d.custo.toFixed(2)}</strong></div>
+                       <div class="racao-tipo-val"><span>R$/kg</span><strong>R$ ${custoKg.toFixed(2)}</strong></div>
+                   </div>
+               </div>`;
+           }).join('')}`
+        : `<div style="padding:10px 14px;font-size:.75rem;color:var(--text3);">Nenhum consumo registrado ainda.</div>`;
+
+    // ── Linha do tempo (agrupado por dia) ─────────────────────────────
+    let timelineHTML = '';
+    if (t.consumoDetalhado && t.consumoDetalhado.length > 0) {
+        // Ordenar do mais recente para o mais antigo
+        let sorted = [...t.consumoDetalhado].sort((a, b) => new Date(b.data) - new Date(a.data));
+        timelineHTML = `
+            <div class="timeline-toggle" id="ttlbtn_${cardId}" onclick="toggleTanqueTimeline('${cardId}')">
+                <span>📅 Histórico detalhado (${t.consumoDetalhado.length} registros)</span>
+                <span class="chv">▼</span>
+            </div>
+            <div class="timeline-body" id="ttl_${cardId}">
+                <div class="timeline-row" style="font-size:.65rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);background:var(--surf3);">
+                    <span>Data</span><span class="t-tipo">Tipo de Ração</span><span class="t-kg">kg</span><span class="t-val">Custo</span>
+                </div>
+                ${sorted.map(c => {
+                    let dia = new Date(c.data).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'});
+                    let hora = new Date(c.data).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+                    let tipo = c.tipo || c.tipoRacao || '—';
+                    // Extrair só o nome curto
+                    let match = tipo.match(/([0-9]+[–\-][0-9]+\.?[0-9]*mm)/);
+                    let tipoShort = match ? match[1] : tipo.replace(/\(.*?\)/g,'').trim();
+                    return `<div class="timeline-row">
+                        <span style="color:var(--text3);">${dia} <span style="opacity:.6;">${hora}</span></span>
+                        <span class="t-tipo" title="${tipo}">${tipoShort}</span>
+                        <span class="t-kg">${(c.kg||0).toFixed(2)} kg</span>
+                        <span class="t-val">R$ ${(c.custoTotal||0).toFixed(2)}</span>
+                    </div>`;
+                }).join('')}
+                <div class="timeline-row" style="background:var(--surf3);font-weight:800;">
+                    <span style="color:var(--text2);grid-column:1/3;">Total geral</span>
+                    <span class="t-kg">${totalKg.toFixed(2)} kg</span>
+                    <span class="t-val">R$ ${totalCusto.toFixed(2)}</span>
+                </div>
+            </div>`;
+    }
+
+    let statusBadge = isDespescado
+        ? `<span class="tanque-hist-badge despescado">🎣 Despescado em ${t.dataDespesca || '—'}</span>`
+        : `<span class="tanque-hist-badge ativo">✅ Ativo</span>`;
+
+    let qtdLabel = isDespescado
+        ? `${t.qtdDespescada || 0} peixes despescados`
+        : `${t.qtdPeixes} peixes · ${pesoMedio.toFixed(0)}g`;
+
+    return `<div class="tanque-hist-card${isDespescado ? ' despescado' : ''}">
+        <div class="tanque-hist-header" onclick="toggleTanqueHist('${cardId}')">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                <span style="font-size:.95rem;font-weight:800;color:var(--blue);">🏞️ ${t.num}</span>
+                <span style="font-size:.73rem;color:var(--text2);">${qtdLabel}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                ${statusBadge}
+                <span style="color:var(--text3);font-size:.8rem;">▼</span>
+            </div>
+        </div>
+        <div class="tanque-hist-body" id="thb_${cardId}">
+            <div class="tanque-hist-stats">
+                <div class="tanque-hist-stat"><span>🌾 Total consumido</span><strong>${totalKg.toFixed(2)} kg</strong></div>
+                <div class="tanque-hist-stat"><span>💰 Custo da ração</span><strong>R$ ${totalCusto.toFixed(2)}</strong></div>
+                <div class="tanque-hist-stat"><span>📊 R$/kg ração</span><strong>${totalKg > 0 ? 'R$ '+(totalCusto/totalKg).toFixed(2) : '—'}</strong></div>
+                <div class="tanque-hist-stat"><span>⚖️ Biomassa atual</span><strong>${custo.biomassa.toFixed(1)} kg</strong></div>
+            </div>
+            ${tiposHTML}
+            ${timelineHTML}
+        </div>
+    </div>`;
 }
 
 function renderLotes() {
@@ -1242,9 +1494,12 @@ function renderLotes() {
             detalhesRacao += `<br>&nbsp;&nbsp;📦 ${tipoLimpo}: ${dados.kg.toFixed(1)}kg | R$ ${dados.custo.toFixed(2)}`;
         }
         
-        let tanquesInfo = l.tanques.filter(t => t.qtdPeixes > 0).map(t => {
-            let custoTanque = calcularCustoTanque(l, t.num);
-            return `<span class="tanque-tag">${t.num}: ${t.qtdPeixes}p · R$${custoTanque.custoPorKg.toFixed(2)}/kg</span>`;
+        let tanquesInfo = l.tanques.map(t => {
+            let custo = calcularCustoTanque(l, t.num);
+            let isDp = !!t.despescado;
+            return `<span class="tanque-tag" style="${isDp?'opacity:.55;text-decoration:line-through;':''}">
+                ${t.num}: ${isDp ? '🎣' : t.qtdPeixes+'p'}${!isDp?' · R$'+custo.custoPorKg.toFixed(2)+'/kg':''}
+            </span>`;
         }).join('');
         
         let loteIdStr = `lote_body_${l.id}`;
@@ -1262,6 +1517,7 @@ function renderLotes() {
                         <span>📦 <strong>${biomassaTotal.toFixed(1)} kg</strong></span>
                         <span>💰 <strong>R$ ${custos.custoPorKg.toFixed(2)}/kg</strong></span>
                         <span style="color:${ca<1.5?'var(--green)':ca<1.8?'var(--amber)':'var(--red)'};">CA ${ca.toFixed(2)} ${ca<1.5?'✅':ca<1.8?'👍':'⚠️'}</span>
+                        <span style="background:var(--blue-xl);color:var(--blue);padding:1px 7px;border-radius:20px;font-weight:700;">🌾 ${(l.tipoRacao || tipoRacaoPorPeso(pesoMedioAtual))}</span>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
@@ -1276,51 +1532,26 @@ function renderLotes() {
                     <div class="stat-cell"><strong>R$ ${l.valorAlevinos.toFixed(2)}</strong><span>🎣 Custo alevinos</span></div>
                     <div class="stat-cell"><strong>R$ ${custoRacaoDetalhado.custoTotal.toFixed(2)}</strong><span>🌾 Custo ração</span></div>
                     <div class="stat-cell"><strong>${consumoTotal.toFixed(2)} kg</strong><span>🌾 Ração consumida</span></div>
-                    <div class="stat-cell"><strong>${l.tanques.filter(t=>t.qtdPeixes>0).length} ativos</strong><span>🏞️ Tanques</span></div>
+                    <div class="stat-cell"><strong>${l.tanques.filter(t=>!t.despescado&&t.qtdPeixes>0).length} ativos${l.tanques.filter(t=>t.despescado).length>0?' / '+l.tanques.filter(t=>t.despescado).length+' despescados':''}</strong><span>🏞️ Tanques</span></div>
                 </div>
                 ${detalhesRacao ? `<div style="font-size:.75rem;color:var(--text2);padding:6px 0;border-top:1px solid var(--border);margin-top:4px;"><strong>Ração por tipo:</strong>${detalhesRacao}</div>` : ''}
                 <div style="margin-top:10px;">
                     <div class="card-title">🏞️ Tanques do Lote</div>
                     <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${tanquesInfo}</div>
-                ${l.tanques.filter(t => t.qtdPeixes > 0).map(t => {
-                    let custo = calcularCustoTanque(l, t.num);
-                    let pesoMedioTanque = t.ultimoPesoMedio || l.pesoMedioAlevino || 0;
-                    let historicoConsumo = "";
-                    if (t.consumoDetalhado && t.consumoDetalhado.length > 0) {
-                        // Group by date-day for compact display
-                        let agrupado = {};
-                        for (let c of t.consumoDetalhado) {
-                            let dia = new Date(c.data).toLocaleDateString('pt-BR');
-                            if (!agrupado[dia]) agrupado[dia] = { kg: 0, custo: 0, tipos: new Set() };
-                            agrupado[dia].kg    += c.kg;
-                            agrupado[dia].custo += c.custoTotal;
-                            agrupado[dia].tipos.add(c.tipo || '—');
-                        }
-                        let dias = Object.entries(agrupado).slice(-7).reverse();
-                        historicoConsumo = `<div style="margin-top:8px;border-top:1px solid #e2e8f0;padding-top:6px;">
-                            <div style="font-size:.65rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;margin-bottom:5px;">📋 Últimos registros de consumo</div>
-                            ${dias.map(([dia, d]) => `<div style="display:flex;justify-content:space-between;font-size:.72rem;padding:3px 0;border-bottom:1px solid #f1f5f9;">
-                                <span style="color:#475569;">📅 ${dia}</span>
-                                <span><strong>${d.kg.toFixed(2)} kg</strong> · ${[...d.tipos].join(', ')}</span>
-                                <span style="color:#15803d;">R$ ${d.custo.toFixed(2)}</span>
-                            </div>`).join('')}
-                            <div style="font-size:.7rem;color:#94a3b8;margin-top:3px;">Total: ${t.consumoDetalhado.length} registros</div>
-                        </div>`;
+                ${(() => {
+                    let ativos = l.tanques.filter(t => !t.despescado && t.qtdPeixes > 0);
+                    let despescados = l.tanques.filter(t => t.despescado);
+                    let html = '';
+                    if (ativos.length > 0) {
+                        html += `<div style="font-size:.68rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);padding:2px 0 4px;">${ativos.length} Tanque${ativos.length>1?'s':''} Ativo${ativos.length>1?'s':''}</div>`;
+                        html += ativos.map(t => renderTanqueHistCard(t, l)).join('');
                     }
-                    return `<div style="background:#f8fafc; padding:8px 12px; border-radius:12px; margin:4px 0; border:1px solid #e2e8f0;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">
-                            <strong style="color:#0a7ea4;">🏞️ ${t.num}</strong>
-                            <span style="font-size:.7rem;background:#e0f7ff;color:#0a7ea4;padding:2px 8px;border-radius:10px;">${t.qtdPeixes} peixes · ${pesoMedioTanque.toFixed(0)}g</span>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;font-size:.75rem;">
-                            <span>🌾 Ração: <strong>${(t.consumoRacao || 0).toFixed(1)} kg</strong></span>
-                            <span>⚖️ Biomassa: <strong>${custo.biomassa.toFixed(1)} kg</strong></span>
-                            <span>💰 Custo total: <strong>R$ ${custo.custoTotal.toFixed(2)}</strong></span>
-                            <span>📊 Custo/kg: <strong>R$ ${custo.custoPorKg.toFixed(2)}</strong></span>
-                        </div>
-                        ${historicoConsumo}
-                    </div>`;
-                }).join('')}
+                    if (despescados.length > 0) {
+                        html += `<div style="font-size:.68rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#94a3b8;padding:${ativos.length>0?'10px':' 2px'} 0 4px;margin-top:${ativos.length>0?'4px':'0'};">${despescados.length} Tanque${despescados.length>1?'s':''} Despescado${despescados.length>1?'s':''}</div>`;
+                        html += despescados.map(t => renderTanqueHistCard(t, l)).join('');
+                    }
+                    return html;
+                })()}
                 </div><!-- /tanques details -->
             </div><!-- /lote-body -->
         </div><!-- /lote-card -->`;
@@ -1329,13 +1560,18 @@ function renderLotes() {
 }
 
 function excluirLote(id) {
-    if(confirm("Remover este lote liberará todos os tanques?")) {
-        let lotes = loadData("lotes");
-        saveData("lotes", lotes.filter(l => l.id !== id));
-        renderLotes();
-        renderTanques();
-        showMessage("Lote removido.");
-    }
+    showConfirm({
+        title: '🗑️ Remover Lote',
+        msg: `Remover este lote?\n\nTodos os tanques associados serão liberados.`,
+        icon: '🐟', type: 'danger', okLabel: '🗑️ Remover',
+        onConfirm: () => {
+            let lotes = loadData("lotes");
+            saveData("lotes", lotes.filter(l => l.id !== id));
+            renderLotes();
+            renderTanques();
+            showMessage("✅ Lote removido.");
+        }
+    });
 }
 
 // ==================== TABELAS AUXILIARES ====================
@@ -1890,7 +2126,10 @@ function preencherTodosTratos(tanqueNum) {
                 let d=extrairDiametroPellet(estoque[j].pellet);
                 if(diaNec && d && diaNec===d && estoque[j].kgTotal>0) idxCompat.push(j);
             }
-            if(idxCompat.length===0) for(let j=0;j<estoque.length;j++){if(estoque[j].kgTotal>0)idxCompat.push(j);}
+            if(idxCompat.length===0){
+                showMessage(`❌ Sem ração "${tipoNec}" no estoque para tanque ${tanqueNum}! Compre o tipo correto.`, true);
+                return;
+            }
             let consumoRestante = kgPorTrato;
             for (let j = 0; j < idxCompat.length && consumoRestante > 0; j++) {
                 let idx=idxCompat[j];
@@ -1981,7 +2220,7 @@ function fornecerUmTratoParaTodosTanques() {
             let d=extrairDiametroPellet(estoqueAtual[i].pellet);
             if(diaNec && d && diaNec===d && estoqueAtual[i].kgTotal>0) idxCompat.push(i);
         }
-        if(idxCompat.length===0) for(let i=0;i<estoqueAtual.length;i++){if(estoqueAtual[i].kgTotal>0)idxCompat.push(i);}
+        if(idxCompat.length===0){ erros.push(`Tanque ${t.num}: sem ração "${tipoNec}" no estoque`); continue; }
         for (let i = 0; i < idxCompat.length && consumoRestante > 0; i++) {
             let idx=idxCompat[i];
             let kg=Math.min(estoqueAtual[idx].kgTotal, consumoRestante);
@@ -2013,107 +2252,21 @@ function fornecerUmTratoParaTodosTanques() {
 
 // ==================== FUNÇÕES DE REVERSÃO ====================
 function reverterTrato(tanqueNum, tratoIndex, kgEstornar) {
-    if (!confirm(`Deseja estornar/reverter o trato ${tratoIndex+1} do tanque ${tanqueNum}?`)) return;
-    let tratos = tLoad(tanqueNum);
-    if (!tratos[tratoIndex] || !tratos[tratoIndex].tratado) { showMessage("Este trato não está marcado como fornecido!", true); return; }
-    let kgAtual = tratos[tratoIndex].kgFornecidos || 0;
-    if (kgEstornar > kgAtual + 0.01) { showMessage(`Não é possível estornar mais do que foi fornecido (${kgAtual.toFixed(2)}kg)`, true); return; }
-    let estoque = loadData("estoqueRacao");
-    estoque.push({ id: Date.now() + Math.random(), marca: `Estorno - Trato ${tratoIndex+1}`, pb: 32, pellet: "estornado", kgTotal: kgEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
-    let novoKgFornecido = kgAtual - kgEstornar;
-    if (novoKgFornecido <= 0.01) tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: false, kgFornecidos: 0 };
-    else tratos[tratoIndex] = { ...tratos[tratoIndex], kgFornecidos: novoKgFornecido };
-    tSave(tanqueNum, tratos);
-    let info = getInfoTanqueOcupado(tanqueNum);
-    if (info) {
-        let lotesData = loadData("lotes");
-        let lote = lotesData.find(l => l.id === info.loteId);
-        if (lote) {
-            let tanque = lote.tanques.find(t => t.num === tanqueNum);
-            if (tanque) tanque.consumoRacao = Math.max(0, (tanque.consumoRacao || 0) - kgEstornar);
-            saveData("lotes", lotesData);
-        }
-    }
-    saveData("estoqueRacao", estoque);
-    renderEstoqueRacao();
-    renderConsumoDiario();
-    renderTratosTanques();
-    showMessage(`🔄 Trato ${tratoIndex+1} do tanque ${tanqueNum} estornado! ${kgEstornar.toFixed(2)}kg retornados.`);
-}
-
-function reverterDiaTanque(tanqueNum) {
-    if (!confirm(`⚠️ ATENÇÃO: ESTORNAR TODOS os tratos do tanque ${tanqueNum}?`)) return;
-    let tratos = tLoad(tanqueNum);
-    let kgTotalEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
-    if (kgTotalEstornar <= 0) { showMessage("Nenhum trato fornecido para estornar.", true); return; }
-    let estoque = loadData("estoqueRacao");
-    estoque.push({ id: Date.now() + Math.random(), marca: `Estorno total - Tanque ${tanqueNum}`, pb: 32, pellet: "estornado", kgTotal: kgTotalEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
-    let info = getInfoTanqueOcupado(tanqueNum);
-    if (info) {
-        let lotesData = loadData("lotes");
-        let lote = lotesData.find(l => l.id === info.loteId);
-        if (lote) {
-            let tanque = lote.tanques.find(t => t.num === tanqueNum);
-            if (tanque) tanque.consumoRacao = Math.max(0, (tanque.consumoRacao || 0) - kgTotalEstornar);
-            saveData("lotes", lotesData);
-        }
-    }
-    let novosTratos = tratos.map(t => ({ ...t, tratado: false, kgFornecidos: 0 }));
-    tSave(tanqueNum, novosTratos);
-    saveData("estoqueRacao", estoque);
-    renderEstoqueRacao();
-    renderConsumoDiario();
-    renderTratosTanques();
-    showMessage(`🔄 Tanque ${tanqueNum}: ${kgTotalEstornar.toFixed(2)}kg estornados.`);
-}
-
-function suspenderAlimentacaoTanque(tanqueNum, justificativa = "") {
-    if (!confirm(`🐟 Suspender alimentação para o tanque ${tanqueNum}?`)) return;
-    let tratos = tLoad(tanqueNum);
-    let kgTotalEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
-    if (kgTotalEstornar > 0) {
-        let estoque = loadData("estoqueRacao");
-        estoque.push({ id: Date.now() + Math.random(), marca: `Jejum - Tanque ${tanqueNum}`, pb: 32, pellet: "suspenso", kgTotal: kgTotalEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
-        saveData("estoqueRacao", estoque);
-        let info = getInfoTanqueOcupado(tanqueNum);
-        if (info) {
-            let lotesData = loadData("lotes");
-            let lote = lotesData.find(l => l.id === info.loteId);
-            if (lote) {
-                let tanque = lote.tanques.find(t => t.num === tanqueNum);
-                if (tanque) tanque.consumoRacao = Math.max(0, (tanque.consumoRacao || 0) - kgTotalEstornar);
-                saveData("lotes", lotesData);
-            }
-        }
-    }
-    let suspensos = loadSuspensos();
-    if (!suspensos.includes(tanqueNum)) suspensos.push(tanqueNum);
-    saveSuspensos(suspensos);
-    let novosTratos = tratos.map(t => ({ ...t, tratado: false, kgFornecidos: 0, suspenso: true, suspensoJustificativa: justificativa || "Não informada", suspensoEm: new Date().toLocaleString() }));
-    tSave(tanqueNum, novosTratos);
-    renderTratosTanques();
-    showMessage(`⛔ Alimentação do tanque ${tanqueNum} SUSPENSA! ${kgTotalEstornar.toFixed(2)}kg estornados.`);
-}
-
-function reativarAlimentacaoTanque(tanqueNum) {
-    if (!confirm(`Reativar a alimentação para o tanque ${tanqueNum}?`)) return;
-    let suspensos = loadSuspensos();
-    saveSuspensos(suspensos.filter(t => t !== tanqueNum));
-    let tratos = tLoad(tanqueNum);
-    let novosTratos = tratos.map(t => ({ ...t, suspenso: false, suspensoJustificativa: null, suspensoEm: null }));
-    tSave(tanqueNum, novosTratos);
-    renderTratosTanques();
-    showMessage(`✅ Alimentação do tanque ${tanqueNum} REATIVADA!`);
-}
-
-function resetarTratosTanqueRefatorado(tanqueNum) {
-    if (confirm(`Resetar todos os tratos do dia para o tanque ${tanqueNum}?\\n\\nA ração consumida será retornada ao estoque.`)) {
-        let tratos = tLoad(tanqueNum);
-        let kgEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
-        if (kgEstornar > 0) {
+    showConfirm({
+        title: '↩️ Estornar Trato',
+        msg: `Reverter o trato ${tratoIndex+1} do tanque ${tanqueNum}?\n${kgEstornar}kg serão retornados ao estoque.`,
+        icon: '↩️', type: 'warn', okLabel: '↩️ Estornar',
+        onConfirm: () => {
+            let tratos = tLoad(tanqueNum);
+            if (!tratos[tratoIndex] || !tratos[tratoIndex].tratado) { showMessage("Este trato não está marcado como fornecido!", true); return; }
+            let kgAtual = tratos[tratoIndex].kgFornecidos || 0;
+            if (kgEstornar > kgAtual + 0.01) { showMessage(`Não é possível estornar mais do que foi fornecido (${kgAtual.toFixed(2)}kg)`, true); return; }
             let estoque = loadData("estoqueRacao");
-            estoque.push({ id: Date.now() + Math.random(), marca: `Estorno - Reset Tanque ${tanqueNum}`, pb: 32, pellet: "estornado", kgTotal: kgEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
-            saveData("estoqueRacao", estoque);
+            estoque.push({ id: Date.now() + Math.random(), marca: `Estorno - Trato ${tratoIndex+1}`, pb: 32, pellet: "estornado", kgTotal: kgEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
+            let novoKgFornecido = kgAtual - kgEstornar;
+            if (novoKgFornecido <= 0.01) tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: false, kgFornecidos: 0 };
+            else tratos[tratoIndex] = { ...tratos[tratoIndex], kgFornecidos: novoKgFornecido };
+            tSave(tanqueNum, tratos);
             let info = getInfoTanqueOcupado(tanqueNum);
             if (info) {
                 let lotesData = loadData("lotes");
@@ -2124,51 +2277,136 @@ function resetarTratosTanqueRefatorado(tanqueNum) {
                     saveData("lotes", lotesData);
                 }
             }
-            renderEstoqueRacao();
+            saveData("estoqueRacao", estoque);
+            renderEstoqueRacao(); renderConsumoDiario(); renderTratosTanques();
+            showMessage(`✅ Trato ${tratoIndex+1} do tanque ${tanqueNum} estornado! ${kgEstornar.toFixed(2)}kg retornados.`);
         }
-        tRemove(tanqueNum);
-        renderTratosTanques();
-        showMessage(`Tratos do tanque ${tanqueNum} resetados. ${kgEstornar.toFixed(1)}kg retornados ao estoque.`);
-    }
+    });
+}
+
+function reverterDiaTanque(tanqueNum) {
+    let tratos = tLoad(tanqueNum);
+    let kgTotalEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
+    if (kgTotalEstornar <= 0) { showMessage("Nenhum trato fornecido para estornar.", true); return; }
+    showConfirm({
+        title: '↩️ Estornar Dia do Tanque',
+        msg: `Estornar TODOS os tratos do tanque ${tanqueNum}?\n${kgTotalEstornar.toFixed(2)}kg retornarão ao estoque.`,
+        icon: '↩️', type: 'warn', okLabel: '↩️ Estornar Tudo',
+        onConfirm: () => {
+            let estoque = loadData("estoqueRacao");
+            estoque.push({ id: Date.now() + Math.random(), marca: `Estorno total - Tanque ${tanqueNum}`, pb: 32, pellet: "estornado", kgTotal: kgTotalEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
+            let info = getInfoTanqueOcupado(tanqueNum);
+            if (info) {
+                let lotesData = loadData("lotes");
+                let lote = lotesData.find(l => l.id === info.loteId);
+                if (lote) { let tanque = lote.tanques.find(t => t.num === tanqueNum); if (tanque) tanque.consumoRacao = Math.max(0, (tanque.consumoRacao || 0) - kgTotalEstornar); saveData("lotes", lotesData); }
+            }
+            tSave(tanqueNum, tratos.map(t => ({ ...t, tratado: false, kgFornecidos: 0 })));
+            saveData("estoqueRacao", estoque);
+            renderEstoqueRacao(); renderConsumoDiario(); renderTratosTanques();
+            showMessage(`✅ Tanque ${tanqueNum}: ${kgTotalEstornar.toFixed(2)}kg estornados.`);
+        }
+    });
+}
+
+function suspenderAlimentacaoTanque(tanqueNum, justificativa = "") {
+    showConfirm({
+        title: '⛔ Suspender Alimentação',
+        msg: `Colocar tanque ${tanqueNum} em jejum?\nOs tratos já fornecidos serão estornados.`,
+        icon: '⛔', type: 'danger', okLabel: '⛔ Confirmar Jejum',
+        onConfirm: () => {
+            let tratos = tLoad(tanqueNum);
+            let kgTotalEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
+            if (kgTotalEstornar > 0) {
+                let estoque = loadData("estoqueRacao");
+                estoque.push({ id: Date.now() + Math.random(), marca: `Jejum - Tanque ${tanqueNum}`, pb: 32, pellet: "suspenso", kgTotal: kgTotalEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
+                saveData("estoqueRacao", estoque);
+                let info = getInfoTanqueOcupado(tanqueNum);
+                if (info) { let lotesData = loadData("lotes"); let lote = lotesData.find(l => l.id === info.loteId); if (lote) { let tanq = lote.tanques.find(t => t.num === tanqueNum); if (tanq) tanq.consumoRacao = Math.max(0, (tanq.consumoRacao || 0) - kgTotalEstornar); saveData("lotes", lotesData); } }
+            }
+            let suspensos = loadSuspensos();
+            if (!suspensos.includes(tanqueNum)) suspensos.push(tanqueNum);
+            saveSuspensos(suspensos);
+            tSave(tanqueNum, tratos.map(t => ({ ...t, tratado: false, kgFornecidos: 0, suspenso: true, suspensoJustificativa: justificativa || "Não informada", suspensoEm: new Date().toLocaleString() })));
+            renderTratosTanques();
+            showMessage(`⛔ Alimentação do tanque ${tanqueNum} SUSPENSA!`);
+        }
+    });
+}
+
+function reativarAlimentacaoTanque(tanqueNum) {
+    showConfirm({
+        title: '✅ Reativar Alimentação',
+        msg: `Reativar alimentação do tanque ${tanqueNum}?`,
+        icon: '✅', type: 'success', okLabel: '✅ Reativar',
+        onConfirm: () => {
+            let suspensos = loadSuspensos();
+            saveSuspensos(suspensos.filter(t => t !== tanqueNum));
+            let tratos = tLoad(tanqueNum);
+            tSave(tanqueNum, tratos.map(t => ({ ...t, suspenso: false, suspensoJustificativa: null, suspensoEm: null })));
+            renderTratosTanques();
+            showMessage(`✅ Alimentação do tanque ${tanqueNum} REATIVADA!`);
+        }
+    });
+}
+
+function resetarTratosTanqueRefatorado(tanqueNum) {
+    let tratos = tLoad(tanqueNum);
+    let kgEstornar = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
+    showConfirm({
+        title: '🔄 Resetar Tratos do Tanque',
+        msg: `Resetar todos os tratos de hoje do tanque ${tanqueNum}?\n${kgEstornar > 0 ? kgEstornar.toFixed(1)+'kg retornarão ao estoque.' : 'Nenhum kg a estornar.'}`,
+        icon: '🔄', type: 'warn', okLabel: '🔄 Resetar',
+        onConfirm: () => {
+            if (kgEstornar > 0) {
+                let estoque = loadData("estoqueRacao");
+                estoque.push({ id: Date.now() + Math.random(), marca: `Estorno - Reset Tanque ${tanqueNum}`, pb: 32, pellet: "estornado", kgTotal: kgEstornar, valorKg: 0, data: new Date().toLocaleDateString() });
+                saveData("estoqueRacao", estoque);
+                let info = getInfoTanqueOcupado(tanqueNum);
+                if (info) { let lotesData = loadData("lotes"); let lote = lotesData.find(l => l.id === info.loteId); if (lote) { let tanq = lote.tanques.find(t => t.num === tanqueNum); if (tanq) tanq.consumoRacao = Math.max(0, (tanq.consumoRacao || 0) - kgEstornar); saveData("lotes", lotesData); } }
+                renderEstoqueRacao();
+            }
+            tRemove(tanqueNum);
+            renderTratosTanques();
+            showMessage(`✅ Tratos do tanque ${tanqueNum} resetados. ${kgEstornar.toFixed(1)}kg retornados.`);
+        }
+    });
 }
 
 function resetarDiaTodosTanques() {
-    if (!confirm(`⚠️ ATENÇÃO! Resetar TODOS os tratos do dia em TODOS os tanques?\\n\\nA ração consumida será retornada ao estoque.`)) return;
-    let lotes = loadData("lotes");
-    let tanquesResetados = 0;
-    let kgTotalEstornado = 0;
-    let estoque = loadData("estoqueRacao");
-    for (let lote of lotes) {
-        for (let tanque of lote.tanques) {
-            if (tanque.qtdPeixes > 0) {
-                let tratos = tLoad(tanque.num);
-                let kgTanque = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
-                if (kgTanque > 0) {
-                    kgTotalEstornado += kgTanque;
-                    let info = getInfoTanqueOcupado(tanque.num);
-                    if (info) {
-                        let loteEncontrado = lotes.find(l => l.id === info.loteId);
-                        if (loteEncontrado) {
-                            let tanqueLote = loteEncontrado.tanques.find(t => t.num === tanque.num);
-                            if (tanqueLote) tanqueLote.consumoRacao = Math.max(0, (tanqueLote.consumoRacao || 0) - kgTanque);
+    showConfirm({
+        title: '🔄 Resetar Dia de Todos os Tanques',
+        msg: `Resetar TODOS os tratos do dia em TODOS os tanques?\nA ração consumida será retornada ao estoque.`,
+        icon: '⚠️', type: 'danger', okLabel: '🔄 Resetar Tudo',
+        onConfirm: () => {
+            let lotes = loadData("lotes");
+            let tanquesResetados = 0;
+            let kgTotalEstornado = 0;
+            let estoque = loadData("estoqueRacao");
+            for (let lote of lotes) {
+                for (let tanque of lote.tanques) {
+                    if (tanque.qtdPeixes > 0) {
+                        let tratos = tLoad(tanque.num);
+                        let kgTanque = tratos.reduce((sum, t) => sum + (t.tratado ? (t.kgFornecidos || 0) : 0), 0);
+                        if (kgTanque > 0) {
+                            kgTotalEstornado += kgTanque;
+                            let info = getInfoTanqueOcupado(tanque.num);
+                            if (info) {
+                                let loteEncontrado = lotes.find(l => l.id === info.loteId);
+                                if (loteEncontrado) { let tanqueLote = loteEncontrado.tanques.find(t => t.num === tanque.num); if (tanqueLote) tanqueLote.consumoRacao = Math.max(0, (tanqueLote.consumoRacao || 0) - kgTanque); }
+                            }
                         }
+                        tSave(tanque.num, horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 })));
+                        tanquesResetados++;
                     }
                 }
-                let novosTratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
-                tSave(tanque.num, novosTratos);
-                tanquesResetados++;
             }
+            if (kgTotalEstornado > 0) { estoque.push({ id: Date.now() + Math.random(), marca: "Estorno - Reset Geral", pb: 32, pellet: "estornado", kgTotal: kgTotalEstornado, valorKg: 0, data: new Date().toLocaleDateString() }); saveData("estoqueRacao", estoque); }
+            saveData("lotes", lotes);
+            renderEstoqueRacao(); renderConsumoDiario(); renderTratosTanques();
+            showMessage(`✅ ${tanquesResetados} tanques resetados! ${kgTotalEstornado.toFixed(1)}kg retornados.`);
         }
-    }
-    if (kgTotalEstornado > 0) {
-        estoque.push({ id: Date.now() + Math.random(), marca: "Estorno - Reset Geral", pb: 32, pellet: "estornado", kgTotal: kgTotalEstornado, valorKg: 0, data: new Date().toLocaleDateString() });
-        saveData("estoqueRacao", estoque);
-    }
-    saveData("lotes", lotes);
-    renderEstoqueRacao();
-    renderConsumoDiario();
-    renderTratosTanques();
-    showMessage(`✅ ${tanquesResetados} tanques resetados! ${kgTotalEstornado.toFixed(1)}kg retornados ao estoque.`);
+    });
 }
 
 // ==================== ALIMENTAÇÃO E MORTALIDADE ====================
@@ -2189,7 +2427,10 @@ function registrarAlimentacao() {
         let d=extrairDiametroPellet(estoque[i].pellet);
         if(diaMetroNec && d && diaMetroNec===d) idxCompat.push(i);
     }
-    if(idxCompat.length===0) for(let i=0;i<estoque.length;i++) idxCompat.push(i); // fallback
+    if(idxCompat.length===0){
+        showMessage(`❌ Sem ração "${tipoNec}" no estoque! Compre o tipo correto.`, true);
+        return;
+    }
     let totalComp = idxCompat.reduce((s,i)=>s+estoque[i].kgTotal,0);
     if(totalComp<kgRacao){showMessage(`Estoque insuficiente de ${tipoNec}! Disponível: ${totalComp.toFixed(1)}kg`,true);return;}
     let resto=kgRacao,dets=[];
@@ -2362,11 +2603,12 @@ function removerAmostra(index) {
 
 function limparAmostras() {
     if (amostrasTemp.length === 0) return;
-    if (confirm("Limpar todas as amostras?")) {
-        amostrasTemp = [];
-        renderAmostras();
-        showMessage("Amostras limpas");
-    }
+    showConfirm({
+        title: '🗑️ Limpar Amostras',
+        msg: 'Deseja limpar todas as amostras adicionadas?',
+        icon: '🗑️', type: 'warn', okLabel: '🗑️ Limpar',
+        onConfirm: () => { amostrasTemp = []; renderAmostras(); showMessage("✅ Amostras limpas"); }
+    });
 }
 
 function carregarInfoTanqueBiometria() {
@@ -2516,12 +2758,17 @@ function renderModelosRacao() {
 }
 
 function excluirModeloRacao(id) {
-    if (confirm("Remover este modelo de ração?")) {
-        let modelos = loadData("modelosRacao");
-        saveData("modelosRacao", modelos.filter(m => m.id !== id));
-        renderModelosRacao();
-        showMessage("✅ Modelo removido");
-    }
+    showConfirm({
+        title: '🗑️ Remover Modelo de Ração',
+        msg: 'Deseja remover este modelo de ração?\nEsta ação não afeta o estoque atual.',
+        icon: '🌾', type: 'warn', okLabel: '🗑️ Remover',
+        onConfirm: () => {
+            let modelos = loadData("modelosRacao");
+            saveData("modelosRacao", modelos.filter(m => m.id !== id));
+            renderModelosRacao();
+            showMessage("✅ Modelo removido");
+        }
+    });
 }
 
 function carregarModeloParaCompra() {
@@ -2652,33 +2899,40 @@ function renderEstoqueRacao() {
 }
 
 function removerItemEstoque(id) {
-    if (confirm("Remover este item do estoque?")) {
-        let estoque = loadData("estoqueRacao");
-        // Comparação robusta: tenta por id numérico e string
-        let novo = estoque.filter(i => String(i.id) !== String(id) && i.id !== id && Number(i.id) !== Number(id));
-        // Se nenhum foi removido (IDs iguais), tenta por índice
-        if (novo.length === estoque.length) {
-            let idx = estoque.findIndex(i => String(i.id) === String(id) || Number(i.id) === Number(id));
-            if (idx !== -1) { estoque.splice(idx, 1); novo = estoque; }
+    let estoque = loadData("estoqueRacao");
+    let item = estoque.find(i => String(i.id) === String(id) || Number(i.id) === Number(id));
+    showConfirm({
+        title: '🗑️ Remover do Estoque',
+        msg: `Remover "${item ? item.marca || item.pellet : 'este item'}" do estoque?\n${item ? (item.kgTotal||0).toFixed(1)+'kg serão removidos.' : ''}`,
+        icon: '📦', type: 'danger', okLabel: '🗑️ Remover',
+        onConfirm: () => {
+            let novo = estoque.filter(i => String(i.id) !== String(id) && i.id !== id && Number(i.id) !== Number(id));
+            if (novo.length === estoque.length) {
+                let idx = estoque.findIndex(i => String(i.id) === String(id) || Number(i.id) === Number(id));
+                if (idx !== -1) { estoque.splice(idx, 1); novo = estoque; }
+            }
+            saveData("estoqueRacao", novo);
+            renderEstoqueRacao();
+            showMessage("✅ Item removido do estoque");
         }
-        saveData("estoqueRacao", novo);
-        renderEstoqueRacao();
-        showMessage("✅ Item removido do estoque");
-    }
+    });
 }
 
 function removerItemEstoqueIdx(idx) {
-    if (confirm("Remover este item do estoque?")) {
-        let estoque = loadData("estoqueRacao");
-        if (idx >= 0 && idx < estoque.length) {
+    let estoque = loadData("estoqueRacao");
+    let item = estoque[idx];
+    if (idx < 0 || idx >= estoque.length) { showMessage("❌ Item não encontrado", true); return; }
+    showConfirm({
+        title: '🗑️ Remover do Estoque',
+        msg: `Remover "${item ? item.marca || item.pellet : 'este item'}" do estoque?\n${item ? (item.kgTotal||0).toFixed(1)+'kg serão removidos.' : ''}`,
+        icon: '📦', type: 'danger', okLabel: '🗑️ Remover',
+        onConfirm: () => {
             estoque.splice(idx, 1);
             saveData("estoqueRacao", estoque);
             renderEstoqueRacao();
             showMessage("✅ Item removido do estoque");
-        } else {
-            showMessage("❌ Item não encontrado", true);
         }
-    }
+    });
 }
 
 window.removerItemEstoqueIdx = removerItemEstoqueIdx;
@@ -3592,8 +3846,7 @@ function atualizarDashboard() {
     setEl("dashLotes",   lotes.length);
     setEl("dashRacao",   totalRacao.toFixed(0)+" kg");
     setEl("dashColabs",  colabs.length);
-    let hb = document.getElementById("headerBadge");
-    if (hb) hb.textContent = "🐟 "+totalPeixes.toLocaleString("pt-BR")+" peixes";
+    atualizarHeaderPisc();
 
     // ── Biomassa total e pronta para venda ──────────────
     let biomassaTotal = 0;
@@ -4211,10 +4464,11 @@ function registrarConsumoNoLote(tanqueNum, kgRacao) {
 }
 // ==================== FUNÇÃO PARA CONCLUIR O DIA ====================
 function concluirDiaAlimentacao() {
-    if (!confirm(`⚠️ ATENÇÃO! Isso irá FINALIZAR o dia de alimentação.\n\n• Todos os tratos pendentes serão CANCELADOS\n• O consumo registrado será consolidado nos lotes\n• Os tratos serão resetados para o novo dia\n\nTem certeza que deseja concluir o dia?`)) {
-        return;
-    }
-    
+    showConfirm({
+        title: '🌅 Finalizar Dia de Alimentação',
+        msg: '• Todos os tratos pendentes serão CANCELADOS\n• O consumo registrado será consolidado nos lotes\n• Os tratos serão resetados para o novo dia\n\nDeseja concluir o dia?',
+        icon: '🌅', type: 'warn', okLabel: '✔ Concluir Dia',
+        onConfirm: () => {
     let lotes = loadData("lotes");
     let totalConsumoDia = 0;
     let tanquesProcessados = 0;
@@ -4281,39 +4535,33 @@ function concluirDiaAlimentacao() {
         }
     }
     
-    // Atualizar interfaces
     renderTratosTanques();
-    renderLotes(); // Atualiza custos e consumo
+    renderLotes();
     renderConsumoDiario();
     atualizarDashboard();
     
-    showMessage(`✅ DIA CONCLUÍDO! Total consumido: ${totalConsumoDia.toFixed(2)} kg em ${tanquesProcessados} tanques.\nOs tratos foram resetados para o novo dia.`);
+    showMessage(`✅ DIA CONCLUÍDO! Total: ${totalConsumoDia.toFixed(2)}kg em ${tanquesProcessados} tanques. Tratos resetados.`);
+        }
+    });
 }
 
 // ==================== FUNÇÃO PARA VERIFICAR SE É O ÚLTIMO TRATO ====================
 function verificarUltimoTrato(tanqueNum, tratoIndex, kgRecomendado) {
     let tratos = tLoad(tanqueNum);
     let proximoTratoIndex = tratoIndex + 1;
-    
-    // Verificar se este é o último trato (próximo não existe ou já está tratado)
     let isUltimo = (proximoTratoIndex >= tratos.length) ||
         (tratos[proximoTratoIndex] && tratos[proximoTratoIndex].tratado);
     
     if (isUltimo) {
-        if (confirm(`🍽️ Este é o ÚLTIMO TRATO do dia para o tanque ${tanqueNum}!\n\nDeseja fornecer este trato e finalizar o dia de alimentação deste tanque?\n\nKg a fornecer: ${kgRecomendado.toFixed(2)}kg`)) {
-            // Registrar o trato
-            registrarTrato(tanqueNum, tratoIndex, kgRecomendado);
-            
-            // Verificar se todos os tanques já terminaram o dia
-            verificarTodosTanquesConcluidos();
-            return true;
-        } else {
-            showMessage(`Trato não fornecido. O tanque ${tanqueNum} ainda tem pendências.`);
-            return false;
-        }
+        showConfirm({
+            title: '🍽️ Último Trato do Dia',
+            msg: `Este é o ÚLTIMO TRATO do dia para o tanque ${tanqueNum}.\n\nFornecer ${kgRecomendado.toFixed(2)}kg e finalizar o dia deste tanque?`,
+            icon: '🍽️', type: 'success', okLabel: '✔ Fornecer e Finalizar',
+            onConfirm: () => { registrarTrato(tanqueNum, tratoIndex, kgRecomendado); verificarTodosTanquesConcluidos(); }
+        });
+        return true;
     }
     
-    // Não é o último, registrar normalmente
     registrarTrato(tanqueNum, tratoIndex, kgRecomendado);
     return true;
 }
@@ -4329,18 +4577,18 @@ function verificarTodosTanquesConcluidos() {
             if (tanque.qtdPeixes > 0) {
                 let tratos = tLoad(tanque.num);
                 let temPendente = tratos.some(t => !t.tratado);
-                if (temPendente) {
-                    todosConcluidos = false;
-                    tanquesPendentes.push(tanque.num);
-                }
+                if (temPendente) { todosConcluidos = false; tanquesPendentes.push(tanque.num); }
             }
         }
     }
     
     if (todosConcluidos && tanquesPendentes.length === 0) {
-        if (confirm(`🎉 TODOS OS TANQUES concluíram os tratos do dia!\n\nDeseja finalizar o dia de alimentação agora?\n\nIsso irá consolidar os registros e preparar para amanhã.`)) {
-            concluirDiaAlimentacao();
-        }
+        showConfirm({
+            title: '🎉 Todos os Tanques Concluídos!',
+            msg: 'TODOS OS TANQUES concluíram os tratos do dia!\n\nDeseja finalizar o dia de alimentação e preparar para amanhã?',
+            icon: '🎉', type: 'success', okLabel: '🌅 Finalizar Dia',
+            onConfirm: () => concluirDiaAlimentacao()
+        });
     } else if (tanquesPendentes.length > 0 && tanquesPendentes.length <= 3) {
         showMessage(`⚠️ Ainda faltam tratos nos tanques: ${tanquesPendentes.join(', ')}`);
     }
@@ -4368,53 +4616,37 @@ function registrarAlimentacaoComConclusao() {
     let isUltimo = (ultimoTratoNaoTratado === tratos.length - 1);
     
     if (isUltimo && tratos.length > 0) {
-        if (confirm(`🍽️ Este é o ÚLTIMO TRATO do dia para o tanque ${tanqueNum}!\n\nDeseja registrar ${kgRacao}kg e finalizar o dia deste tanque?`)) {
-            // Registrar consumo
-            let estoque = loadData("estoqueRacao");
-            let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
-            if (totalEstoque < kgRacao) {
-                showMessage("Estoque insuficiente", true);
-                return;
-            }
-            
-            let consumoRestante = kgRacao;
-            for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
-                if (estoque[i].kgTotal >= consumoRestante) {
-                    estoque[i].kgTotal -= consumoRestante;
-                    consumoRestante = 0;
-                } else {
-                    consumoRestante -= estoque[i].kgTotal;
-                    estoque[i].kgTotal = 0;
+        showConfirm({
+            title: '🍽️ Último Trato do Dia',
+            msg: `Este é o ÚLTIMO TRATO do dia para o tanque ${tanqueNum}.\n\nDeseja registrar ${kgRacao}kg e finalizar o dia deste tanque?`,
+            icon: '🍽️', type: 'success', okLabel: '✔ Registrar e Finalizar',
+            onConfirm: () => {
+                let estoque = loadData("estoqueRacao");
+                let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
+                if (totalEstoque < kgRacao) { showMessage("Estoque insuficiente", true); return; }
+                let consumoRestante = kgRacao;
+                for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
+                    if (estoque[i].kgTotal >= consumoRestante) { estoque[i].kgTotal -= consumoRestante; consumoRestante = 0; }
+                    else { consumoRestante -= estoque[i].kgTotal; estoque[i].kgTotal = 0; }
                 }
-            }
-            saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
-            
-            let lotes = loadData("lotes");
-            let lote = lotes.find(l => l.id === info.loteId);
-            let tanque = lote.tanques.find(t => t.num === tanqueNum);
-            tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
-            saveData("lotes", lotes);
-            
-            // Marcar todos os tratos pendentes como fornecidos
-            for (let i = 0; i < tratos.length; i++) {
-                if (!tratos[i].tratado) {
-                    tratos[i] = { ...tratos[i], tratado: true, kgFornecidos: kgRacao / (tratos.length - i) };
+                saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
+                let lotes = loadData("lotes");
+                let lote = lotes.find(l => l.id === info.loteId);
+                let tanque = lote.tanques.find(t => t.num === tanqueNum);
+                tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
+                saveData("lotes", lotes);
+                for (let i = 0; i < tratos.length; i++) {
+                    if (!tratos[i].tratado) tratos[i] = { ...tratos[i], tratado: true, kgFornecidos: kgRacao / (tratos.length - i) };
                 }
+                tSave(tanqueNum, tratos);
+                showMessage(`✅ ${kgRacao}kg registrado. Dia finalizado para o tanque ${tanqueNum}`);
+                renderEstoqueRacao(); renderConsumoDiario(); renderTratosTanques(); renderLotes();
+                verificarTodosTanquesConcluidos();
             }
-            tSave(tanqueNum, tratos);
-            
-            showMessage(`✅ Consumo de ${kgRacao}kg registrado. Dia finalizado para o tanque ${tanqueNum}`);
-            renderEstoqueRacao();
-            renderConsumoDiario();
-            renderTratosTanques();
-            renderLotes();
-            
-            verificarTodosTanquesConcluidos();
-            return;
-        }
+        });
+        return;
     }
     
-    // Não é o último, registrar normalmente
     registrarAlimentacao();
 }
 
