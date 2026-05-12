@@ -530,34 +530,57 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
 <!-- CLASSIFICAÇÃO E REPICAGEM -->
 <div id="classificacao" class="hidden">
     <div class="section-header">
-        <div class="card-header" style="margin-bottom:0;">📊 Classificação & Repicagem</div>
+        <div class="card-header" style="margin-bottom:0;">🔀 Classificação por Tamanho</div>
         <button class="btn-outline btn-sm back-top-btn" onclick="nav('menu')">⬅ Voltar ao menu</button>
     </div>
-    
-    <!-- Origem -->
-    <div class="card">
-        <strong>📤 TANQUE DE ORIGEM</strong>
-        <select id="origemTanque" style="height:50px" onchange="carregarInfoOrigem()"></select>
-        <div id="infoOrigem" class="card" style="background:#f0f9ff; margin-top:8px; font-size:0.85rem;">
-            Selecione um tanque ocupado
+
+    <!-- PASSO 1: Origens -->
+    <div class="card" style="border-left:3px solid var(--blue);">
+        <div class="card-title">📤 PASSO 1 — TANQUES DE ORIGEM (até 2)</div>
+        <small style="display:block;margin-bottom:8px;">Selecione 1 ou 2 tanques para classificar juntos. Os peixes serão somados e distribuídos por tamanho.</small>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="field">
+                <label>Tanque de Origem 1 *</label>
+                <select id="origemTanque" onchange="carregarInfoOrigem()" style="height:48px;"></select>
+            </div>
+            <div class="field">
+                <label>Tanque de Origem 2 (opcional)</label>
+                <select id="origemTanque2" onchange="carregarInfoOrigem()" style="height:48px;">
+                    <option value="">— Não usar —</option>
+                </select>
+            </div>
+        </div>
+        <div id="infoOrigem" class="card" style="background:#f0f9ff;margin-top:4px;font-size:.82rem;">
+            Selecione pelo menos um tanque ocupado
         </div>
     </div>
-    
-    <!-- Destinos -->
-    <div class="card">
-        <strong>🎯 TRANSFERÊNCIA PARA NOVOS TANQUES</strong>
-        <small>Distribua os peixes do tanque de origem para tanques disponíveis</small>
-        
-        <div id="areaRepicagem"></div>
-        
-        <button onclick="adicionarDestino()" class="btn-outline btn-sm" style="margin-top:8px;">➕ Adicionar Tanque de Destino</button>
-        <button onclick="executarClassificacao()" class="btn-success" style="width:100%; margin-top:12px;">🎯 Executar Transferência</button>
+
+    <!-- PASSO 2: Tamanhos -->
+    <div class="card" style="border-left:3px solid var(--amber);">
+        <div class="card-title">📏 PASSO 2 — DEFINIR CLASSES DE TAMANHO</div>
+        <small style="display:block;margin-bottom:10px;">Configure quantos tanques destino cada tamanho vai ocupar e a capacidade de cada tanque. Os peixes preenchem sequencialmente.</small>
+
+        <div id="classesContainer">
+            <!-- renderizado dinamicamente -->
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+            <button onclick="adicionarClasse()" class="btn-outline btn-sm">➕ Adicionar Tamanho</button>
+            <button onclick="resetarClasses()" class="btn-amber btn-sm">🔄 Resetar Classes</button>
+        </div>
+        <div id="resumoDistribuicao" style="margin-top:10px;"></div>
     </div>
-    
+
+    <!-- PASSO 3: Executar -->
+    <div class="card" style="border-left:3px solid var(--green);">
+        <div class="card-title">🎯 PASSO 3 — EXECUTAR CLASSIFICAÇÃO</div>
+        <div id="previewClassificacao" style="margin-bottom:10px;font-size:.82rem;"></div>
+        <button onclick="executarClassificacaoNova()" class="btn-success btn-full">🔀 Executar Classificação por Tamanho</button>
+    </div>
+
     <!-- Histórico -->
     <div class="card">
-        <strong>📜 HISTÓRICO DE TRANSFERÊNCIAS</strong>
-        <div id="historicoClassificacoes" class="scroll-list" style="max-height: 200px;"></div>
+        <strong>📜 HISTÓRICO DE CLASSIFICAÇÕES</strong>
+        <div id="historicoClassificacoes" class="scroll-list" style="max-height:220px;"></div>
     </div>
 </div>
 
@@ -1126,11 +1149,12 @@ function getInfoTanqueOcupado(numTanque) {
     return null;
 }
 
-function atualizarSelectTanques(selectId, tipo = 'todos') {
+function atualizarSelectTanques(selectId, tipo = 'todos', withEmpty = false) {
     let tanques = loadData("tanques");
     let select = document.getElementById(selectId);
     if (!select) return;
     let options = [];
+    if (withEmpty) options.push('<option value="">— Não usar —</option>');
     if (tipo === 'distribuicao') {
         tanques.forEach(t => {
             if (!isTanqueOcupado(t.num)) {
@@ -1148,7 +1172,8 @@ function atualizarSelectTanques(selectId, tipo = 'todos') {
             options.push(`<option value="${t.num}">${t.num} (${t.vol}m³)</option>`);
         });
     }
-    select.innerHTML = options.length ? options.join('') : '<option value="">Nenhum tanque disponível</option>';
+    if (!withEmpty && options.length === 0) options.push('<option value="">Nenhum tanque disponível</option>');
+    select.innerHTML = options.join('');
 }
 
 // ==================== TANQUES ====================
@@ -4081,27 +4106,8 @@ function seedExemplo() {
     if(loadData("adiantamentos").length === 0) saveData("adiantamentos", []);
 }
 
-// ==================== CLASSIFICAÇÃO E REPICAGEM ====================
-let destinosRepicagem = [];
-
-function carregarInfoOrigem() {
-    let tanqueNum = document.getElementById("origemTanque").value;
-    let infoDiv = document.getElementById("infoOrigem");
-    if (!tanqueNum || tanqueNum === "") { infoDiv.innerHTML = "Selecione um tanque ocupado"; return; }
-    let info = getInfoTanqueOcupado(tanqueNum);
-    if (!info) { infoDiv.innerHTML = "Tanque vazio."; return; }
-    let ultimaBio = null;
-    if (info.lote.biometrias && info.lote.biometrias.length) {
-        ultimaBio = info.lote.biometrias.slice().reverse().find(b => b.tanque === tanqueNum);
-    }
-    let pesoMedio = ultimaBio ? ultimaBio.pesoMedio.toFixed(0) : (info.lote.pesoMedioAlevino || 5);
-    let biomassa = ultimaBio ? ultimaBio.biomassa : ((info.lote.pesoMedioAlevino / 1000) * info.qtdPeixes);
-    infoDiv.innerHTML = `<strong>🐟 Lote #${info.loteId}</strong><br>
-    📊 População: ${info.qtdPeixes} peixes<br>
-    ⚖️ Peso médio: ${pesoMedio} g<br>
-    📦 Biomassa: ${biomassa.toFixed(1)} kg<br>
-    📌 Disponível para transferência: ${info.qtdPeixes} peixes`;
-}
+// ==================== CLASSIFICAÇÃO POR TAMANHO (NOVA) ====================
+// Suporte: até 2 tanques de origem, distribuição sequencial por tamanho (P/M/G/GG)
 
 // Obter tanques disponíveis (vazios)
 function getTanquesDisponiveis() {
@@ -4109,279 +4115,448 @@ function getTanquesDisponiveis() {
     return tanques.filter(t => !isTanqueOcupado(t.num));
 }
 
-function adicionarDestino() {
-    let tanquesDisponiveis = getTanquesDisponiveis();
-    if (tanquesDisponiveis.length === 0) {
-        showMessage("❌ Nenhum tanque disponível para receber peixes", true);
-        return;
-    }
-    
-    destinosRepicagem.push({
+const TAMANHOS_PADRAO = [
+    { label: "P", emoji: "🟡", descricao: "Pequeno" },
+    { label: "M", emoji: "🟠", descricao: "Médio" },
+    { label: "G", emoji: "🟢", descricao: "Grande" },
+    { label: "GG", emoji: "🔵", descricao: "Muito Grande" }
+];
+
+// Estado da classificação
+let classesClassificacao = []; // [{label, emoji, pesoMin, pesoMax, descricao, tanquesDestino:[{num,capMax}]}]
+
+function initClassesDefault() {
+    classesClassificacao = [
+        { id: 1, label: "P",  emoji: "🟡", descricao: "Pequeno",      pesoMin: 0,   pesoMax: 100, tanquesDestino: [{ id: Date.now()+1, num: "", capMax: 0 }] },
+        { id: 2, label: "M",  emoji: "🟠", descricao: "Médio",        pesoMin: 100, pesoMax: 300, tanquesDestino: [{ id: Date.now()+2, num: "", capMax: 0 }] },
+        { id: 3, label: "G",  emoji: "🟢", descricao: "Grande",       pesoMin: 300, pesoMax: 600, tanquesDestino: [{ id: Date.now()+3, num: "", capMax: 0 }] },
+        { id: 4, label: "GG", emoji: "🔵", descricao: "Muito Grande", pesoMin: 600, pesoMax: 99999, tanquesDestino: [{ id: Date.now()+4, num: "", capMax: 0 }] }
+    ];
+}
+
+function resetarClasses() {
+    initClassesDefault();
+    renderClassesContainer();
+    showMessage("Classes resetadas para P/M/G/GG");
+}
+
+function adicionarClasse() {
+    if (classesClassificacao.length >= 4) { showMessage("Máximo de 4 tamanhos permitido", true); return; }
+    let ultimo = classesClassificacao[classesClassificacao.length - 1];
+    let tamPadrao = TAMANHOS_PADRAO[classesClassificacao.length] || { label: "GG", emoji: "🔵", descricao: "Muito Grande" };
+    classesClassificacao.push({
         id: Date.now() + Math.random(),
-        tanque: "",
-        quantidade: 0,
-        pesoMedio: 0,
-        biomassa: 0
+        label: tamPadrao.label,
+        emoji: tamPadrao.emoji,
+        descricao: tamPadrao.descricao,
+        pesoMin: ultimo ? (ultimo.pesoMax || 0) : 0,
+        pesoMax: 99999,
+        tanquesDestino: [{ id: Date.now() + Math.random(), num: "", capMax: 0 }]
     });
-    renderAreaRepicagem();
+    renderClassesContainer();
 }
 
-function removerDestino(id) {
-    destinosRepicagem = destinosRepicagem.filter(d => d.id !== id);
-    renderAreaRepicagem();
+function removerClasse(classId) {
+    classesClassificacao = classesClassificacao.filter(c => c.id !== classId);
+    renderClassesContainer();
 }
 
-function renderAreaRepicagem() {
-    let div = document.getElementById("areaRepicagem");
-    let tanquesDisponiveis = getTanquesDisponiveis();
-    
-    if (destinosRepicagem.length === 0) {
-        div.innerHTML = "<small>Clique em 'Adicionar Tanque de Destino' para começar.</small>";
-        return;
-    }
-    
-    div.innerHTML = destinosRepicagem.map((dest, idx) => `
-        <div style="background:#f1f5f9; padding:12px; border-radius:16px; margin:8px 0;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <strong>Destino ${idx+1}</strong>
-                <button onclick="removerDestino(${dest.id})" class="btn-danger btn-sm">🗑️</button>
-            </div>
-            <select id="destTanque_${dest.id}" onchange="atualizarDestino(${dest.id}, 'tanque', this.value)" style="margin:4px 0;">
-                <option value="">-- Selecione o tanque de destino --</option>
-                ${tanquesDisponiveis.map(t => `<option value="${t.num}" ${dest.tanque === t.num ? 'selected' : ''}>${t.num} (${t.vol}m³) - Disponível</option>`).join('')}
-            </select>
-            <div class="flex-row">
-                <input type="number" id="destQtd_${dest.id}" placeholder="Quantidade de peixes" step="1" style="flex:1;" value="${dest.quantidade || ''}" onchange="atualizarDestino(${dest.id}, 'quantidade', parseFloat(this.value))">
-                <input type="number" id="destPeso_${dest.id}" placeholder="Peso médio (g)" step="0.1" style="flex:1;" value="${dest.pesoMedio || ''}" onchange="atualizarDestino(${dest.id}, 'pesoMedio', parseFloat(this.value))">
-            </div>
-            <small>Biomassa: <strong id="destBiomassa_${dest.id}">${dest.biomassa ? dest.biomassa.toFixed(2) : '0'}</strong> kg</small>
-        </div>
-    `).join('');
+function adicionarTanqueNaClasse(classId) {
+    let cl = classesClassificacao.find(c => c.id === classId);
+    if (!cl) return;
+    if (cl.tanquesDestino.length >= 6) { showMessage("Máximo 6 tanques por tamanho", true); return; }
+    cl.tanquesDestino.push({ id: Date.now() + Math.random(), num: "", capMax: 0 });
+    renderClassesContainer();
 }
 
-function atualizarDestino(id, campo, valor) {
-    let index = destinosRepicagem.findIndex(d => d.id === id);
-    if (index !== -1) {
-        destinosRepicagem[index][campo] = valor;
-        if (campo === 'quantidade' || campo === 'pesoMedio') {
-            let qtd = destinosRepicagem[index].quantidade || 0;
-            let pesoMedio = destinosRepicagem[index].pesoMedio || 0;
-            destinosRepicagem[index].biomassa = (qtd * pesoMedio) / 1000;
-            let biomassaSpan = document.getElementById(`destBiomassa_${id}`);
-            if (biomassaSpan) biomassaSpan.innerHTML = destinosRepicagem[index].biomassa.toFixed(2);
+function removerTanqueDaClasse(classId, tanqueDestId) {
+    let cl = classesClassificacao.find(c => c.id === classId);
+    if (!cl || cl.tanquesDestino.length <= 1) return;
+    cl.tanquesDestino = cl.tanquesDestino.filter(t => t.id !== tanqueDestId);
+    renderClassesContainer();
+}
+
+function lerValoresClasses() {
+    // Ler todos os valores dos inputs antes de executar
+    for (let cl of classesClassificacao) {
+        let pesoMinEl = document.getElementById(`cl_pmin_${cl.id}`);
+        let pesoMaxEl = document.getElementById(`cl_pmax_${cl.id}`);
+        if (pesoMinEl) cl.pesoMin = parseFloat(pesoMinEl.value) || 0;
+        if (pesoMaxEl) cl.pesoMax = parseFloat(pesoMaxEl.value) || 99999;
+        for (let td of cl.tanquesDestino) {
+            let numEl  = document.getElementById(`td_num_${td.id}`);
+            let capEl  = document.getElementById(`td_cap_${td.id}`);
+            if (numEl) td.num    = numEl.value;
+            if (capEl) td.capMax = parseInt(capEl.value) || 0;
         }
     }
 }
 
-function executarClassificacao() {
-    let tanqueOrigem = document.getElementById("origemTanque").value;
-    if (!tanqueOrigem) { showMessage("❌ Selecione o tanque de origem", true); return; }
-    
-    let info = getInfoTanqueOcupado(tanqueOrigem);
-    if (!info) { showMessage("❌ Tanque de origem não ocupado", true); return; }
-    
-    let destinosValidos = destinosRepicagem.filter(d => d.tanque && d.quantidade > 0 && d.pesoMedio > 0);
-    if (destinosValidos.length === 0) {
-        showMessage("❌ Adicione pelo menos um destino válido (tanque, quantidade e peso médio)", true);
-        return;
+function renderClassesContainer() {
+    let div = document.getElementById("classesContainer");
+    if (!div) return;
+    let tanquesDisp = getTanquesDisponiveis();
+    // Também incluir tanques já selecionados em outras classes (para validar depois)
+    let jaUsados = new Set();
+    classesClassificacao.forEach(cl => cl.tanquesDestino.forEach(td => { if (td.num) jaUsados.add(td.num); }));
+
+    div.innerHTML = classesClassificacao.map((cl, cidx) => {
+        let corBg = ["#fef9c3","#fff7ed","#f0fdf4","#eff6ff"][cidx] || "#f8fafc";
+        let corBorda = ["#eab308","#f97316","#22c55e","#3b82f6"][cidx] || "#94a3b8";
+        return `<div style="background:${corBg};border:1.5px solid ${corBorda};border-radius:var(--r-md);padding:12px;margin:8px 0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1.2rem;">${cl.emoji}</span>
+                    <strong style="font-size:.9rem;">${cl.label} — ${cl.descricao}</strong>
+                </div>
+                ${classesClassificacao.length > 1 ? `<button onclick="removerClasse(${cl.id})" class="btn-danger btn-xs" style="margin:0;">🗑️</button>` : ''}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                <div class="field" style="margin:0;">
+                    <label style="font-size:.65rem;">Peso mínimo (g)</label>
+                    <input type="number" id="cl_pmin_${cl.id}" value="${cl.pesoMin}" placeholder="0" step="1" style="padding:7px 10px;">
+                </div>
+                <div class="field" style="margin:0;">
+                    <label style="font-size:.65rem;">Peso máximo (g) — 99999=sem limite</label>
+                    <input type="number" id="cl_pmax_${cl.id}" value="${cl.pesoMax >= 99999 ? '' : cl.pesoMax}" placeholder="Sem limite" step="1" style="padding:7px 10px;">
+                </div>
+            </div>
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:4px;">Tanques de destino (preenchem em ordem):</div>
+            ${cl.tanquesDestino.map((td, tidx) => `
+                <div style="display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap;">
+                    <span style="font-size:.7rem;color:#64748b;min-width:16px;">${tidx+1}.</span>
+                    <select id="td_num_${td.id}" style="flex:2;padding:6px 8px;font-size:.78rem;">
+                        <option value="">— Tanque —</option>
+                        ${tanquesDisp.map(t => `<option value="${t.num}" ${td.num===t.num?'selected':''}>${t.num} (${t.vol}m³)</option>`).join('')}
+                    </select>
+                    <input type="number" id="td_cap_${td.id}" placeholder="Cap. máx. peixes" value="${td.capMax||''}" step="1" style="flex:1;padding:6px 8px;font-size:.78rem;" title="Capacidade máxima de peixes neste tanque (0 = sem limite)">
+                    ${cl.tanquesDestino.length > 1 ? `<button onclick="removerTanqueDaClasse(${cl.id},${td.id})" class="btn-xs btn-danger" style="margin:0;padding:4px 8px;">✕</button>` : ''}
+                </div>
+            `).join('')}
+            <button onclick="adicionarTanqueNaClasse(${cl.id})" class="btn-xs btn-outline" style="margin-top:4px;">➕ + Tanque neste tamanho</button>
+        </div>`;
+    }).join('');
+    atualizarPreviewClassificacao();
+}
+
+function carregarInfoOrigem() {
+    let tanqueNum1 = document.getElementById("origemTanque").value;
+    let tanqueNum2El = document.getElementById("origemTanque2");
+    let tanqueNum2 = tanqueNum2El ? tanqueNum2El.value : "";
+    let infoDiv = document.getElementById("infoOrigem");
+    let linhas = [];
+    let totalPeixes = 0;
+    let pesoMedioGlobal = 0;
+    let biomassaGlobal = 0;
+    let pesoMin = Infinity, pesoMax = -Infinity;
+
+    function infoTanque(num) {
+        if (!num || num === "") return null;
+        let info = getInfoTanqueOcupado(num);
+        if (!info) return null;
+        let ultimaBio = (info.lote.biometrias || []).slice().reverse().find(b => b.tanque === num);
+        let peso = ultimaBio ? ultimaBio.pesoMedio : (info.lote.pesoMedioAlevino || 5);
+        let bio  = ultimaBio ? ultimaBio.biomassa : ((peso / 1000) * info.qtdPeixes);
+        return { ...info, peso, bio };
     }
-    
-    let totalTransferido = destinosValidos.reduce((sum, d) => sum + d.quantidade, 0);
-    let totalBiomassaTransferida = destinosValidos.reduce((sum, d) => sum + d.biomassa, 0);
-    
-    if (totalTransferido > info.qtdPeixes) {
-        showMessage(`❌ Total a transferir (${totalTransferido}) excede a população do tanque origem (${info.qtdPeixes})`, true);
-        return;
+
+    let t1 = infoTanque(tanqueNum1);
+    let t2 = tanqueNum2 ? infoTanque(tanqueNum2) : null;
+
+    if (!t1 && !t2) { infoDiv.innerHTML = "Selecione pelo menos um tanque ocupado"; return; }
+
+    [t1, t2].filter(Boolean).forEach(t => {
+        totalPeixes += t.qtdPeixes;
+        biomassaGlobal += t.bio;
+        if (t.peso < pesoMin) pesoMin = t.peso;
+        if (t.peso > pesoMax) pesoMax = t.peso;
+        linhas.push(`<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <span>🏞️ <strong>${t.tanque.num}</strong></span>
+            <span>🐟 ${t.qtdPeixes} peixes</span>
+            <span>⚖️ ${t.peso.toFixed(0)}g</span>
+            <span>📦 ${t.bio.toFixed(1)} kg</span>
+            <span style="color:var(--blue);font-size:.68rem;">Lote #${t.loteId}</span>
+        </div>`);
+    });
+    pesoMedioGlobal = biomassaGlobal > 0 ? (biomassaGlobal / totalPeixes) * 1000 : 0;
+
+    infoDiv.innerHTML = `<div style="font-size:.8rem;">
+        ${linhas.join('<hr style="margin:6px 0;">')}
+        ${t1 && t2 ? `<hr style="margin:6px 0;"><div style="background:var(--blue-xl);border-radius:8px;padding:6px 10px;font-weight:700;font-size:.8rem;">
+            📊 TOTAL COMBINADO: ${totalPeixes} peixes · Biomassa: ${biomassaGlobal.toFixed(1)} kg · PM: ${pesoMedioGlobal.toFixed(0)}g
+        </div>` : ''}
+    </div>`;
+    atualizarPreviewClassificacao();
+}
+
+function atualizarPreviewClassificacao() {
+    let div = document.getElementById("previewClassificacao");
+    if (!div) return;
+    lerValoresClasses();
+    let t1num = document.getElementById("origemTanque") ? document.getElementById("origemTanque").value : "";
+    let t2El = document.getElementById("origemTanque2");
+    let t2num = t2El ? t2El.value : "";
+    let totalPeixes = 0;
+    [t1num, t2num].filter(Boolean).forEach(num => {
+        let info = getInfoTanqueOcupado(num);
+        if (info) totalPeixes += info.qtdPeixes;
+    });
+    if (totalPeixes === 0) { div.innerHTML = ""; return; }
+    let classesBlocos = classesClassificacao.map(cl => {
+        let tanquesOk = cl.tanquesDestino.filter(td => td.num).length;
+        return `<span style="background:${['#fef9c3','#fff7ed','#f0fdf4','#eff6ff'][classesClassificacao.indexOf(cl)]||'#f8fafc'};padding:3px 9px;border-radius:12px;font-size:.72rem;font-weight:700;">${cl.emoji}${cl.label} (${cl.pesoMin}g–${cl.pesoMax>=99999?'∞':cl.pesoMax+'g'}, ${tanquesOk} tanque${tanquesOk!==1?'s':''})</span>`;
+    }).join(' ');
+    div.innerHTML = `<div style="line-height:1.8;">🐟 <strong>${totalPeixes}</strong> peixes serão distribuídos em até ${classesClassificacao.length} classes:<br>${classesBlocos}</div>`;
+}
+
+function executarClassificacaoNova() {
+    lerValoresClasses();
+
+    let t1num = document.getElementById("origemTanque").value;
+    let t2El  = document.getElementById("origemTanque2");
+    let t2num = t2El ? t2El.value : "";
+
+    if (!t1num) { showMessage("❌ Selecione pelo menos o Tanque de Origem 1", true); return; }
+
+    let origens = [t1num, t2num].filter(Boolean);
+    if (origens.length === 2 && origens[0] === origens[1]) { showMessage("❌ Os dois tanques de origem não podem ser iguais", true); return; }
+
+    // Coletar info das origens
+    let infoOrigem1 = getInfoTanqueOcupado(t1num);
+    if (!infoOrigem1) { showMessage("❌ Tanque de origem 1 não está ocupado", true); return; }
+    let infoOrigem2 = t2num ? getInfoTanqueOcupado(t2num) : null;
+    if (t2num && !infoOrigem2) { showMessage(`❌ Tanque de origem 2 (${t2num}) não está ocupado`, true); return; }
+    if (t2num && infoOrigem1.loteId !== infoOrigem2.loteId) {
+        showMessage("❌ Os dois tanques devem pertencer ao mesmo lote para classificar juntos", true); return;
     }
-    
-    for (let d of destinosValidos) {
-        if (isTanqueOcupado(d.tanque)) {
-            showMessage(`❌ Tanque ${d.tanque} já está ocupado!`, true);
-            return;
+
+    let totalPeixesOrigem = infoOrigem1.qtdPeixes + (infoOrigem2 ? infoOrigem2.qtdPeixes : 0);
+
+    // Validar classes
+    let classesValidas = classesClassificacao.filter(cl => cl.tanquesDestino.some(td => td.num));
+    if (classesValidas.length === 0) { showMessage("❌ Configure pelo menos uma classe com tanque de destino", true); return; }
+
+    // Verificar tanques duplicados nos destinos
+    let todosDestNums = [];
+    for (let cl of classesValidas) {
+        for (let td of cl.tanquesDestino) {
+            if (!td.num) continue;
+            if (todosDestNums.includes(td.num)) { showMessage(`❌ Tanque ${td.num} está selecionado em mais de uma classe!`, true); return; }
+            if (origens.includes(td.num)) { showMessage(`❌ Tanque ${td.num} é origem e destino ao mesmo tempo!`, true); return; }
+            if (isTanqueOcupado(td.num)) { showMessage(`❌ Tanque destino ${td.num} já está ocupado!`, true); return; }
+            todosDestNums.push(td.num);
         }
     }
-    
+
+    // Calcular peso médio dos peixes de cada origem para classificar
+    let getPesoMedioTanque = (info) => {
+        let ultimaBio = (info.lote.biometrias||[]).slice().reverse().find(b => b.tanque === info.tanque.num);
+        return ultimaBio ? ultimaBio.pesoMedio : (info.lote.pesoMedioAlevino || 5);
+    };
+    let pm1 = getPesoMedioTanque(infoOrigem1);
+    let pm2 = infoOrigem2 ? getPesoMedioTanque(infoOrigem2) : 0;
+
+    // Para classificação real: usamos o peso médio do lote para distribuir os peixes em classes.
+    // A distribuição é SEQUENCIAL: dado que não temos peso individual, simulamos que os peixes do
+    // lote têm um peso médio representativo. O usuário distribuiu por % estimada OU todos vão para
+    // a classe cujo range engloba o peso médio de cada tanque de origem.
+    // LÓGICA: cada tanque de origem vai para a classe que engloba seu peso médio, sequencialmente preenchendo os tanques destino.
+
     let lotes = loadData("lotes");
-    let loteOrigem = lotes.find(l => l.id === info.loteId);
-    if (!loteOrigem) { showMessage("❌ Lote de origem não encontrado", true); return; }
-    
-    let tanqueOrigemObj = loteOrigem.tanques.find(t => t.num === tanqueOrigem);
-    let populacaoOriginal = tanqueOrigemObj.qtdPeixes;
-    
-    // Remover peixes do tanque de origem
-    tanqueOrigemObj.qtdPeixes -= totalTransferido;
-    tanqueOrigemObj.consumoRacao = 0;
-    
-    // Recalcular biomassa do tanque de origem
-    if (tanqueOrigemObj.ultimoPesoMedio) {
-        tanqueOrigemObj.ultimaBiomassa = (tanqueOrigemObj.ultimoPesoMedio / 1000) * tanqueOrigemObj.qtdPeixes;
+    let loteOrigem = lotes.find(l => l.id === infoOrigem1.loteId);
+    if (!loteOrigem) { showMessage("❌ Lote não encontrado", true); return; }
+
+    // Estrutura: { classId -> [ { tanqueDestNum, qtdAlocada } ] }
+    let alocacoes = []; // [{classeLabel, classIdx, tanqueDestNum, qtdPeixes, pesoMedio, biomassa}]
+
+    // Função: alocar N peixes com peso médio PM na classe cl, distribuindo sequencialmente pelos tanques destino
+    function alocarNaClasse(cl, qtdPeixes, pesoMedioAl) {
+        let restante = qtdPeixes;
+        for (let td of cl.tanquesDestino) {
+            if (!td.num || restante <= 0) continue;
+            let capMax = td.capMax > 0 ? td.capMax : restante; // 0 = sem limite
+            let alocar = Math.min(restante, capMax);
+            if (alocar <= 0) continue;
+            alocacoes.push({
+                classeLabel: cl.label, classeEmoji: cl.emoji,
+                tanqueDestNum: td.num,
+                qtdPeixes: alocar,
+                pesoMedio: pesoMedioAl,
+                biomassa: (pesoMedioAl / 1000) * alocar
+            });
+            restante -= alocar;
+        }
+        return restante; // retorna o que sobrou (não alocado — tanques cheios ou sem destino)
     }
-    
-    // Se o tanque de origem ficou vazio, remover do lote
-    if (tanqueOrigemObj.qtdPeixes <= 0) {
-        loteOrigem.tanques = loteOrigem.tanques.filter(t => t.num !== tanqueOrigem);
+
+    // Determinar classe de cada tanque origem por seu peso médio, e alocar
+    let semClasse1 = 0, semClasse2 = 0;
+    let clMatch1 = classesValidas.find(cl => pm1 >= cl.pesoMin && pm1 < (cl.pesoMax >= 99999 ? Infinity : cl.pesoMax));
+    let clMatch2 = infoOrigem2 ? classesValidas.find(cl => pm2 >= cl.pesoMin && pm2 < (cl.pesoMax >= 99999 ? Infinity : cl.pesoMax)) : null;
+
+    if (!clMatch1) { showMessage(`⚠️ Peso médio do tanque ${t1num} (${pm1.toFixed(0)}g) não se encaixa em nenhuma classe. Ajuste os ranges.`, true); return; }
+    semClasse1 = alocarNaClasse(clMatch1, infoOrigem1.qtdPeixes, pm1);
+
+    if (infoOrigem2 && clMatch2) {
+        semClasse2 = alocarNaClasse(clMatch2, infoOrigem2.qtdPeixes, pm2);
+    } else if (infoOrigem2 && !clMatch2) {
+        showMessage(`⚠️ Peso médio do tanque ${t2num} (${pm2.toFixed(0)}g) não se encaixa em nenhuma classe. Ajuste os ranges.`, true); return;
     }
-    
-    // Para cada destino, adicionar ao MESMO lote de origem
-    for (let d of destinosValidos) {
-        let pesoMedio = d.pesoMedio;
-        let biomassa = d.biomassa;
-        let quantidade = d.quantidade;
-        
-        // Verificar se o tanque já existe no lote
-        let tanqueDestinoExistente = loteOrigem.tanques.find(t => t.num === d.tanque);
-        
-        if (tanqueDestinoExistente) {
-            // Tanque já existe no lote - adicionar peixes
-            let populacaoAtual = tanqueDestinoExistente.qtdPeixes;
-            let pesoMedioAtual = tanqueDestinoExistente.ultimoPesoMedio || loteOrigem.pesoMedioAlevino;
-            let novoPesoMedio = (populacaoAtual * pesoMedioAtual + quantidade * pesoMedio) / (populacaoAtual + quantidade);
-            
-            tanqueDestinoExistente.qtdPeixes += quantidade;
-            tanqueDestinoExistente.ultimoPesoMedio = novoPesoMedio;
-            tanqueDestinoExistente.ultimaBiomassa = (tanqueDestinoExistente.ultimaBiomassa || 0) + biomassa;
-            tanqueDestinoExistente.ultimaBiometriaData = new Date().toLocaleString();
+
+    let sobras = semClasse1 + semClasse2;
+    if (alocacoes.length === 0) { showMessage("❌ Nenhum peixe foi alocado. Verifique os tanques destino.", true); return; }
+
+    let totalAlocado = alocacoes.reduce((s,a) => s + a.qtdPeixes, 0);
+
+    // Resumo para confirmação
+    let resumoLinhas = alocacoes.map(a =>
+        `• ${a.classeEmoji}${a.classeLabel} → ${a.tanqueDestNum}: ${a.qtdPeixes} peixes (${a.pesoMedio.toFixed(0)}g, ${a.biomassa.toFixed(1)}kg)`
+    ).join('\n');
+
+    showConfirm({
+        title: '🔀 Confirmar Classificação',
+        msg: `Tanques origem: ${origens.join(' + ')}\nTotal: ${totalAlocado} peixes\n\n${resumoLinhas}${sobras>0?`\n\n⚠️ ${sobras} peixes não alocados (capacidade esgotada)`:''}`,
+        icon: '🔀', type: 'info', okLabel: '✅ Confirmar',
+        onConfirm: () => _aplicarClassificacao(lotes, loteOrigem, infoOrigem1, infoOrigem2, alocacoes, totalAlocado, sobras, origens)
+    });
+}
+
+function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, totalAlocado, sobras, origens) {
+    let dataAgora = new Date().toLocaleString();
+
+    // ── 1. Reduzir/zerar tanques de origem ───────────────────────────────
+    [info1, info2].filter(Boolean).forEach(info => {
+        let tObj = loteOrigem.tanques.find(t => t.num === info.tanque.num);
+        if (!tObj) return;
+        // Quantos peixes deste tanque foram alocados
+        let alocadosDeste = alocacoes.filter(a => {
+            // alocações podem vir de t1 ou t2; mas como alocamos por classe, precisamos inferir
+            // Simplificação: tudo alocado vem da origem; se há 2 origens ambas são esvaziadas
+            return true;
+        }).reduce((s, a) => s, 0);
+        // Zerar (todos foram classificados)
+        tObj.qtdPeixes = 0;
+        tObj.consumoRacao = 0;
+        tObj.ultimaBiomassa = 0;
+        tRemove(info.tanque.num);
+    });
+
+    // ── 2. Adicionar peixes nos tanques destino ───────────────────────────
+    for (let aloc of alocacoes) {
+        let existente = loteOrigem.tanques.find(t => t.num === aloc.tanqueDestNum);
+        if (existente) {
+            // Já existe (não deveria pois validamos destinos vazios, mas por segurança)
+            let totalQ = existente.qtdPeixes + aloc.qtdPeixes;
+            let pmAtual = existente.ultimoPesoMedio || loteOrigem.pesoMedioAlevino || 5;
+            existente.ultimoPesoMedio = (existente.qtdPeixes * pmAtual + aloc.qtdPeixes * aloc.pesoMedio) / totalQ;
+            existente.qtdPeixes = totalQ;
+            existente.ultimaBiomassa = (existente.ultimaBiomassa || 0) + aloc.biomassa;
         } else {
-            // Criar novo tanque no lote
             loteOrigem.tanques.push({
-                num: d.tanque,
-                qtdPeixes: quantidade,
+                num: aloc.tanqueDestNum,
+                qtdPeixes: aloc.qtdPeixes,
                 mortalidade: 0,
                 consumoRacao: 0,
-                ultimoPesoMedio: pesoMedio,
-                ultimaBiomassa: biomassa,
-                ultimaBiometriaData: new Date().toLocaleString()
+                consumoDetalhado: [],
+                ultimoPesoMedio: aloc.pesoMedio,
+                ultimaBiomassa: aloc.biomassa,
+                ultimaBiometriaData: dataAgora,
+                classeClassificacao: aloc.classeLabel
             });
         }
-        
-        // Registrar biometria no lote
+        // Biometria
         if (!loteOrigem.biometrias) loteOrigem.biometrias = [];
         loteOrigem.biometrias.push({
-            data: new Date().toLocaleString(),
-            tanque: d.tanque,
-            pesoMedio: pesoMedio,
-            biomassa: biomassa,
-            observacao: `Transferência do tanque ${tanqueOrigem}`
+            data: dataAgora,
+            tanque: aloc.tanqueDestNum,
+            pesoMedio: aloc.pesoMedio,
+            biomassa: aloc.biomassa,
+            observacao: `Classificação ${aloc.classeEmoji}${aloc.classeLabel} — origem: ${origens.join('+')}`
         });
-        
-        // Criar tratos para o novo tanque
+        // Tratos
         if (horariosTratos.length > 0) {
-            let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
-            let gpd = obterGPD(pesoMedio);
-            let ca = getCAEfetiva(pesoMedio, caSelecionado);
-            let ganhoBiomassaKg = (quantidade * gpd) / 1000;
-            let racaoDiariaRecomendada = ganhoBiomassaKg * ca;
-            let kgPorTrato = racaoDiariaRecomendada / horariosTratos.length;
-            
-            let novosTratos = horariosTratos.map(ht => ({
-                hora: ht.hora,
-                tratado: false,
-                kgFornecidos: 0,
-                kgRecomendado: kgPorTrato
-            }));
-            tSave(d.tanque, novosTratos);
+            let caSel = parseFloat(document.getElementById("caSelectRacao")?.value || 1.4);
+            let gpd = obterGPD(aloc.pesoMedio);
+            let ca  = getCAEfetiva(aloc.pesoMedio, caSel);
+            let racaDia = (aloc.qtdPeixes * gpd / 1000) * ca;
+            let kgT = racaDia / horariosTratos.length;
+            tSave(aloc.tanqueDestNum, horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0, kgRecomendado: kgT })));
         }
     }
-    
-    // 🔧 CORREÇÃO: Recalcular a quantidade total de peixes do lote corretamente
-    let novaQtdTotal = 0;
-    for (let t of loteOrigem.tanques) {
-        novaQtdTotal += t.qtdPeixes;
-    }
-    loteOrigem.qtdTotal = novaQtdTotal;
-    
-    // Recalcular biomassa total do lote
-    let novaBiomassaTotal = 0;
-    for (let t of loteOrigem.tanques) {
-        if (t.ultimaBiomassa) {
-            novaBiomassaTotal += t.ultimaBiomassa;
-        } else {
-            novaBiomassaTotal += (loteOrigem.pesoMedioAlevino / 1000) * t.qtdPeixes;
-        }
-    }
-    loteOrigem.biomassaAtual = novaBiomassaTotal;
-    
-    // Salvar alterações
+
+    // ── 3. Recalcular total do lote ───────────────────────────────────────
+    // Remover tanques zerados
+    loteOrigem.tanques = loteOrigem.tanques.filter(t => t.qtdPeixes > 0);
+    loteOrigem.qtdTotal = loteOrigem.tanques.reduce((s, t) => s + t.qtdPeixes, 0);
+    loteOrigem.biomassaAtual = loteOrigem.tanques.reduce((s, t) => s + (t.ultimaBiomassa || 0), 0);
+
     saveData("lotes", lotes);
-    
-    // Registrar no histórico
+
+    // ── 4. Histórico ─────────────────────────────────────────────────────
     let historico = loadData("historicoClassificacoes") || [];
     historico.unshift({
         id: Date.now(),
-        data: new Date().toLocaleString(),
-        tanqueOrigem: tanqueOrigem,
-        loteId: info.loteId,
-        populacaoOriginal: populacaoOriginal,
-        restanteOrigem: tanqueOrigemObj.qtdPeixes,
-        destinos: destinosValidos.map(d => ({
-            tanque: d.tanque,
-            quantidade: d.quantidade,
-            pesoMedio: d.pesoMedio,
-            biomassa: d.biomassa
-        })),
-        totalPeixes: totalTransferido,
-        totalBiomassa: totalBiomassaTransferida,
-        novaQtdTotalLote: novaQtdTotal
+        data: dataAgora,
+        tipo: "classificacao_tamanho",
+        origens: origens,
+        loteId: info1.loteId,
+        alocacoes: alocacoes,
+        totalPeixes: totalAlocado,
+        sobras: sobras,
+        novaQtdLote: loteOrigem.qtdTotal
     });
     saveData("historicoClassificacoes", historico);
-    
-    // Limpar campos
-    destinosRepicagem = [];
-    renderAreaRepicagem();
+
     renderHistoricoClassificacoes();
-    
-    // Forçar atualização completa da tela
-    renderTanques();
-    renderLotes();
-    renderTratosTanques();
-    renderConsumoDiario();
-    atualizarDashboard();
-    renderBiometrias();
-    
-    // Atualizar selects
+    renderTanques(); renderLotes(); renderTratosTanques(); renderConsumoDiario(); atualizarDashboard();
     atualizarSelectTanques("origemTanque", "ocupados");
+    atualizarSelectTanques("origemTanque2", "ocupados", true);
     atualizarSelectTanques("bioTanque", "ocupados");
     atualizarSelectTanques("alimTanque", "ocupados");
     atualizarSelectTanques("mortTanque", "ocupados");
-    
-    // Recarregar informações de origem
     carregarInfoOrigem();
-    
-    showMessage(`✅ Transferência concluída! ${totalTransferido} peixes transferidos para ${destinosValidos.length} tanques.\nNovo total do lote #${info.loteId}: ${novaQtdTotal} peixes.`);
-    
-    // Se o tanque de origem foi esvaziado completamente, recarregar a página de classificação
-    if (tanqueOrigemObj.qtdPeixes <= 0) {
-        setTimeout(() => {
-            inicializarClassificacao();
-        }, 500);
-    }
+    renderClassesContainer();
+
+    showMessage(`✅ Classificação concluída! ${totalAlocado} peixes em ${alocacoes.length} tanque(s).${sobras>0?' ⚠️ '+sobras+' peixes não alocados.':''}`)
 }
 
 function renderHistoricoClassificacoes() {
     let historico = loadData("historicoClassificacoes") || [];
     let div = document.getElementById("historicoClassificacoes");
-    
+    if (!div) return;
     if (historico.length === 0) {
-        div.innerHTML = "<div class='card'>Nenhuma transferência registrada</div>";
+        div.innerHTML = "<div class='card'>Nenhuma classificação registrada</div>";
         return;
     }
-    
-    div.innerHTML = historico.map(h => `
-        <div class='card' style="margin-bottom:8px;">
+    div.innerHTML = historico.slice(0, 20).map(h => {
+        // Suporte a ambos os formatos (novo e legado)
+        if (h.tipo === "classificacao_tamanho") {
+            let linhas = (h.alocacoes || []).map(a =>
+                `<span class="tanque-tag">${a.classeEmoji||''}${a.classeLabel} → ${a.tanqueDestNum}: ${a.qtdPeixes}p (${(a.pesoMedio||0).toFixed(0)}g)</span>`
+            ).join('');
+            return `<div class='card' style="margin-bottom:6px;">
+                <strong>🔀 ${h.data}</strong> &nbsp; <span style="font-size:.68rem;color:var(--text3);">Lote #${h.loteId}</span><br>
+                📤 Origens: <strong>${(h.origens||[]).join(' + ')}</strong> · 🐟 ${h.totalPeixes} peixes<br>
+                <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px;">${linhas}</div>
+                ${h.sobras>0?`<small style="color:var(--amber);">⚠️ ${h.sobras} peixes não alocados</small>`:''}
+            </div>`;
+        }
+        // Legado
+        return `<div class='card' style="margin-bottom:6px;">
             <strong>📅 ${h.data}</strong><br>
             📤 Origem: ${h.tanqueOrigem} (Lote #${h.loteId})<br>
-            📊 População original: ${h.populacaoOriginal} peixes | Restante: ${h.restanteOrigem} peixes<br>
-            🐟 Total transferido: ${h.totalPeixes} peixes | ⚖️ ${h.totalBiomassa.toFixed(2)} kg<br>
-            🎯 Destinos:<br>
-            ${h.destinos.map(d => `&nbsp;&nbsp;• ${d.tanque}: ${d.quantidade} peixes (${d.pesoMedio.toFixed(0)}g, ${d.biomassa.toFixed(2)} kg)`).join('<br>')}
-        </div>
-    `).join('');
+            🐟 Total: ${h.totalPeixes} peixes<br>
+            🎯 Destinos: ${(h.destinos||[]).map(d=>`${d.tanque}:${d.quantidade}p`).join(', ')}
+        </div>`;
+    }).join('');
 }
 
 function inicializarClassificacao() {
     atualizarSelectTanques("origemTanque", "ocupados");
+    atualizarSelectTanques("origemTanque2", "ocupados", true);
+    if (classesClassificacao.length === 0) initClassesDefault();
+    renderClassesContainer();
     carregarInfoOrigem();
-    renderAreaRepicagem();
     renderHistoricoClassificacoes();
 }
 
@@ -4896,7 +5071,12 @@ window.resetarTratosTanque = resetarTratosTanqueRefatorado;
 window.resetarDiaTodosTanques = resetarDiaTodosTanques;
 window.padronizarTratosTodosTanques = padronizarTratosTodosTanques;
 window.inicializarClassificacao = inicializarClassificacao;
-window.adicionarDestino = adicionarDestino;
+window.adicionarClasse = adicionarClasse;
+window.removerClasse = removerClasse;
+window.resetarClasses = resetarClasses;
+window.adicionarTanqueNaClasse = adicionarTanqueNaClasse;
+window.removerTanqueDaClasse = removerTanqueDaClasse;
+window.executarClassificacaoNova = executarClassificacaoNova;
 window.adicionarAmostra = adicionarAmostra;
 window.calcularMediaAmostras = calcularMediaAmostras;
 window.limparAmostras = limparAmostras;
@@ -4926,10 +5106,7 @@ window.resetarDadosPiscicultura = resetarDadosPiscicultura;
 window.renderGerenciadorPisciculturas = renderGerenciadorPisciculturas;
 window.removerItemCarrada = removerItemCarrada;
 window.removerItemEstoque = removerItemEstoque;
-window.removerDestino = removerDestino;
-window.atualizarDestino = atualizarDestino;
 window.carregarInfoOrigem = carregarInfoOrigem;
-window.executarClassificacao = executarClassificacao;
 window.formatarDataBio = formatarDataBio;
 window.relMortalidade = relMortalidade;
 window.atualizarGraficoMortalidade = atualizarGraficoMortalidade;
