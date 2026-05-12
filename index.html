@@ -844,7 +844,7 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
       <p style="font-size:.78rem;color:var(--text2);margin-bottom:10px;">Apaga TODOS os dados da piscicultura atual (tanques, lotes, estoque, biometrias, colaboradores, compras). Irreversível!</p>
       <button onclick="resetarDadosPiscicultura()" class="btn-danger" style="width:100%;">🗑️ Resetar esta Piscicultura</button>
     </div>
-    <button onclick="fecharGerenciadorPisciculturas()" class="btn-outline" style="width:100%;margin-top:10px;">✕ Fechar</button>
+    <button onclick="fecharModalPisc()" class="btn-outline" style="width:100%;margin-top:10px;">✕ Fechar</button>
   </div>
 </div>
 
@@ -995,6 +995,11 @@ function abrirGerenciadorPisciculturas() {
 }
 function fecharGerenciadorPisciculturas(e) {
     if (e && e.target !== document.getElementById('piscModal')) return;
+    document.getElementById('piscModal').style.display = 'none';
+}
+
+// BUG FIX: wrapper para botão fechar sem evento
+function fecharModalPisc() {
     document.getElementById('piscModal').style.display = 'none';
 }
 
@@ -1202,11 +1207,16 @@ function renderTanques() {
         div.innerHTML = tanques.map(t => {
             let ocupado = isTanqueOcupado(t.num);
             let info = ocupado ? getInfoTanqueOcupado(t.num) : null;
+            // BUG FIX: mostrar ID legível do lote (últimos 4 dígitos se for timestamp)
+            let loteLabel = info ? String(info.loteId).slice(-4) : '?';
             let badge = ocupado
-                ? `<span class="badge-ocupado">🐟 Lote #${info ? info.loteId : '?'}</span>`
+                ? `<span class="badge-ocupado">🐟 Lote #${loteLabel}</span>`
                 : `<span class="badge-disponivel">✅ Livre</span>`;
+            let pesoMedio = info && info.lote && (info.lote.biometrias || []).length
+                ? info.lote.biometrias[info.lote.biometrias.length - 1].pesoMedio
+                : (info && info.lote ? (info.lote.pesoMedioAlevino || 0) : 0);
             let subInfo = info
-                ? `${info.qtdPeixes} peixes · ${t.vol}m³ · ${t.malha||'-'} · ${t.material}`
+                ? `${info.qtdPeixes} peixes · ${pesoMedio.toFixed(0)}g · ${t.vol}m³ · ${t.malha||'-'} · ${t.material}`
                 : `${t.vol}m³ · ${t.malha||'-'} · ${t.material}`;
             let actions = `<div class="list-item-actions">`;
             if (ocupado) actions += `<button onclick="liberarTanque('${t.num}')" class="btn-success btn-xs">🎣 Despescar</button>`;
@@ -1220,9 +1230,12 @@ function renderTanques() {
             </div>`;
         }).join('');
     }
+    // BUG FIX: também atualizar selects de mortalidade e classificação
     atualizarSelectTanques("lTanquesSelect", "distribuicao");
     atualizarSelectTanques("bioTanque", "ocupados");
     atualizarSelectTanques("alimTanque", "ocupados");
+    atualizarSelectTanques("mortTanque", "ocupados");
+    atualizarSelectTanques("origemTanque", "ocupados");
 }
 
 function excluirTanque(id) {
@@ -1288,6 +1301,9 @@ function liberarTanque(numTanque) {
 
 // ==================== LOTES ====================
 function addLote() {
+    // BUG FIX: re-popular select antes de ler os valores
+    atualizarSelectTanques("lTanquesSelect", "distribuicao");
+    
     let qtd = parseFloat(document.getElementById("lqtd").value);
     let valorTotal = parseFloat(document.getElementById("lvalor").value);
     let fornecedor = document.getElementById("lfornecedor").value.trim();
@@ -1297,32 +1313,39 @@ function addLote() {
     let tanquesSel = Array.from(document.getElementById("lTanquesSelect").selectedOptions).map(o => o.value);
     
     if (isNaN(qtd) || qtd <= 0) { showMessage("Quantidade inválida", true); return; }
-    if (tanquesSel.length === 0) { showMessage("Selecione tanques", true); return; }
-    for (let t of tanquesSel) { if (isTanqueOcupado(t)) { showMessage(`Tanque ${t} ocupado`, true); return; } }
+    if (tanquesSel.length === 0) { showMessage("Selecione ao menos um tanque disponível", true); return; }
+    // BUG FIX: verificar se não selecionou o placeholder
+    if (tanquesSel.includes("")) { showMessage("Selecione tanques válidos", true); return; }
+    for (let t of tanquesSel) { if (isTanqueOcupado(t)) { showMessage(`Tanque ${t} já está ocupado`, true); return; } }
     
     let qtdPorTanque = Math.floor(qtd / tanquesSel.length);
     let biomassaInicial = isNaN(pesoMedioAlevino) ? 0 : (pesoMedioAlevino / 1000) * qtd;
     let tipoRacao = tipoRacaoPorPeso(isNaN(pesoMedioAlevino) ? 5 : pesoMedioAlevino);
     
+    // BUG FIX: usar ID compacto de 4 dígitos baseado em sequência
+    let lotes = loadData("lotes");
+    let maxId = lotes.reduce((max, l) => Math.max(max, typeof l.id === 'number' ? l.id : 0), 999);
+    let novoId = maxId + 1;
+    
     let novoLote = {
-        id: Date.now(),
+        id: novoId,
         qtdTotal: qtd,
         valorAlevinos: valorTotal || 0,
-        custoUnitario: qtd > 0 ? (valorTotal / qtd) : 0,
+        custoUnitario: qtd > 0 ? ((valorTotal||0) / qtd) : 0,
         fornecedor: fornecedor || "Não informado",
         cidadeOrigem: cidadeOrigem || "Não informada",
         pesoMedioAlevino: isNaN(pesoMedioAlevino) ? 0 : pesoMedioAlevino,
         dataEstocagem: dataEstocagem || new Date().toISOString().slice(0, 10),
         biomassaInicial: biomassaInicial,
         tipoRacao: tipoRacao,
-        tanques: tanquesSel.map(num => ({ num, qtdPeixes: qtdPorTanque, mortalidade: 0, consumoRacao: 0 })),
+        tanques: tanquesSel.map(num => ({ num, qtdPeixes: qtdPorTanque, mortalidade: 0, consumoRacao: 0, consumoDetalhado: [] })),
         biometrias: []
     };
-    let lotes = loadData("lotes");
     lotes.push(novoLote);
     saveData("lotes", lotes);
     renderLotes();
     renderTanques();
+    atualizarDashboard();
     showMessage(`✅ Lote #${novoLote.id} registrado! Ração: ${tipoRacao} | Biomassa inicial: ${biomassaInicial.toFixed(1)}kg`);
     
     document.getElementById("lqtd").value = "";
@@ -1483,7 +1506,7 @@ function renderLotes() {
         let ca = calcularCALote(l);
         let custos = calcularCustoPorKGLote(l);
         let ultimaBiometria = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length - 1] : null;
-        let pesoMedioAtual = ultimaBiometria ? ultimaBiometria.pesoMedio : l.pesoMedioAlevino;
+        let pesoMedioAtual = ultimaBiometria ? ultimaBiometria.pesoMedio : (l.pesoMedioAlevino || 0);
         
         let custoRacaoDetalhado = calcularCustoRacaoLoteReal(l);
         let detalhesRacao = "";
@@ -3826,9 +3849,10 @@ function relConsumoRacao() { let lotes = loadData("lotes"); let consumoTotal = l
 function relBiomassaDetalhada() {
     let lotes = loadData("lotes");
     let html = lotes.map(l => {
-        let ultimaBio = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length - 1].biomassa : (l.biomassaInicial || 0);
-        let ganho = ultimaBio - (l.biomassaInicial || 0);
-        return `<div class='card'><strong>Lote #${l.id}</strong><br>📍 ${l.cidadeOrigem}<br>⚖️ Biomassa inicial: ${(l.biomassaInicial || 0).toFixed(1)}kg<br>⚖️ Biomassa atual: ${ultimaBio.toFixed(1)}kg<br>📈 Ganho de biomassa: ${ganho.toFixed(1)}kg</div>`;
+        // BUG FIX: use calcularBiomassaTotalLote to avoid null/undefined crashes
+        let biomassaAtual = calcularBiomassaTotalLote(l);
+        let ganho = biomassaAtual - (l.biomassaInicial || 0);
+        return `<div class='card'><strong>Lote #${l.id}</strong><br>📍 ${l.cidadeOrigem||'—'}<br>⚖️ Biomassa inicial: ${(l.biomassaInicial || 0).toFixed(1)}kg<br>⚖️ Biomassa atual: ${biomassaAtual.toFixed(1)}kg<br>📈 Ganho de biomassa: ${ganho.toFixed(1)}kg</div>`;
     }).join('');
     document.getElementById("resultadoRel").innerHTML = html || "<div class='card'>Nenhum lote</div>";
 }
@@ -3977,7 +4001,10 @@ function atualizarDashboard() {
 }
 
 function seedExemplo() {
-    if(loadData("tanques").length === 0) saveData("tanques", [{ id: 1001, num: "T01", vol: 50, malha: "Fina 5mm", material: "Geomembrana" },{ id: 1002, num: "T02", vol: 80, malha: "Média 10mm", material: "PVC" }]);
+    if(loadData("tanques").length === 0) saveData("tanques", [
+        { id: 1001, num: "T01", vol: 50, malha: "Fina 5mm", material: "Geomembrana" },
+        { id: 1002, num: "T02", vol: 80, malha: "Média 10mm", material: "PVC" }
+    ]);
     if(loadData("modelosRacao").length === 0){
         saveData("modelosRacao", [
             {id:100, marca:"Supra", pellet:"4-6mm", proteina:32, pesoSaco:25},
@@ -3986,7 +4013,21 @@ function seedExemplo() {
             {id:103, marca:"Tilápia Top", pellet:"1.3-1.5mm", proteina:34, pesoSaco:25}
         ]);
     }
-    if(loadData("lotes").length === 0) saveData("lotes", [{ id: 2001, qtdTotal: 2000, valorAlevinos: 1200, custoUnitario: 0.6, fornecedor: "Bom Peixe", dataEstocagem: "2025-03-01", tanques: [{ num: "T01", qtdPeixes: 2000, mortalidade: 0, consumoRacao: 50 }], biometrias: [] }]);
+    // BUG FIX: usar id numérico simples de 4 dígitos, incluir todos os campos obrigatórios
+    if(loadData("lotes").length === 0) saveData("lotes", [{
+        id: 2001,
+        qtdTotal: 2000,
+        valorAlevinos: 1200,
+        custoUnitario: 0.6,
+        fornecedor: "Bom Peixe Ltda",
+        cidadeOrigem: "Patos de Minas - MG",
+        pesoMedioAlevino: 5,
+        dataEstocagem: "2025-03-01",
+        biomassaInicial: 10,
+        tipoRacao: "🟡 2–3mm (36% PB)",
+        tanques: [{ num: "T01", qtdPeixes: 2000, mortalidade: 0, consumoRacao: 50, consumoDetalhado: [] }],
+        biometrias: []
+    }]);
     if(loadData("estoqueRacao").length === 0) saveData("estoqueRacao", [{ id: 3001, marca: "Supra", pb: 32, pellet: "4-6mm", kgTotal: 300, valorKg: 3.8, data: "2025-03-10" }]);
     if(loadData("colab").length === 0) saveData("colab", [{ id: 4001, nome: "João Silva", tipo: "mensal", valorBase: 2200 }]);
     if(loadData("adiantamentos").length === 0) saveData("adiantamentos", []);
@@ -4316,10 +4357,20 @@ function nav(sectionId) {
         renderConsumoDiario();
         mostrarAbaAlimentacao();
     }
-    if(sectionId === "lotes") { renderLotes(); atualizarSelectTanques("lTanquesSelect", "distribuicao"); }
+    if(sectionId === "lotes") {
+        renderLotes();
+        // BUG FIX: fechar o form ao navegar, e o select será populado quando abrir
+        let fm = document.getElementById("formLote");
+        if (fm) fm.classList.remove("open");
+    }
     if(sectionId === "tanques") renderTanques();
     if(sectionId === "mao") renderColab();
-    if(sectionId === "classificacao") { inicializarClassificacao(); }
+    if(sectionId === "classificacao") {
+        // BUG FIX: popular select de origem ao navegar para classificação
+        atualizarSelectTanques("origemTanque", "ocupados");
+        inicializarClassificacao();
+    }
+    window.scrollTo(0, 0);
 }
 // ==================== CÁLCULO DE CUSTOS ====================
 
@@ -4341,13 +4392,16 @@ function calcularConsumoRacaoLote(lote) {
 // Calcular biomassa total atual do lote
 function calcularBiomassaTotalLote(lote) {
     let biomassaTotal = 0;
+    let pesoBase = lote.pesoMedioAlevino || 0;
     if (lote.tanques) {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
                 if (tanque.ultimaBiomassa) {
                     biomassaTotal += tanque.ultimaBiomassa;
                 } else {
-                    biomassaTotal += (lote.pesoMedioAlevino / 1000) * tanque.qtdPeixes;
+                    // BUG FIX: guard against null/0 peso
+                    let pesoMedio = tanque.ultimoPesoMedio || pesoBase;
+                    biomassaTotal += (pesoMedio / 1000) * tanque.qtdPeixes;
                 }
             }
         }
@@ -4426,10 +4480,13 @@ function calcularCustoTanque(lote, tanqueNum) {
     if (!tanque) return { custoTotal: 0, custoPorKg: 0, consumoRacao: 0, biomassa: 0 };
     
     let consumoRacao = tanque.consumoRacao || 0;
-    let biomassa = tanque.ultimaBiomassa || 0;
+    // BUG FIX: usar peso medio para calcular biomassa se não tiver ultimaBiomassa
+    let pesoMedio = tanque.ultimoPesoMedio || lote.pesoMedioAlevino || 0;
+    let biomassa = tanque.ultimaBiomassa || ((pesoMedio / 1000) * tanque.qtdPeixes);
     
     // Custo proporcional de alevinos (baseado na porcentagem de peixes)
-    let proporcaoPeixes = tanque.qtdPeixes / lote.qtdTotal;
+    // BUG FIX: guard against division by zero
+    let proporcaoPeixes = lote.qtdTotal > 0 ? tanque.qtdPeixes / lote.qtdTotal : 0;
     let custoAlevinosProporcional = (lote.valorAlevinos || 0) * proporcaoPeixes;
     
     // Custo proporcional de ração (baseado no consumo)
@@ -4714,7 +4771,10 @@ function toggleFormLote() {
     let opening = !el.classList.contains("open");
     el.classList.toggle("open", opening);
     if (opening) {
-        atualizarSelectTanques("lTanquesSelect", "distribuicao");
+        // BUG FIX: usar setTimeout para garantir que o form está visível antes de popular o select
+        setTimeout(() => {
+            atualizarSelectTanques("lTanquesSelect", "distribuicao");
+        }, 50);
         // Set today's date
         let d = document.getElementById("ldataEstocagem");
         if (d && !d.value) d.value = new Date().toISOString().slice(0,10);
@@ -4801,6 +4861,7 @@ window.toggleFormRacao = toggleFormRacao;
 window.toggleFormAlim = toggleFormAlim;
 window.abrirGerenciadorPisciculturas = abrirGerenciadorPisciculturas;
 window.fecharGerenciadorPisciculturas = fecharGerenciadorPisciculturas;
+window.fecharModalPisc = fecharModalPisc;
 window.criarNovaPiscicultura = criarNovaPiscicultura;
 window.trocarParaPiscicultura = trocarParaPiscicultura;
 window.excluirPiscicultura = excluirPiscicultura;
