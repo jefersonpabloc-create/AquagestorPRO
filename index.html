@@ -1156,11 +1156,14 @@ function atualizarSelectTanques(selectId, tipo = 'todos', withEmpty = false) {
     let options = [];
     if (withEmpty) options.push('<option value="">— Não usar —</option>');
     if (tipo === 'distribuicao') {
-        tanques.forEach(t => {
-            if (!isTanqueOcupado(t.num)) {
+        let disponiveis = tanques.filter(t => !isTanqueOcupado(t.num));
+        if (disponiveis.length === 0) {
+            options.push('<option value="" disabled>Nenhum tanque disponível — cadastre tanques primeiro</option>');
+        } else {
+            disponiveis.forEach(t => {
                 options.push(`<option value="${t.num}">${t.num} (${t.vol}m³) ${t.malha ? `- ${t.malha}` : ''}</option>`);
-            }
-        });
+            });
+        }
     } else if (tipo === 'ocupados') {
         tanques.forEach(t => {
             if (isTanqueOcupado(t.num)) {
@@ -1172,7 +1175,7 @@ function atualizarSelectTanques(selectId, tipo = 'todos', withEmpty = false) {
             options.push(`<option value="${t.num}">${t.num} (${t.vol}m³)</option>`);
         });
     }
-    if (!withEmpty && options.length === 0) options.push('<option value="">Nenhum tanque disponível</option>');
+    if (!withEmpty && tipo !== 'distribuicao' && options.length === 0) options.push('<option value="">Nenhum tanque disponível</option>');
     select.innerHTML = options.join('');
 }
 
@@ -1337,22 +1340,33 @@ function liberarTanque(numTanque) {
 
 // ==================== LOTES ====================
 function addLote() {
-    // BUG FIX: re-popular select antes de ler os valores
-    atualizarSelectTanques("lTanquesSelect", "distribuicao");
-    
     let qtd = parseFloat(document.getElementById("lqtd").value);
     let valorTotal = parseFloat(document.getElementById("lvalor").value);
     let fornecedor = document.getElementById("lfornecedor").value.trim();
     let cidadeOrigem = document.getElementById("lcidadeOrigem").value.trim();
     let pesoMedioAlevino = parseFloat(document.getElementById("lpesoMedioAlevino").value);
     let dataEstocagem = document.getElementById("ldataEstocagem").value;
-    let tanquesSel = Array.from(document.getElementById("lTanquesSelect").selectedOptions).map(o => o.value);
-    
-    if (isNaN(qtd) || qtd <= 0) { showMessage("Quantidade inválida", true); return; }
-    if (tanquesSel.length === 0) { showMessage("Selecione ao menos um tanque disponível", true); return; }
-    // BUG FIX: verificar se não selecionou o placeholder
-    if (tanquesSel.includes("")) { showMessage("Selecione tanques válidos", true); return; }
-    for (let t of tanquesSel) { if (isTanqueOcupado(t)) { showMessage(`Tanque ${t} já está ocupado`, true); return; } }
+
+    // BUG FIX: ler selected options corretamente e filtrar vazios
+    let selEl = document.getElementById("lTanquesSelect");
+    let tanquesSel = Array.from(selEl.selectedOptions)
+        .map(o => o.value)
+        .filter(v => v && v.trim() !== "" && v !== "Nenhum tanque disponível");
+
+    if (isNaN(qtd) || qtd <= 0) { showMessage("❌ Quantidade inválida", true); return; }
+    if (isNaN(pesoMedioAlevino) || pesoMedioAlevino <= 0) { showMessage("❌ Informe o peso médio dos alevinos", true); return; }
+    if (tanquesSel.length === 0) {
+        // Re-popular e tentar novamente antes de dar erro
+        atualizarSelectTanques("lTanquesSelect", "distribuicao");
+        tanquesSel = Array.from(selEl.selectedOptions)
+            .map(o => o.value)
+            .filter(v => v && v.trim() !== "" && v !== "Nenhum tanque disponível");
+        if (tanquesSel.length === 0) {
+            showMessage("❌ Selecione ao menos um tanque disponível", true);
+            return;
+        }
+    }
+    for (let t of tanquesSel) { if (isTanqueOcupado(t)) { showMessage(`❌ Tanque ${t} já está ocupado`, true); return; } }
     
     let qtdPorTanque = Math.floor(qtd / tanquesSel.length);
     let biomassaInicial = isNaN(pesoMedioAlevino) ? 0 : (pesoMedioAlevino / 1000) * qtd;
@@ -1390,7 +1404,8 @@ function addLote() {
     document.getElementById("lcidadeOrigem").value = "";
     document.getElementById("lpesoMedioAlevino").value = "";
     document.getElementById("ldataEstocagem").value = "";
-    document.getElementById("lTipoRacao").value = "";
+    let lTipoRacaoEl = document.getElementById("lTipoRacao");
+    if (lTipoRacaoEl) lTipoRacaoEl.value = "";
     // Close form
     let fm = document.getElementById("formLote");
     if (fm) fm.classList.remove("open");
@@ -1424,47 +1439,82 @@ function renderTanqueHistCard(t, lote) {
     let isDespescado = !!t.despescado;
     let cardId = `${lote.id}_${t.num}`.replace(/[^a-z0-9]/gi, '_');
     let pesoMedio = t.ultimoPesoMedio || lote.pesoMedioAlevino || 0;
-    let custo = calcularCustoTanque(lote, t.num);
+    let custoTanque = calcularCustoTanque(lote, t.num);
 
-    // ── Agrupamento por tipo de ração (usa tipoIdeal se disponível) ──────
+    // ── Agrupamento por tipo de ração ─────────────────────────────────────
     let porTipo = {};
     let totalKg = 0, totalCusto = 0;
+    let temDadosLegados = false;
+
+    // Caso 1: consumoDetalhado populado
     if (t.consumoDetalhado && t.consumoDetalhado.length > 0) {
         for (let c of t.consumoDetalhado) {
-            // FIX: prioriza tipoIdeal (nome legível) como chave de agrupamento
             let chave = c.tipoIdeal || c.tipo || c.tipoRacao || 'Não identificado';
             let kg = c.kg || 0;
-            let custo = c.custoTotal || 0;
+            let custoItem = c.custoTotal || 0;
             let valorKg = c.valorPorKg || 0;
-            if (!porTipo[chave]) porTipo[chave] = { kg: 0, custo: 0, valorKgPonderado: 0, marcas: new Set() };
+            if (!porTipo[chave]) porTipo[chave] = { kg: 0, custo: 0, valorKgPonderado: 0, marcas: new Set(), legado: false };
             porTipo[chave].kg += kg;
-            porTipo[chave].custo += custo;
+            porTipo[chave].custo += custoItem;
             porTipo[chave].valorKgPonderado += valorKg * kg;
             if (c.marca) porTipo[chave].marcas.add(c.marca);
             totalKg += kg;
-            totalCusto += custo;
+            totalCusto += custoItem;
         }
+        // Verificar se há kg residual legado (consumoRacao > soma detalhada)
+        let kgResidual = (t.consumoRacao || 0) - totalKg;
+        if (kgResidual > 0.1) {
+            temDadosLegados = true;
+            let tipoFase = tipoRacaoPorPeso(pesoMedio);
+            let vFallback = _valorMedioKgEstoque();
+            let chave = tipoFase;
+            if (!porTipo[chave]) porTipo[chave] = { kg: 0, custo: 0, valorKgPonderado: 0, marcas: new Set(), legado: true };
+            porTipo[chave].kg += kgResidual;
+            porTipo[chave].custo += kgResidual * vFallback;
+            porTipo[chave].valorKgPonderado += vFallback * kgResidual;
+            porTipo[chave].legado = true;
+            totalKg += kgResidual;
+            totalCusto += kgResidual * vFallback;
+        }
+    // Caso 2: só consumoRacao (dados legados totalmente sem detalhe)
+    } else if ((t.consumoRacao || 0) > 0) {
+        temDadosLegados = true;
+        let kgLegado = t.consumoRacao;
+        let tipoFase = tipoRacaoPorPeso(pesoMedio);
+        let vFallback = _valorMedioKgEstoque();
+        porTipo[tipoFase] = { kg: kgLegado, custo: kgLegado * vFallback, valorKgPonderado: vFallback * kgLegado, marcas: new Set(), legado: true };
+        totalKg = kgLegado;
+        totalCusto = kgLegado * vFallback;
     }
+
+    let legadoAviso = temDadosLegados
+        ? `<div style="padding:5px 14px 6px;font-size:.67rem;color:var(--amber);font-weight:600;background:#fffbeb;border-top:1px solid #fde68a;">
+            ⚠️ Parte do consumo foi registrada sem custo unitário — valor estimado pelo preço médio do estoque atual
+           </div>`
+        : '';
+
     let tiposHTML = Object.entries(porTipo).length > 0
-        ? `<div class="racao-section-title">📊 Consumo por tipo de ração</div>
+        ? `<div class="racao-section-title">📊 Consumo por fase de ração (${Object.entries(porTipo).length} tipo${Object.entries(porTipo).length>1?'s':''})</div>
            ${Object.entries(porTipo).map(([tipo, d]) => {
                let pct = totalKg > 0 ? ((d.kg / totalKg) * 100).toFixed(0) : 0;
-               let custoKg = d.kg > 0 ? d.custo / d.kg : 0;
                let vMedioKg = d.kg > 0 ? d.valorKgPonderado / d.kg : 0;
                let marcasArr = Array.from(d.marcas);
+               let custoFase = d.custo;
+               let legadoTag = d.legado ? `<span style="font-size:.6rem;background:var(--amber-l);color:var(--amber);padding:1px 6px;border-radius:8px;margin-left:4px;">estimado</span>` : '';
                return `<div class="racao-tipo-row">
-                   <div class="racao-tipo-nome">${tipo}
+                   <div class="racao-tipo-nome">${tipo}${legadoTag}
                        <br><span style="font-size:.65rem;color:var(--text3);font-weight:500;">${pct}% do total${marcasArr.length ? ' · ' + marcasArr.join(', ') : ''}</span>
                    </div>
                    <div class="racao-tipo-vals">
-                       <div class="racao-tipo-val"><span>Quantidade</span><strong>${d.kg.toFixed(2)} kg</strong></div>
-                       <div class="racao-tipo-val"><span>R$/kg médio</span><strong>R$ ${vMedioKg.toFixed(2)}</strong></div>
-                       <div class="racao-tipo-val"><span>Custo total</span><strong class="green">R$ ${d.custo.toFixed(2)}</strong></div>
+                       <div class="racao-tipo-val"><span>Consumido</span><strong>${d.kg.toFixed(2)} kg</strong></div>
+                       <div class="racao-tipo-val"><span>R$/kg fase</span><strong>R$ ${vMedioKg.toFixed(2)}</strong></div>
+                       <div class="racao-tipo-val"><span>Custo fase</span><strong class="green">R$ ${custoFase.toFixed(2)}</strong></div>
                    </div>
                </div>`;
            }).join('')}
+           ${legadoAviso}
            <div class="racao-tipo-row" style="background:var(--surf2);">
-               <div class="racao-tipo-nome" style="font-weight:800;color:var(--text);">📦 TOTAL</div>
+               <div class="racao-tipo-nome" style="font-weight:800;color:var(--text);">📦 TOTAL GERAL</div>
                <div class="racao-tipo-vals">
                    <div class="racao-tipo-val"><span>Total kg</span><strong>${totalKg.toFixed(2)} kg</strong></div>
                    <div class="racao-tipo-val"><span>R$/kg médio</span><strong>R$ ${totalKg > 0 ? (totalCusto/totalKg).toFixed(2) : '0.00'}</strong></div>
@@ -1490,7 +1540,8 @@ function renderTanqueHistCard(t, lote) {
                 ${sorted.map(c => {
                     let dia = new Date(c.data).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'});
                     let hora = new Date(c.data).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-                    let tipo = c.tipo || c.tipoRacao || '—';
+                    // FIX: usar tipoIdeal (nome legível da fase) se disponível
+                    let tipo = c.tipoIdeal || c.tipo || c.tipoRacao || '—';
                     // Extrair só o nome curto
                     let match = tipo.match(/([0-9]+[–\-][0-9]+\.?[0-9]*mm)/);
                     let tipoShort = match ? match[1] : tipo.replace(/\(.*?\)/g,'').trim();
@@ -1533,7 +1584,7 @@ function renderTanqueHistCard(t, lote) {
                 <div class="tanque-hist-stat"><span>🌾 Total consumido</span><strong>${totalKg.toFixed(2)} kg</strong></div>
                 <div class="tanque-hist-stat"><span>💰 Custo da ração</span><strong>R$ ${totalCusto.toFixed(2)}</strong></div>
                 <div class="tanque-hist-stat"><span>📊 R$/kg ração</span><strong>${totalKg > 0 ? 'R$ '+(totalCusto/totalKg).toFixed(2) : '—'}</strong></div>
-                <div class="tanque-hist-stat"><span>⚖️ Biomassa atual</span><strong>${custo.biomassa.toFixed(1)} kg</strong></div>
+                <div class="tanque-hist-stat"><span>⚖️ Biomassa atual</span><strong>${custoTanque.biomassa.toFixed(1)} kg</strong></div>
             </div>
             ${tiposHTML}
             ${timelineHTML}
@@ -1572,25 +1623,30 @@ function renderLotes() {
                 let pct = totalKgRacao > 0 ? ((d.kg / totalKgRacao) * 100).toFixed(0) : 0;
                 let vMedio = d.kg > 0 ? (d.custo / d.kg).toFixed(2) : "0.00";
                 let marcasStr = d.marcas && d.marcas.length ? d.marcas.join(", ") : "";
+                let legadoTag = d.legado ? `<span style="font-size:.6rem;background:var(--amber-l);color:var(--amber);padding:1px 6px;border-radius:8px;margin-left:4px;">estimado</span>` : '';
                 return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--surf3);gap:6px;flex-wrap:wrap;background:#fff;">
                     <div style="flex:1;min-width:0;">
-                        <div style="font-size:.78rem;font-weight:700;color:var(--text);">🌾 ${tipo}</div>
+                        <div style="font-size:.78rem;font-weight:700;color:var(--text);">🌾 ${tipo}${legadoTag}</div>
                         ${marcasStr ? `<div style="font-size:.65rem;color:var(--text3);">${marcasStr}</div>` : ""}
                     </div>
                     <div style="display:flex;gap:14px;flex-shrink:0;text-align:right;">
                         <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">Consumido</span><strong>${d.kg.toFixed(2)} kg</strong></div>
                         <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">R$/kg</span><strong>R$ ${vMedio}</strong></div>
-                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">Custo total</span><strong style="color:var(--green);">R$ ${d.custo.toFixed(2)}</strong></div>
+                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">Custo fase</span><strong style="color:var(--green);">R$ ${d.custo.toFixed(2)}</strong></div>
                         <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">% do total</span><strong>${pct}%</strong></div>
                     </div>
                 </div>`;
             }).join('');
+            let legadoNotaLote = custoRacaoDetalhado.temDadosLegados
+                ? `<div style="padding:5px 12px 6px;font-size:.67rem;color:var(--amber);font-weight:600;background:#fffbeb;border-top:1px solid #fde68a;">⚠️ Parte do consumo foi registrada antes do sistema de custos — valores marcados como "estimado" usam o preço médio do estoque atual</div>`
+                : '';
             blocoRacaoHTML = `<div style="margin:10px 0;border-radius:var(--r-md);overflow:hidden;border:1.5px solid var(--border);">
                 <div style="background:var(--surf3);padding:7px 12px;font-size:.65rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);display:flex;justify-content:space-between;">
-                    <span>🌾 Gasto por tipo de ração (${tiposRacaoEntries.length} tipo${tiposRacaoEntries.length>1?'s':''})</span>
+                    <span>🌾 Gasto por fase de ração (${tiposRacaoEntries.length} tipo${tiposRacaoEntries.length>1?'s':''})</span>
                     <span>Total: ${totalKgRacao.toFixed(2)} kg | R$ ${custoRacaoDetalhado.custoTotal.toFixed(2)}</span>
                 </div>
                 ${rows}
+                ${legadoNotaLote}
             </div>`;
         }
 
@@ -4632,30 +4688,86 @@ function calcularBiomassaTotalLote(lote) {
     return biomassaTotal;
 }
 
+// ── Preço médio ponderado do estoque atual (fallback para dados legados sem custo) ──
+function _valorMedioKgEstoque() {
+    let estoque = loadData("estoqueRacao");
+    let totalKg = 0, totalValor = 0;
+    for (let item of estoque) {
+        let kg = item.kgTotal || 0;
+        let vkg = item.valorKg || 0;
+        if (kg > 0 && vkg > 0) { totalKg += kg; totalValor += kg * vkg; }
+    }
+    // Se não há estoque valorado, tenta histórico de compras
+    if (totalKg === 0) {
+        // Retorna 0 — será exibido como "sem custo registrado"
+        return 0;
+    }
+    return totalValor / totalKg;
+}
+
 function calcularCustoRacaoLoteReal(lote) {
     let custoTotalRacao = 0;
-    let consumoPorTipo = {}; // chave: tipo canônico, valor: { kg, custo, valorMedioKg, marcas[] }
+    let consumoPorTipo = {}; // chave: tipo canônico, valor: { kg, custo, valorKgTotal, qtdRegistros, marcas, legado }
 
-    if (!lote.tanques) return { custoTotal: 0, porTipo: {} };
+    if (!lote.tanques) return { custoTotal: 0, porTipo: {}, temDadosLegados: false };
+
+    let temDadosLegados = false;
+    let valorMedioFallback = null; // calculado sob demanda
 
     for (let tanque of lote.tanques) {
-        if (!tanque.consumoDetalhado || tanque.consumoDetalhado.length === 0) continue;
-        for (let consumo of tanque.consumoDetalhado) {
-            let kg = consumo.kg || 0;
-            let custo = consumo.custoTotal || 0;
-            let valorKg = consumo.valorPorKg || 0;
-            custoTotalRacao += custo;
+        let kgTotalTanque = tanque.consumoRacao || 0;
 
-            // Agrupa por tipo de pellet (usa tipoIdeal se disponível para nome legível)
-            let chave = consumo.tipoIdeal || consumo.tipo || consumo.tipoRacao || "Não identificado";
-            if (!consumoPorTipo[chave]) {
-                consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set() };
+        // ── Caso 1: tem consumoDetalhado populado ─────────────────────────────
+        if (tanque.consumoDetalhado && tanque.consumoDetalhado.length > 0) {
+            let kgDetalhado = tanque.consumoDetalhado.reduce((s, c) => s + (c.kg || 0), 0);
+
+            for (let consumo of tanque.consumoDetalhado) {
+                let kg = consumo.kg || 0;
+                let custoItem = consumo.custoTotal || 0;
+                let valorKg = consumo.valorPorKg || 0;
+                custoTotalRacao += custoItem;
+                let chave = consumo.tipoIdeal || consumo.tipo || consumo.tipoRacao || "Não identificado";
+                if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: false };
+                consumoPorTipo[chave].kg += kg;
+                consumoPorTipo[chave].custo += custoItem;
+                consumoPorTipo[chave].valorKgTotal += valorKg * kg;
+                consumoPorTipo[chave].qtdRegistros += 1;
+                if (consumo.marca) consumoPorTipo[chave].marcas.add(consumo.marca);
             }
-            consumoPorTipo[chave].kg += kg;
-            consumoPorTipo[chave].custo += custo;
-            consumoPorTipo[chave].valorKgTotal += valorKg * kg;
+
+            // Se há kg total maior que o detalhado (parte registrada sem detalhe), adicionar legado residual
+            let kgResidual = kgTotalTanque - kgDetalhado;
+            if (kgResidual > 0.1) {
+                temDadosLegados = true;
+                if (valorMedioFallback === null) valorMedioFallback = _valorMedioKgEstoque();
+                let pesoMedio = tanque.ultimoPesoMedio || lote.pesoMedioAlevino || 5;
+                let tipoFase = tipoRacaoPorPeso(pesoMedio);
+                let chave = tipoFase;
+                if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: true };
+                let custoResidual = kgResidual * valorMedioFallback;
+                consumoPorTipo[chave].kg += kgResidual;
+                consumoPorTipo[chave].custo += custoResidual;
+                consumoPorTipo[chave].valorKgTotal += valorMedioFallback * kgResidual;
+                consumoPorTipo[chave].qtdRegistros += 1;
+                consumoPorTipo[chave].legado = true;
+                custoTotalRacao += custoResidual;
+            }
+
+        // ── Caso 2: só tem consumoRacao (dados legados sem consumoDetalhado) ──
+        } else if (kgTotalTanque > 0) {
+            temDadosLegados = true;
+            if (valorMedioFallback === null) valorMedioFallback = _valorMedioKgEstoque();
+            let pesoMedio = tanque.ultimoPesoMedio || lote.pesoMedioAlevino || 5;
+            let tipoFase = tipoRacaoPorPeso(pesoMedio);
+            let chave = tipoFase;
+            if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: true };
+            let custoEstimado = kgTotalTanque * valorMedioFallback;
+            consumoPorTipo[chave].kg += kgTotalTanque;
+            consumoPorTipo[chave].custo += custoEstimado;
+            consumoPorTipo[chave].valorKgTotal += valorMedioFallback * kgTotalTanque;
             consumoPorTipo[chave].qtdRegistros += 1;
-            if (consumo.marca) consumoPorTipo[chave].marcas.add(consumo.marca);
+            consumoPorTipo[chave].legado = true;
+            custoTotalRacao += custoEstimado;
         }
     }
 
@@ -4666,7 +4778,7 @@ function calcularCustoRacaoLoteReal(lote) {
         d.marcas = Array.from(d.marcas);
     }
 
-    return { custoTotal: custoTotalRacao, porTipo: consumoPorTipo };
+    return { custoTotal: custoTotalRacao, porTipo: consumoPorTipo, temDadosLegados };
 }
 
 // Substituir a função antiga
@@ -4710,32 +4822,46 @@ function calcularCALote(lote) {
 function calcularCustoTanque(lote, tanqueNum) {
     let tanque = lote.tanques.find(t => t.num === tanqueNum);
     if (!tanque) return { custoTotal: 0, custoPorKg: 0, consumoRacao: 0, biomassa: 0 };
-    
+
     let consumoRacao = tanque.consumoRacao || 0;
-    // BUG FIX: usar peso medio para calcular biomassa se não tiver ultimaBiomassa
     let pesoMedio = tanque.ultimoPesoMedio || lote.pesoMedioAlevino || 0;
-    let biomassa = tanque.ultimaBiomassa || ((pesoMedio / 1000) * tanque.qtdPeixes);
-    
-    // Custo proporcional de alevinos (baseado na porcentagem de peixes)
-    // BUG FIX: guard against division by zero
-    let proporcaoPeixes = lote.qtdTotal > 0 ? tanque.qtdPeixes / lote.qtdTotal : 0;
+    let biomassa = tanque.ultimaBiomassa || ((pesoMedio / 1000) * (tanque.qtdPeixes || tanque.qtdDespescada || 0));
+
+    // Custo proporcional de alevinos (por proporção de peixes)
+    let qtdRef = tanque.qtdPeixes > 0 ? tanque.qtdPeixes : (tanque.qtdDespescada || 0);
+    let proporcaoPeixes = lote.qtdTotal > 0 ? qtdRef / lote.qtdTotal : 0;
     let custoAlevinosProporcional = (lote.valorAlevinos || 0) * proporcaoPeixes;
-    
-    // Custo proporcional de ração (baseado no consumo)
-    let consumoTotalLote = calcularConsumoRacaoLote(lote);
-    let proporcaoRacao = consumoTotalLote > 0 ? consumoRacao / consumoTotalLote : 0;
-    let custoRacaoTotal = calcularCustoRacaoLote(lote);
-    let custoRacaoProporcional = custoRacaoTotal * proporcaoRacao;
-    
-    let custoTotal = custoAlevinosProporcional + custoRacaoProporcional;
+
+    // Custo de ração: calcular diretamente pelo consumoDetalhado do tanque
+    // + fallback para dados legados (sem consumoDetalhado)
+    let custoRacaoTanque = 0;
+    if (tanque.consumoDetalhado && tanque.consumoDetalhado.length > 0) {
+        let kgDetalhado = 0;
+        for (let c of tanque.consumoDetalhado) {
+            custoRacaoTanque += c.custoTotal || 0;
+            kgDetalhado += c.kg || 0;
+        }
+        // Residual legado
+        let kgResidual = consumoRacao - kgDetalhado;
+        if (kgResidual > 0.1) {
+            let vFallback = _valorMedioKgEstoque();
+            custoRacaoTanque += kgResidual * vFallback;
+        }
+    } else if (consumoRacao > 0) {
+        // Dados 100% legados — estimar pelo preço médio do estoque
+        let vFallback = _valorMedioKgEstoque();
+        custoRacaoTanque = consumoRacao * vFallback;
+    }
+
+    let custoTotal = custoAlevinosProporcional + custoRacaoTanque;
     let custoPorKg = biomassa > 0 ? custoTotal / biomassa : 0;
-    
+
     return {
         custoTotal: custoTotal,
         custoPorKg: custoPorKg,
         consumoRacao: consumoRacao,
         biomassa: biomassa,
-        quantidadePeixes: tanque.qtdPeixes
+        quantidadePeixes: qtdRef
     };
 }
 
@@ -5003,13 +5129,18 @@ function toggleFormLote() {
     let opening = !el.classList.contains("open");
     el.classList.toggle("open", opening);
     if (opening) {
-        // BUG FIX: usar setTimeout para garantir que o form está visível antes de popular o select
-        setTimeout(() => {
-            atualizarSelectTanques("lTanquesSelect", "distribuicao");
-        }, 50);
+        // Sempre re-popular o select ao abrir para garantir tanques atualizados
+        atualizarSelectTanques("lTanquesSelect", "distribuicao");
         // Set today's date
         let d = document.getElementById("ldataEstocagem");
         if (d && !d.value) d.value = new Date().toISOString().slice(0,10);
+        // Clear fields
+        document.getElementById("lqtd").value = "";
+        document.getElementById("lvalor").value = "";
+        document.getElementById("lfornecedor").value = "";
+        document.getElementById("lcidadeOrigem").value = "";
+        document.getElementById("lpesoMedioAlevino").value = "";
+        document.getElementById("lTipoRacao").value = "";
     }
 }
 
