@@ -122,6 +122,17 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
 .back-top-btn{margin-bottom:0}
 .tanque-tag{display:inline-flex;background:var(--blue-l);color:var(--blue);padding:3px 9px;border-radius:10px;font-size:.68rem;font-weight:700;margin:3px}
 
+/* RACAO BREAKDOWN no corpo do lote */
+.racao-breakdown-table{border-radius:var(--r-md);overflow:hidden;border:1.5px solid var(--border);margin:10px 0;}
+.racao-breakdown-header{background:var(--surf3);padding:7px 12px;font-size:.65rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);display:flex;justify-content:space-between;align-items:center;}
+.racao-breakdown-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--surf3);gap:6px;flex-wrap:wrap;background:#fff;}
+.racao-breakdown-row:last-child{border-bottom:none;background:var(--surf2);}
+.racao-breakdown-nome{flex:1;min-width:0;font-size:.78rem;font-weight:700;color:var(--text);}
+.racao-breakdown-marca{font-size:.65rem;color:var(--text3);}
+.racao-breakdown-vals{display:flex;gap:14px;flex-shrink:0;text-align:right;}
+.racao-breakdown-val{font-size:.72rem;}
+.racao-breakdown-val span{color:var(--text3);font-size:.62rem;display:block;}
+
 /* SCROLL LIST */
 .scroll-list{max-height:300px;overflow-y:auto;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--surf);scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .scroll-list .card{margin:0;border:none;border-bottom:1px solid var(--border);border-radius:0;box-shadow:none}
@@ -1390,18 +1401,23 @@ function renderTanqueHistCard(t, lote) {
     let pesoMedio = t.ultimoPesoMedio || lote.pesoMedioAlevino || 0;
     let custo = calcularCustoTanque(lote, t.num);
 
-    // ── Agrupamento por tipo de ração ──────────────────────────────────
+    // ── Agrupamento por tipo de ração (usa tipoIdeal se disponível) ──────
     let porTipo = {};
     let totalKg = 0, totalCusto = 0;
     if (t.consumoDetalhado && t.consumoDetalhado.length > 0) {
         for (let c of t.consumoDetalhado) {
-            let chave = c.tipo || c.tipoRacao || 'Não identificado';
-            if (!porTipo[chave]) porTipo[chave] = { kg: 0, custo: 0, valorKg: c.valorPorKg || 0 };
-            porTipo[chave].kg     += c.kg || 0;
-            porTipo[chave].custo  += c.custoTotal || 0;
-            if (c.valorPorKg && c.valorPorKg > porTipo[chave].valorKg) porTipo[chave].valorKg = c.valorPorKg;
-            totalKg   += c.kg || 0;
-            totalCusto += c.custoTotal || 0;
+            // FIX: prioriza tipoIdeal (nome legível) como chave de agrupamento
+            let chave = c.tipoIdeal || c.tipo || c.tipoRacao || 'Não identificado';
+            let kg = c.kg || 0;
+            let custo = c.custoTotal || 0;
+            let valorKg = c.valorPorKg || 0;
+            if (!porTipo[chave]) porTipo[chave] = { kg: 0, custo: 0, valorKgPonderado: 0, marcas: new Set() };
+            porTipo[chave].kg += kg;
+            porTipo[chave].custo += custo;
+            porTipo[chave].valorKgPonderado += valorKg * kg;
+            if (c.marca) porTipo[chave].marcas.add(c.marca);
+            totalKg += kg;
+            totalCusto += custo;
         }
     }
     let tiposHTML = Object.entries(porTipo).length > 0
@@ -1409,15 +1425,27 @@ function renderTanqueHistCard(t, lote) {
            ${Object.entries(porTipo).map(([tipo, d]) => {
                let pct = totalKg > 0 ? ((d.kg / totalKg) * 100).toFixed(0) : 0;
                let custoKg = d.kg > 0 ? d.custo / d.kg : 0;
+               let vMedioKg = d.kg > 0 ? d.valorKgPonderado / d.kg : 0;
+               let marcasArr = Array.from(d.marcas);
                return `<div class="racao-tipo-row">
-                   <div class="racao-tipo-nome">${tipo}<br><span style="font-size:.65rem;color:var(--text3);font-weight:500;">${pct}% do total</span></div>
+                   <div class="racao-tipo-nome">${tipo}
+                       <br><span style="font-size:.65rem;color:var(--text3);font-weight:500;">${pct}% do total${marcasArr.length ? ' · ' + marcasArr.join(', ') : ''}</span>
+                   </div>
                    <div class="racao-tipo-vals">
                        <div class="racao-tipo-val"><span>Quantidade</span><strong>${d.kg.toFixed(2)} kg</strong></div>
+                       <div class="racao-tipo-val"><span>R$/kg médio</span><strong>R$ ${vMedioKg.toFixed(2)}</strong></div>
                        <div class="racao-tipo-val"><span>Custo total</span><strong class="green">R$ ${d.custo.toFixed(2)}</strong></div>
-                       <div class="racao-tipo-val"><span>R$/kg</span><strong>R$ ${custoKg.toFixed(2)}</strong></div>
                    </div>
                </div>`;
-           }).join('')}`
+           }).join('')}
+           <div class="racao-tipo-row" style="background:var(--surf2);">
+               <div class="racao-tipo-nome" style="font-weight:800;color:var(--text);">📦 TOTAL</div>
+               <div class="racao-tipo-vals">
+                   <div class="racao-tipo-val"><span>Total kg</span><strong>${totalKg.toFixed(2)} kg</strong></div>
+                   <div class="racao-tipo-val"><span>R$/kg médio</span><strong>R$ ${totalKg > 0 ? (totalCusto/totalKg).toFixed(2) : '0.00'}</strong></div>
+                   <div class="racao-tipo-val"><span>Custo total</span><strong class="green" style="font-size:.9rem;">R$ ${totalCusto.toFixed(2)}</strong></div>
+               </div>
+           </div>`
         : `<div style="padding:10px 14px;font-size:.75rem;color:var(--text3);">Nenhum consumo registrado ainda.</div>`;
 
     // ── Linha do tempo (agrupado por dia) ─────────────────────────────
@@ -1509,14 +1537,38 @@ function renderLotes() {
         let pesoMedioAtual = ultimaBiometria ? ultimaBiometria.pesoMedio : (l.pesoMedioAlevino || 0);
         
         let custoRacaoDetalhado = calcularCustoRacaoLoteReal(l);
-        let detalhesRacao = "";
-        for (let [tipo, dados] of Object.entries(custoRacaoDetalhado.porTipo)) {
-            let tipoLimpo = tipo;
-            let match = tipo.match(/([0-9]+[–-][0-9]+mm)/);
-            if (match) tipoLimpo = match[1];
-            detalhesRacao += `<br>&nbsp;&nbsp;📦 ${tipoLimpo}: ${dados.kg.toFixed(1)}kg | R$ ${dados.custo.toFixed(2)}`;
+
+        // ── Bloco rico de ração por tipo ──
+        let tiposRacaoEntries = Object.entries(custoRacaoDetalhado.porTipo);
+        let totalKgRacao = tiposRacaoEntries.reduce((s,[,d]) => s + d.kg, 0);
+        let blocoRacaoHTML = "";
+        if (tiposRacaoEntries.length > 0) {
+            let rows = tiposRacaoEntries.map(([tipo, d]) => {
+                let pct = totalKgRacao > 0 ? ((d.kg / totalKgRacao) * 100).toFixed(0) : 0;
+                let vMedio = d.kg > 0 ? (d.custo / d.kg).toFixed(2) : "0.00";
+                let marcasStr = d.marcas && d.marcas.length ? d.marcas.join(", ") : "";
+                return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--surf3);gap:6px;flex-wrap:wrap;background:#fff;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:.78rem;font-weight:700;color:var(--text);">🌾 ${tipo}</div>
+                        ${marcasStr ? `<div style="font-size:.65rem;color:var(--text3);">${marcasStr}</div>` : ""}
+                    </div>
+                    <div style="display:flex;gap:14px;flex-shrink:0;text-align:right;">
+                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">Consumido</span><strong>${d.kg.toFixed(2)} kg</strong></div>
+                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">R$/kg</span><strong>R$ ${vMedio}</strong></div>
+                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">Custo total</span><strong style="color:var(--green);">R$ ${d.custo.toFixed(2)}</strong></div>
+                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">% do total</span><strong>${pct}%</strong></div>
+                    </div>
+                </div>`;
+            }).join('');
+            blocoRacaoHTML = `<div style="margin:10px 0;border-radius:var(--r-md);overflow:hidden;border:1.5px solid var(--border);">
+                <div style="background:var(--surf3);padding:7px 12px;font-size:.65rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);display:flex;justify-content:space-between;">
+                    <span>🌾 Gasto por tipo de ração (${tiposRacaoEntries.length} tipo${tiposRacaoEntries.length>1?'s':''})</span>
+                    <span>Total: ${totalKgRacao.toFixed(2)} kg | R$ ${custoRacaoDetalhado.custoTotal.toFixed(2)}</span>
+                </div>
+                ${rows}
+            </div>`;
         }
-        
+
         let tanquesInfo = l.tanques.map(t => {
             let custo = calcularCustoTanque(l, t.num);
             let isDp = !!t.despescado;
@@ -1557,7 +1609,7 @@ function renderLotes() {
                     <div class="stat-cell"><strong>${consumoTotal.toFixed(2)} kg</strong><span>🌾 Ração consumida</span></div>
                     <div class="stat-cell"><strong>${l.tanques.filter(t=>!t.despescado&&t.qtdPeixes>0).length} ativos${l.tanques.filter(t=>t.despescado).length>0?' / '+l.tanques.filter(t=>t.despescado).length+' despescados':''}</strong><span>🏞️ Tanques</span></div>
                 </div>
-                ${detalhesRacao ? `<div style="font-size:.75rem;color:var(--text2);padding:6px 0;border-top:1px solid var(--border);margin-top:4px;"><strong>Ração por tipo:</strong>${detalhesRacao}</div>` : ''}
+                ${blocoRacaoHTML}
                 <div style="margin-top:10px;">
                     <div class="card-title">🏞️ Tanques do Lote</div>
                     <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${tanquesInfo}</div>
@@ -1706,101 +1758,63 @@ function calcularRacaoPorTanque() {
 function aplicarRacaoTanque(tanqueNum, kgRacao) {
     let info = getInfoTanqueOcupado(tanqueNum);
     if (!info) { showMessage("Tanque não ocupado!", true); return false; }
-    
-    // Descobrir o tipo de ração necessário baseado no peso do peixe
+
     let pesoMedio = info.tanque.ultimoPesoMedio || info.lote.pesoMedioAlevino || 5;
     let tipoRacaoNecessario = tipoRacaoPorPeso(pesoMedio);
-    let diametroNecessario = extrairDiametroPellet(tipoRacaoNecessario);
-    
     let estoque = loadData("estoqueRacao");
-    
-    // Buscar apenas itens COMPATÍVEIS com o tipo de pellet necessário
-    let itensCompativeis = [];
-    let indicesCompativeis = [];
-    
-    for (let i = 0; i < estoque.length; i++) {
-        let diametroItem = extrairDiametroPellet(estoque[i].pellet);
-        if (diametroNecessario && diametroItem && diametroNecessario === diametroItem) {
-            itensCompativeis.push(estoque[i]);
-            indicesCompativeis.push(i);
-        }
-    }
-    
-    // Se não tem estoque compatível, tentar compatibilidade aproximada
-    if (itensCompativeis.length === 0) {
-        for (let i = 0; i < estoque.length; i++) {
-            let diametroItem = extrairDiametroPellet(estoque[i].pellet);
-            if (diametroItem && diametroNecessario) {
-                let necMin = parseInt(diametroNecessario.split('-')[0]);
-                let necMax = parseInt(diametroNecessario.split('-')[1]);
-                let itemMin = parseInt(diametroItem.split('-')[0]);
-                if (itemMin <= necMax + 1 && itemMin >= necMin - 1) {
-                    itensCompativeis.push(estoque[i]);
-                    indicesCompativeis.push(i);
-                }
-            }
-        }
-    }
-    
-    let totalCompativel = itensCompativeis.reduce((s, i) => s + i.kgTotal, 0);
-    
-    if (totalCompativel < kgRacao) {
-        showMessage(`❌ Estoque insuficiente de ${tipoRacaoNecessario}! Disponível: ${totalCompativel.toFixed(1)}kg`, true);
+
+    let { indices: idxCompativeis, isFallback } = buscarItensEstoqueCompativeis(estoque, tipoRacaoNecessario);
+    if (idxCompativeis.length === 0) {
+        showMessage("❌ Estoque vazio! Compre ração primeiro.", true);
         return false;
     }
-    
-    // Descontar APENAS dos itens compatíveis e registrar detalhes
+    let totalDisp = idxCompativeis.reduce((s, i) => s + estoque[i].kgTotal, 0);
+    if (totalDisp < kgRacao) {
+        showMessage(`❌ Estoque insuficiente! Disponível: ${totalDisp.toFixed(1)}kg`, true);
+        return false;
+    }
+
     let consumoRestante = kgRacao;
     let detalhesConsumo = [];
-    
-    for (let i = 0; i < indicesCompativeis.length && consumoRestante > 0; i++) {
-        let idx = indicesCompativeis[i];
+    for (let i = 0; i < idxCompativeis.length && consumoRestante > 0.001; i++) {
+        let idx = idxCompativeis[i];
         let kgConsumido = Math.min(estoque[idx].kgTotal, consumoRestante);
-        
+        if (kgConsumido <= 0) continue;
         detalhesConsumo.push({
             tipo: estoque[idx].pellet,
-            marca: estoque[idx].marca,
+            tipoIdeal: tipoRacaoNecessario,
+            marca: estoque[idx].marca || 'Sem marca',
             kg: kgConsumido,
-            valorPorKg: estoque[idx].valorKg,
-            custoTotal: kgConsumido * estoque[idx].valorKg
+            valorPorKg: estoque[idx].valorKg || 0,
+            custoTotal: kgConsumido * (estoque[idx].valorKg || 0)
         });
-        
         estoque[idx].kgTotal -= kgConsumido;
         consumoRestante -= kgConsumido;
     }
-    
-    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
-    
-    // Registrar consumo detalhado no lote
+    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0.001));
+
     let lotes = loadData("lotes");
     let lote = lotes.find(l => l.id === info.loteId);
     let tanque = lote.tanques.find(t => t.num === tanqueNum);
-    
     if (!tanque.consumoDetalhado) tanque.consumoDetalhado = [];
-    
     for (let det of detalhesConsumo) {
         tanque.consumoDetalhado.push({
             data: new Date().toISOString(),
             tipo: det.tipo,
+            tipoIdeal: det.tipoIdeal,
             marca: det.marca,
             kg: det.kg,
             valorPorKg: det.valorPorKg,
             custoTotal: det.custoTotal,
-            origem: "Lançamento manual"
+            origem: "Cálculo automático"
         });
     }
-    
     tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
     saveData("lotes", lotes);
-    
+
     let custoReal = detalhesConsumo.reduce((sum, d) => sum + d.custoTotal, 0);
-    showMessage(`✅ ${kgRacao.toFixed(1)}kg de ${tipoRacaoNecessario} registrado para o tanque ${tanqueNum} | Custo: R$ ${custoReal.toFixed(2)}`);
-    
-    renderEstoqueRacao();
-    renderConsumoDiario();
-    renderLotes();
-    renderTratosTanques();
-    
+    showMessage(`✅ ${kgRacao.toFixed(2)}kg registrado para ${tanqueNum} | R$ ${custoReal.toFixed(2)}`);
+    renderEstoqueRacao(); renderConsumoDiario(); renderLotes(); renderTratosTanques();
     return true;
 }
 
@@ -1999,26 +2013,54 @@ function toggleTank(num) {
     if (chv) chv.classList.toggle("open", opening);
 }
 
+// ==================== COMPATIBILIDADE DE RAÇÃO (REFATORADA) ====================
+// Normaliza qualquer descrição de ração para chave canônica comparável
 function extrairDiametroPellet(tipoRacao) {
     if (!tipoRacao) return null;
-    
-    // Remove emojis e textos
-    let texto = tipoRacao.replace(/[🔵🟢🟡🟠🟤⚫🍼]/g, '').trim();
-    
-    // Padrões: "4-6mm", "2–3mm", "1.3–1.5mm", "0.8–1mm", etc.
-    let match = texto.match(/([0-9]+[.,]?[0-9]*)\s*[-–]\s*([0-9]+[.,]?[0-9]*)mm/i);
+    // Normaliza: substitui en-dash/em-dash por hífen, remove não-ASCII (emojis)
+    let texto = tipoRacao
+        .replace(/\u2013|\u2014/g, '-')
+        .replace(/[^\u0000-\u007F]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    // Caso especial: "pó" / "po"
+    if (texto.includes('p') && texto.includes('\xf3')) return "po";
+    if (/\bpo\b/.test(texto) || texto.includes('p\xf3')) return "po";
+    // Padrão numérico: "4-6mm", "1.3-1.5mm", "0.8-1mm", "2-3mm"
+    let match = texto.match(/([0-9]+[.,]?[0-9]*)\s*-\s*([0-9]+[.,]?[0-9]*)\s*mm/i);
     if (match) {
-        return `${parseFloat(match[1])}-${parseFloat(match[2])}mm`;
+        let a = parseFloat(match[1].replace(',', '.'));
+        let b = parseFloat(match[2].replace(',', '.'));
+        return a + '-' + b + 'mm';
     }
-    
-    // Caso especial: "pó"
-    if (texto.toLowerCase().includes('pó')) return "0-0.8mm";
-    
-    // Caso especial: pellet sem mm (ex: "Fina", "Média")
     return null;
 }
-// Substitua a função registrarTrato existente por esta:
-// Na função registrarTrato, substitua a parte do registro de consumo:
+
+// Busca itens do estoque compatíveis com o tipo de ração necessário
+// Retorna array de índices. Fallback: usa qualquer item válido se não houver match exato.
+function buscarItensEstoqueCompativeis(estoque, tipoNecessario) {
+    let dNec = extrairDiametroPellet(tipoNecessario);
+    // 1ª: match exato de diâmetro
+    let exatos = [];
+    for (let i = 0; i < estoque.length; i++) {
+        if (estoque[i].kgTotal <= 0) continue;
+        let dItem = extrairDiametroPellet(estoque[i].pellet);
+        if (dNec && dItem && dNec === dItem) exatos.push(i);
+    }
+    if (exatos.length > 0) return { indices: exatos, isFallback: false };
+    // 2ª: fallback — qualquer item válido (não estornado/suspenso) com estoque
+    let fallback = [];
+    for (let i = 0; i < estoque.length; i++) {
+        if (estoque[i].kgTotal <= 0) continue;
+        let p = (estoque[i].pellet || '').toLowerCase();
+        if (p === 'estornado' || p === 'suspenso') continue;
+        fallback.push(i);
+    }
+    return { indices: fallback, isFallback: true };
+}
+
+
 
 function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
     let tratos = tLoad(tanqueNum);
@@ -2026,71 +2068,71 @@ function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
         showMessage("Este trato já foi fornecido hoje!", true);
         return;
     }
-    
+
     let info = getInfoTanqueOcupado(tanqueNum);
     if (!info) { showMessage("Tanque não ocupado", true); return; }
-    
-    // BUGFIX: usar última biometria do lote, não ultimoPesoMedio do tanque (que não existe)
+
     let ultimaBiometria = info.lote.biometrias && info.lote.biometrias.length
         ? info.lote.biometrias[info.lote.biometrias.length - 1] : null;
     let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (info.lote.pesoMedioAlevino || 5);
     let tipoRacaoNecessario = tipoRacaoPorPeso(pesoMedio);
-    let diametroNecessario = extrairDiametroPellet(tipoRacaoNecessario);
-    
+
     let estoque = loadData("estoqueRacao");
-    
-    // Buscar itens compatíveis e seus preços
-    let itensCompativeis = estoque.filter(item => {
-        let diametroItem = extrairDiametroPellet(item.pellet);
-        return diametroNecessario && diametroItem && diametroNecessario === diametroItem;
-    });
-    
-    let totalCompativel = itensCompativeis.reduce((s, i) => s + i.kgTotal, 0);
-    if (totalCompativel < kgRecomendado) {
-        showMessage(`❌ Estoque insuficiente de ${tipoRacaoNecessario}!`, true);
+
+    // FIX: usar busca com fallback para não travar quando não há match exato
+    let { indices: idxCompativeis, isFallback } = buscarItensEstoqueCompativeis(estoque, tipoRacaoNecessario);
+
+    if (idxCompativeis.length === 0) {
+        showMessage("❌ Estoque de ração vazio! Compre ração primeiro.", true);
         return;
     }
-    
-    // Registrar consumo detalhado (QUAL tipo e QUAL valor)
-    let consumoRestante = kgRecomendado;
-    let detalhesConsumo = []; // Array para registrar cada item consumido
-    
-    for (let i = 0; i < estoque.length && consumoRestante > 0; i++) {
-        let diametroItem = extrairDiametroPellet(estoque[i].pellet);
-        if (diametroItem === diametroNecessario && estoque[i].kgTotal > 0) {
-            let kgConsumido = Math.min(estoque[i].kgTotal, consumoRestante);
-            
-            // Registrar detalhe do consumo
-            detalhesConsumo.push({
-                tipo: estoque[i].pellet,
-                marca: estoque[i].marca,
-                kg: kgConsumido,
-                valorPorKg: estoque[i].valorKg,
-                custoTotal: kgConsumido * estoque[i].valorKg
-            });
-            
-            estoque[i].kgTotal -= kgConsumido;
-            consumoRestante -= kgConsumido;
-        }
+
+    let totalCompativel = idxCompativeis.reduce((s, i) => s + estoque[i].kgTotal, 0);
+    if (totalCompativel < kgRecomendado) {
+        showMessage(`❌ Estoque insuficiente! Disponível: ${totalCompativel.toFixed(1)}kg, necessário: ${kgRecomendado.toFixed(1)}kg`, true);
+        return;
     }
-    
-    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0));
-    
-    // SALVAR CONSUMO DETALHADO NO LOTE
+
+    if (isFallback) {
+        let tipoDisp = estoque[idxCompativeis[0]].pellet;
+        showMessage(`⚠️ Tipo ideal (${tipoRacaoNecessario}) sem estoque. Usando: ${tipoDisp}`, false);
+    }
+
+    // Descontar do estoque e registrar consumo detalhado por item
+    let consumoRestante = kgRecomendado;
+    let detalhesConsumo = [];
+
+    for (let i = 0; i < idxCompativeis.length && consumoRestante > 0.001; i++) {
+        let idx = idxCompativeis[i];
+        let kgConsumido = Math.min(estoque[idx].kgTotal, consumoRestante);
+        if (kgConsumido <= 0) continue;
+        detalhesConsumo.push({
+            tipo: estoque[idx].pellet,
+            marca: estoque[idx].marca || 'Sem marca',
+            kg: kgConsumido,
+            valorPorKg: estoque[idx].valorKg || 0,
+            custoTotal: kgConsumido * (estoque[idx].valorKg || 0)
+        });
+        estoque[idx].kgTotal -= kgConsumido;
+        consumoRestante -= kgConsumido;
+    }
+
+    saveData("estoqueRacao", estoque.filter(item => item.kgTotal > 0.001));
+
+    // Salvar consumo detalhado no lote/tanque
     let lotes = loadData("lotes");
     let lote = lotes.find(l => l.id === info.loteId);
+    if (!lote) { showMessage("Lote não encontrado", true); return; }
     let tanque = lote.tanques.find(t => t.num === tanqueNum);
-    
-    // Inicializar estrutura de consumo detalhado se não existir
-    if (!tanque.consumoDetalhado) {
-        tanque.consumoDetalhado = [];
-    }
-    
-    // Adicionar registro de consumo com tipo específico
+    if (!tanque) { showMessage("Tanque não encontrado no lote", true); return; }
+
+    if (!tanque.consumoDetalhado) tanque.consumoDetalhado = [];
+
     for (let det of detalhesConsumo) {
         tanque.consumoDetalhado.push({
             data: new Date().toISOString(),
             tipo: det.tipo,
+            tipoIdeal: tipoRacaoNecessario,
             marca: det.marca,
             kg: det.kg,
             valorPorKg: det.valorPorKg,
@@ -2098,24 +2140,21 @@ function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
             trato: tratoIndex + 1
         });
     }
-    
-    // Manter também o consumo total somado (para compatibilidade)
+
     tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRecomendado;
-    
     saveData("lotes", lotes);
-    
+
     tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: true, kgFornecidos: kgRecomendado };
     tSave(tanqueNum, tratos);
-    
-    // Calcular custo real do consumo
+
     let custoReal = detalhesConsumo.reduce((sum, d) => sum + d.custoTotal, 0);
-    
-    showMessage(`✅ Tanque ${tanqueNum}: ${kgRecomendado.toFixed(1)}kg de ${tipoRacaoNecessario} | Custo: R$ ${custoReal.toFixed(2)}`);
+    showMessage(`✅ Tanque ${tanqueNum}: ${kgRecomendado.toFixed(2)}kg — R$ ${custoReal.toFixed(2)}`);
     renderEstoqueRacao();
     renderConsumoDiario();
     renderTratosTanques();
     renderLotes();
-    
+    atualizarDashboard();
+
     if (tratoIndex + 1 >= tratos.length || tratos[tratoIndex + 1]?.tratado) {
         verificarTodosTanquesConcluidos();
     }
@@ -2436,41 +2475,50 @@ function resetarDiaTodosTanques() {
 function registrarAlimentacao() {
     let tanqueNum = document.getElementById("alimTanque").value;
     let kgRacao = parseFloat(document.getElementById("alimKg").value);
-    if(!tanqueNum || isNaN(kgRacao) || kgRacao <= 0) { showMessage("Tanque e kg válidos", true); return; }
+    if (!tanqueNum || isNaN(kgRacao) || kgRacao <= 0) { showMessage("Informe tanque e quantidade válida", true); return; }
     let info = getInfoTanqueOcupado(tanqueNum);
-    if(!info) { showMessage("Tanque não ocupado", true); return; }
-    // BUGFIX: descontar do tipo de ração correto para o peso do peixe
-    let ultimaBio = info.lote.biometrias && info.lote.biometrias.length ? info.lote.biometrias[info.lote.biometrias.length-1] : null;
+    if (!info) { showMessage("Tanque não ocupado", true); return; }
+
+    let ultimaBio = info.lote.biometrias && info.lote.biometrias.length
+        ? info.lote.biometrias[info.lote.biometrias.length - 1] : null;
     let pesoMedio = ultimaBio ? ultimaBio.pesoMedio : (info.lote.pesoMedioAlevino || 5);
     let tipoNec = tipoRacaoPorPeso(pesoMedio);
-    let diaMetroNec = extrairDiametroPellet(tipoNec);
     let estoque = loadData("estoqueRacao");
-    let idxCompat = [];
-    for(let i=0;i<estoque.length;i++){
-        let d=extrairDiametroPellet(estoque[i].pellet);
-        if(diaMetroNec && d && diaMetroNec===d) idxCompat.push(i);
+
+    let { indices: idxCompat, isFallback } = buscarItensEstoqueCompativeis(estoque, tipoNec);
+    if (idxCompat.length === 0) {
+        showMessage("❌ Estoque vazio! Compre ração primeiro.", true); return;
     }
-    if(idxCompat.length===0){
-        showMessage(`❌ Sem ração "${tipoNec}" no estoque! Compre o tipo correto.`, true);
-        return;
+    let totalComp = idxCompat.reduce((s, i) => s + estoque[i].kgTotal, 0);
+    if (totalComp < kgRacao) {
+        showMessage(`Estoque insuficiente! Disponível: ${totalComp.toFixed(1)}kg`, true); return;
     }
-    let totalComp = idxCompat.reduce((s,i)=>s+estoque[i].kgTotal,0);
-    if(totalComp<kgRacao){showMessage(`Estoque insuficiente de ${tipoNec}! Disponível: ${totalComp.toFixed(1)}kg`,true);return;}
-    let resto=kgRacao,dets=[];
-    for(let i=0;i<idxCompat.length&&resto>0;i++){
-        let idx=idxCompat[i],kg=Math.min(estoque[idx].kgTotal,resto);
-        dets.push({tipo:estoque[idx].pellet,marca:estoque[idx].marca,kg,valorPorKg:estoque[idx].valorKg,custoTotal:kg*estoque[idx].valorKg});
-        estoque[idx].kgTotal-=kg;resto-=kg;
+
+    let resto = kgRacao, dets = [];
+    for (let i = 0; i < idxCompat.length && resto > 0.001; i++) {
+        let idx = idxCompat[i];
+        let kg = Math.min(estoque[idx].kgTotal, resto);
+        if (kg <= 0) continue;
+        dets.push({ tipo: estoque[idx].pellet, tipoIdeal: tipoNec, marca: estoque[idx].marca || '', kg, valorPorKg: estoque[idx].valorKg || 0, custoTotal: kg * (estoque[idx].valorKg || 0) });
+        estoque[idx].kgTotal -= kg;
+        resto -= kg;
     }
-    saveData("estoqueRacao",estoque.filter(i=>i.kgTotal>0));
-    let lotes=loadData("lotes"),lote=lotes.find(l=>l.id===info.loteId),tanque=lote.tanques.find(t=>t.num===tanqueNum);
-    if(!tanque.consumoDetalhado) tanque.consumoDetalhado=[];
-    for(let d of dets) tanque.consumoDetalhado.push({data:new Date().toISOString(),tipo:d.tipo,marca:d.marca,kg:d.kg,valorPorKg:d.valorPorKg,custoTotal:d.custoTotal,origem:"Manual"});
-    tanque.consumoRacao=(tanque.consumoRacao||0)+kgRacao;
-    saveData("lotes",lotes);
-    let custoR=dets.reduce((s,d)=>s+d.custoTotal,0);
-    showMessage(`✅ ${kgRacao}kg de ${tipoNec} registrado | R$ ${custoR.toFixed(2)}`);
-    renderEstoqueRacao();renderConsumoDiario();renderLotes();
+    saveData("estoqueRacao", estoque.filter(i => i.kgTotal > 0.001));
+
+    let lotes = loadData("lotes");
+    let lote = lotes.find(l => l.id === info.loteId);
+    let tanque = lote.tanques.find(t => t.num === tanqueNum);
+    if (!tanque.consumoDetalhado) tanque.consumoDetalhado = [];
+    for (let d of dets) {
+        tanque.consumoDetalhado.push({ data: new Date().toISOString(), tipo: d.tipo, tipoIdeal: d.tipoIdeal, marca: d.marca, kg: d.kg, valorPorKg: d.valorPorKg, custoTotal: d.custoTotal, origem: "Manual" });
+    }
+    tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRacao;
+    saveData("lotes", lotes);
+
+    let custoR = dets.reduce((s, d) => s + d.custoTotal, 0);
+    showMessage(`✅ ${kgRacao.toFixed(2)}kg registrado para ${tanqueNum} | R$ ${custoR.toFixed(2)}`);
+    renderEstoqueRacao(); renderConsumoDiario(); renderLotes(); atualizarDashboard();
+    document.getElementById("alimKg").value = "";
 }
 
 function registrarMortalidade() {
@@ -4411,30 +4459,39 @@ function calcularBiomassaTotalLote(lote) {
 
 function calcularCustoRacaoLoteReal(lote) {
     let custoTotalRacao = 0;
-    let consumoPorTipo = {};
-    
+    let consumoPorTipo = {}; // chave: tipo canônico, valor: { kg, custo, valorMedioKg, marcas[] }
+
     if (!lote.tanques) return { custoTotal: 0, porTipo: {} };
-    
+
     for (let tanque of lote.tanques) {
-        if (tanque.consumoDetalhado && tanque.consumoDetalhado.length > 0) {
-            for (let consumo of tanque.consumoDetalhado) {
-                custoTotalRacao += consumo.custoTotal;
-                
-                // Usar o tipo do pellet como chave
-                let chave = consumo.tipo || consumo.tipoRacao || "Desconhecido";
-                if (!consumoPorTipo[chave]) {
-                    consumoPorTipo[chave] = { kg: 0, custo: 0 };
-                }
-                consumoPorTipo[chave].kg += consumo.kg;
-                consumoPorTipo[chave].custo += consumo.custoTotal;
+        if (!tanque.consumoDetalhado || tanque.consumoDetalhado.length === 0) continue;
+        for (let consumo of tanque.consumoDetalhado) {
+            let kg = consumo.kg || 0;
+            let custo = consumo.custoTotal || 0;
+            let valorKg = consumo.valorPorKg || 0;
+            custoTotalRacao += custo;
+
+            // Agrupa por tipo de pellet (usa tipoIdeal se disponível para nome legível)
+            let chave = consumo.tipoIdeal || consumo.tipo || consumo.tipoRacao || "Não identificado";
+            if (!consumoPorTipo[chave]) {
+                consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set() };
             }
+            consumoPorTipo[chave].kg += kg;
+            consumoPorTipo[chave].custo += custo;
+            consumoPorTipo[chave].valorKgTotal += valorKg * kg;
+            consumoPorTipo[chave].qtdRegistros += 1;
+            if (consumo.marca) consumoPorTipo[chave].marcas.add(consumo.marca);
         }
     }
-    
-    return {
-        custoTotal: custoTotalRacao,
-        porTipo: consumoPorTipo
-    };
+
+    // Converter Set para Array e calcular médias
+    for (let tipo in consumoPorTipo) {
+        let d = consumoPorTipo[tipo];
+        d.valorMedioKg = d.kg > 0 ? d.valorKgTotal / d.kg : 0;
+        d.marcas = Array.from(d.marcas);
+    }
+
+    return { custoTotal: custoTotalRacao, porTipo: consumoPorTipo };
 }
 
 // Substituir a função antiga
