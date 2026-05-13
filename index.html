@@ -1158,7 +1158,7 @@ function atualizarSelectTanques(selectId, tipo = 'todos', withEmpty = false) {
     if (tipo === 'distribuicao') {
         let disponiveis = tanques.filter(t => !isTanqueOcupado(t.num));
         if (disponiveis.length === 0) {
-            options.push('<option value="" disabled>Nenhum tanque disponível — cadastre tanques primeiro</option>');
+            options.push('<option value="" disabled selected>Nenhum tanque disponível — cadastre tanques primeiro</option>');
         } else {
             disponiveis.forEach(t => {
                 options.push(`<option value="${t.num}">${t.num} (${t.vol}m³) ${t.malha ? `- ${t.malha}` : ''}</option>`);
@@ -1321,7 +1321,7 @@ function liberarTanque(numTanque) {
             tanqueRemovido.dataDespesca = new Date().toLocaleDateString('pt-BR');
             tanqueRemovido.qtdDespescada = peixesRemovidos;
             tanqueRemovido.qtdPeixes = 0;
-            lote.qtdTotal -= peixesRemovidos;
+            lote.qtdTotal = Math.max(0, (lote.qtdTotal || 0) - peixesRemovidos);
             // Se não há mais tanques ativos, encerrar o lote
             let ativos = lote.tanques.filter(t => !t.despescado && t.qtdPeixes > 0);
             if (ativos.length === 0) {
@@ -1596,6 +1596,7 @@ function renderLotes() {
     let lotes = loadData("lotes");
     let div = document.getElementById("lotesLista");
     let cnt = document.getElementById("contLotes");
+    if (!div) return;
     if (cnt) cnt.textContent = lotes.length;
     if (!lotes.length) {
         div.innerHTML = `<div class="list-item" style="justify-content:center;color:var(--text3);">
@@ -1722,9 +1723,17 @@ function excluirLote(id) {
         icon: '🐟', type: 'danger', okLabel: '🗑️ Remover',
         onConfirm: () => {
             let lotes = loadData("lotes");
+            let loteARemover = lotes.find(l => l.id === id);
+            // Limpar tratos dos tanques associados
+            if (loteARemover && loteARemover.tanques) {
+                for (let t of loteARemover.tanques) {
+                    tRemove(t.num);
+                }
+            }
             saveData("lotes", lotes.filter(l => l.id !== id));
             renderLotes();
             renderTanques();
+            atualizarDashboard();
             showMessage("✅ Lote removido.");
         }
     });
@@ -1798,7 +1807,8 @@ function tipoRacaoPorPeso(pesoGramas) {
 
 // ==================== CÁLCULO DE RAÇÃO POR TANQUE ====================
 function calcularRacaoPorTanque() {
-    let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value);
+    let caSelEl = document.getElementById("caSelectRacao");
+    let caSelecionado = caSelEl ? (parseFloat(caSelEl.value) || 1.4) : 1.4;
     let tanquesOcupados = [];
     let lotes = loadData("lotes");
     for (let lote of lotes) {
@@ -1958,7 +1968,8 @@ function padronizarTratosTodosTanques() {
 function renderTratosTanques() {
     let tanquesOcupados = [];
     let lotes = loadData("lotes");
-    let pesoCopo = parseFloat(document.getElementById("pesoCopo").value) || 2.5;
+    let pesoCopoEl = document.getElementById("pesoCopo");
+    let pesoCopo = pesoCopoEl ? (parseFloat(pesoCopoEl.value) || 2.5) : 2.5;
     let suspensos = loadSuspensos();
 
     for (let lote of lotes) {
@@ -1967,7 +1978,8 @@ function renderTratosTanques() {
                 let ultimaBiometria = lote.biometrias && lote.biometrias.length
                     ? lote.biometrias[lote.biometrias.length - 1] : null;
                 let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (lote.pesoMedioAlevino || 5);
-                let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
+                let caEl = document.getElementById("caSelectRacao");
+                let caSelecionado = caEl ? (parseFloat(caEl.value) || 1.4) : 1.4;
                 let gpd = obterGPD(pesoMedio);
                 let ca = getCAEfetiva(pesoMedio, caSelecionado);
                 let ganhoBiomassaKg = (tanque.qtdPeixes * gpd) / 1000;
@@ -2117,101 +2129,38 @@ function extrairDiametroPellet(tipoRacao) {
     }
     return null;
 }
-// Função para normalizar e comparar tipos de ração de forma mais inteligente
-function tiposRacaoCompativeis(tipoNecessario, tipoEstoque) {
-    if (!tipoNecessario || !tipoEstoque) return false;
-    
-    // Normalizar strings
-    const nec = tipoNecessario.toLowerCase();
-    const est = tipoEstoque.toLowerCase();
-    
-    // Caso exato
-    if (nec === est) return true;
-    
-    // Mapeamento de compatibilidade entre tipos
-    const compatibilidade = {
-        // Rações iniciais (pó e micro pellets)
-        '🍼 pó (55% pb)': ['pó', 'po', 'micro', 'inicial', '55%', '55pb'],
-        '⚫ 0.8–1mm (45% pb)': ['0.8-1mm', '0.8–1mm', '0.8', '1mm', 'micro', '45%'],
-        '🟤 1.3–1.5mm (45% pb)': ['1.3-1.5mm', '1.3–1.5mm', '1.3', '1.5mm', '45%'],
-        
-        // Rações de crescimento
-        '🟠 1.8–2.3mm (40% pb)': ['1.8-2.3mm', '1.8–2.3mm', '1.8', '2.3mm', '40%'],
-        '🟡 2–3mm (36% pb)': ['2-3mm', '2–3mm', '2mm', '3mm', '36%'],
-        
-        // Rações de engorda
-        '🟢 4–6mm (32% pb)': ['4-6mm', '4–6mm', '4mm', '6mm', 'engorda', '32%'],
-        '🔵 6–8mm (32% pb)': ['6-8mm', '6–8mm', '6mm', '8mm', 'engorda grossa', '32%']
-    };
-    
-    // Busca compatibilidade pelo mapeamento
-    for (const [tipo, sinonimos] of Object.entries(compatibilidade)) {
-        const tipoNorm = tipo.toLowerCase();
-        if ((nec.includes(tipoNorm) || tipoNorm.includes(nec)) &&
-            (est.includes(tipoNorm) || tipoNorm.includes(est))) {
-            return true;
-        }
-        if (sinonimos.some(s => nec.includes(s) && est.includes(s))) {
-            return true;
-        }
-    }
-    
-    // Verificar se é ração em pó (caso especial)
-    if ((nec.includes('pó') || nec.includes('po')) &&
-        (est.includes('pó') || est.includes('po') || est.includes('micro'))) {
-        return true;
-    }
-    
-    // Extrair diâmetros para comparação numérica se possível
-    const diamNec = extrairDiametroPellet(tipoNecessario);
-    const diamEst = extrairDiametroPellet(tipoEstoque);
-    
-    if (diamNec && diamEst) {
-        return diamNec === diamEst;
-    }
-    
-    return false;
-}
+
 // Busca itens do estoque compatíveis com o tipo de ração necessário
 // Retorna array de índices. Fallback: usa qualquer item válido se não houver match exato.
 function buscarItensEstoqueCompativeis(estoque, tipoNecessario) {
-    // 1ª tentativa: compatibilidade direta (incluindo pó)
-    let compativeis = [];
-    let fallback = [];
-    
+    let dNec = extrairDiametroPellet(tipoNecessario);
+    // 1ª: match exato de diâmetro
+    let exatos = [];
     for (let i = 0; i < estoque.length; i++) {
         if (estoque[i].kgTotal <= 0) continue;
-        
-        const pelletItem = estoque[i].pellet || '';
-        // Pular itens estornados ou suspensos
-        if (pelletItem === 'estornado' || pelletItem === 'suspenso') continue;
-        
-        // Verificar compatibilidade usando a nova função
-        if (tiposRacaoCompativeis(tipoNecessario, pelletItem)) {
-            compativeis.push(i);
-        } else {
-            // Fallback: qualquer ração com estoque (último recurso)
-            fallback.push(i);
-        }
+        let dItem = extrairDiametroPellet(estoque[i].pellet);
+        if (dNec && dItem && dNec === dItem) exatos.push(i);
     }
-    
-    // Priorizar compatíveis exatos
-    if (compativeis.length > 0) {
-        return { indices: compativeis, isFallback: false, tipoMatch: tipoNecessario };
+    if (exatos.length > 0) return { indices: exatos, isFallback: false };
+    // 2ª: fallback — qualquer item válido (não estornado/suspenso) com estoque
+    let fallback = [];
+    for (let i = 0; i < estoque.length; i++) {
+        if (estoque[i].kgTotal <= 0) continue;
+        let p = (estoque[i].pellet || '').toLowerCase();
+        if (p === 'estornado' || p === 'suspenso') continue;
+        fallback.push(i);
     }
-    
-    // Se não tem compatível, usar fallback
-    if (fallback.length > 0) {
-        return { indices: fallback, isFallback: true, tipoMatch: null };
-    }
-    
-    return { indices: [], isFallback: true, tipoMatch: null };
+    return { indices: fallback, isFallback: true };
 }
 
 
 
 function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
     let tratos = tLoad(tanqueNum);
+    if (tratoIndex < 0 || tratoIndex >= tratos.length) {
+        showMessage("❌ Índice de trato inválido!", true);
+        return;
+    }
     if (tratos[tratoIndex] && tratos[tratoIndex].tratado) {
         showMessage("Este trato já foi fornecido hoje!", true);
         return;
@@ -2337,8 +2286,15 @@ function preencherTodosTratos(tanqueNum) {
                 if(diaNec && d && diaNec===d && estoque[j].kgTotal>0) idxCompat.push(j);
             }
             if(idxCompat.length===0){
-                showMessage(`❌ Sem ração "${tipoNec}" no estoque para tanque ${tanqueNum}! Compre o tipo correto.`, true);
-                return;
+                // Fallback: tentar qualquer ração disponível
+                for(let j=0;j<estoque.length;j++){
+                    if(estoque[j].kgTotal>0) idxCompat.push(j);
+                }
+                if(idxCompat.length===0){
+                    showMessage(`❌ Estoque de ração vazio para tanque ${tanqueNum}!`, true);
+                    return;
+                }
+                showMessage(`⚠️ Sem ração "${tipoNec}" no estoque. Usando ração disponível.`, false);
             }
             let consumoRestante = kgPorTrato;
             for (let j = 0; j < idxCompat.length && consumoRestante > 0; j++) {
@@ -2430,7 +2386,13 @@ function fornecerUmTratoParaTodosTanques() {
             let d=extrairDiametroPellet(estoqueAtual[i].pellet);
             if(diaNec && d && diaNec===d && estoqueAtual[i].kgTotal>0) idxCompat.push(i);
         }
-        if(idxCompat.length===0){ erros.push(`Tanque ${t.num}: sem ração "${tipoNec}" no estoque`); continue; }
+        if(idxCompat.length===0){
+            // Tentar fallback com qualquer ração disponível
+            for(let i=0;i<estoqueAtual.length;i++){
+                if(estoqueAtual[i].kgTotal>0) idxCompat.push(i);
+            }
+            if(idxCompat.length===0){ erros.push(`Tanque ${t.num}: estoque vazio`); continue; }
+        }
         for (let i = 0; i < idxCompat.length && consumoRestante > 0; i++) {
             let idx=idxCompat[i];
             let kg=Math.min(estoqueAtual[idx].kgTotal, consumoRestante);
@@ -2686,7 +2648,7 @@ function registrarMortalidade() {
     // Registrar no lote
     tanque.mortalidade = (tanque.mortalidade || 0) + mortos;
     tanque.qtdPeixes -= mortos;
-    lote.qtdTotal -= mortos;
+    lote.qtdTotal = Math.max(0, (lote.qtdTotal || 0) - mortos);
     
     // Registrar no histórico de mortalidade com data
     let historico = loadData("historicoMortalidade") || [];
@@ -2709,9 +2671,12 @@ function registrarMortalidade() {
     renderLotes();
     renderConsumoDiario();
     atualizarDashboard();
+    atualizarSelectTanques("mortTanque", "ocupados");
     
     // Limpar campo
     document.getElementById("mortQtde").value = "";
+    let motivoEl = document.getElementById("motivoMorte");
+    if (motivoEl) motivoEl.value = "";
 }
 
 function renderConsumoDiario() {
@@ -2906,7 +2871,8 @@ function calcularMediaAmostras() {
     }
     lote.biomassaAtual = biomassaTotalLote;
     saveData("lotes", lotes);
-    let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
+    let caElBio = document.getElementById("caSelectRacao");
+    let caSelecionado = caElBio ? (parseFloat(caElBio.value) || 1.4) : 1.4;
     let gpd = obterGPD(pesoMedioGramas);
     let ca = getCAEfetiva(pesoMedioGramas, caSelecionado);
     let ganhoBiomassaKg = (info.qtdPeixes * gpd) / 1000;
@@ -2925,7 +2891,9 @@ function calcularMediaAmostras() {
     renderBiometrias();
     renderLotes();
     renderTratosTanques();
-    limparAmostras();
+    // Limpar amostras diretamente (sem confirm, pois acabamos de registrar)
+    amostrasTemp = [];
+    renderAmostras();
     atualizarSelectTanques("bioTanque", "ocupados");
     carregarInfoTanqueBiometria();
 }
@@ -3101,11 +3069,16 @@ function renderEstoqueRacao() {
         return item;
     });
     if (changed) saveData("estoqueRacao", estoque);
-    let totalKg = estoque.reduce((s, i) => s + i.kgTotal, 0);
-    let totalItens = estoque.length;
+    // Separar itens reais de estornos/suspensões
+    let estoqueReal = estoque.filter(i => !['estornado','suspenso'].includes((i.pellet||'').toLowerCase()));
+    let estoqueEstornos = estoque.filter(i => ['estornado','suspenso'].includes((i.pellet||'').toLowerCase()));
+    let totalKg = estoqueReal.reduce((s, i) => s + i.kgTotal, 0);
+    let totalKgEstorno = estoqueEstornos.reduce((s, i) => s + i.kgTotal, 0);
+    let totalItens = estoqueReal.length;
     div.innerHTML = `<div class='card' style="background:#f0f9ff;">
         <strong>📊 Resumo do Estoque</strong><br>
-        📦 Total: ${totalKg.toFixed(1)} kg | 🏷️ ${totalItens} lotes
+        📦 Total disponível: ${totalKg.toFixed(1)} kg | 🏷️ ${totalItens} lote(s)
+        ${totalKgEstorno > 0 ? `<br><span style="color:var(--amber);font-size:.72rem;">↩️ ${totalKgEstorno.toFixed(1)} kg aguardando reintegração (estornos/jejum)</span>` : ''}
     </div>` + estoque.map((i, idx) => {
         let safeId = String(i.id).replace(/['"]/g,'');
         return `<div class='card' style="position:relative;padding-right:60px;">
@@ -3190,8 +3163,10 @@ function addAdiantamento(){
     let adiant = loadData("adiantamentos"); 
     adiant.push({ idColab, valor, data: new Date().toLocaleDateString() }); 
     saveData("adiantamentos", adiant); 
-    showMessage("Vale registrado");
+    showMessage("💸 Vale registrado com sucesso!");
     renderColab();
+    document.getElementById("adIdColab").value = "";
+    document.getElementById("adValor").value = "";
 }
 
 // ==================== RELATÓRIOS ====================
@@ -3345,9 +3320,12 @@ function atualizarGraficoMortalidade() {
         taxaMortalidade = totalPeixes > 0 ? (totalMortos / totalPeixes) * 100 : 0;
         
     } else if (tipo === "tanque" && itemValue && itemValue.startsWith("tanque_")) {
-        let parts = itemValue.split("_");
-        let tanqueNum = parts[1];
-        let loteId = parseInt(parts[2]);
+        // FIX: split seguro — "tanque_T01_123" → ["tanque","T01","123"]
+        let firstUnderscore = itemValue.indexOf("_");
+        let rest = itemValue.substring(firstUnderscore + 1);
+        let lastUnderscore = rest.lastIndexOf("_");
+        let tanqueNum = rest.substring(0, lastUnderscore);
+        let loteId = parseInt(rest.substring(lastUnderscore + 1));
         dadosMortes = historicoMortalidade.filter(d => d.tanque === tanqueNum && d.loteId === loteId);
         titulo = `Mortalidade - Tanque ${tanqueNum} (Lote #${loteId})`;
         totalMortos = dadosMortes.reduce((sum, d) => sum + d.quantidade, 0);
@@ -3358,7 +3336,7 @@ function atualizarGraficoMortalidade() {
         taxaMortalidade = populacao > 0 ? (totalMortos / populacao) * 100 : 0;
         
     } else if (tipo === "lote" && itemValue && itemValue.startsWith("lote_")) {
-        let loteId = parseInt(itemValue.split("_")[1]);
+        let loteId = parseInt(itemValue.replace("lote_",""));
         dadosMortes = historicoMortalidade.filter(d => d.loteId === loteId);
         titulo = `Mortalidade - Lote #${loteId}`;
         totalMortos = dadosMortes.reduce((sum, d) => sum + d.quantidade, 0);
@@ -3411,9 +3389,12 @@ function atualizarGraficoMortalidade() {
     document.getElementById("mortalidadeStats").innerHTML = statsHtml;
     
     // Renderizar gráfico
-    let ctx = document.getElementById('mortalidadeChart').getContext('2d');
+    let canvasMort = document.getElementById('mortalidadeChart');
+    if (!canvasMort) return;
+    let ctx = canvasMort.getContext('2d');
     if (window.mortalidadeChartInstance) {
         window.mortalidadeChartInstance.destroy();
+        window.mortalidadeChartInstance = null;
     }
     
     // Criar datasets
@@ -3738,7 +3719,7 @@ function registrarMortalidadeComData() {
     // Registrar no lote
     tanque.mortalidade = (tanque.mortalidade || 0) + mortos;
     tanque.qtdPeixes -= mortos;
-    lote.qtdTotal -= mortos;
+    lote.qtdTotal = Math.max(0, (lote.qtdTotal || 0) - mortos);
     
     // Registrar no histórico com data
     let historico = loadData("historicoMortalidade") || [];
@@ -3869,7 +3850,7 @@ function atualizarCurva() {
         
     } else {
         // Por Lote - soma todos os tanques
-        let loteId = parseInt(itemValue.split("_")[1]);
+        let loteId = parseInt(itemValue.replace("lote_",""));
         let lote = lotes.find(l => l.id === loteId);
         
         if (lote) {
@@ -3944,9 +3925,12 @@ function atualizarCurva() {
     }
     
     // Renderizar gráfico
-    let ctx = document.getElementById('curvaChart').getContext('2d');
+    let canvasCurva = document.getElementById('curvaChart');
+    if (!canvasCurva) return;
+    let ctx = canvasCurva.getContext('2d');
     if (window.curvaChartInstance) {
         window.curvaChartInstance.destroy();
+        window.curvaChartInstance = null;
     }
     
     window.curvaChartInstance = new Chart(ctx, {
@@ -4425,9 +4409,9 @@ function atualizarPreviewClassificacao() {
         if (info) totalPeixes += info.qtdPeixes;
     });
     if (totalPeixes === 0) { div.innerHTML = ""; return; }
-    let classesBlocos = classesClassificacao.map(cl => {
+    let classesBlocos = classesClassificacao.map((cl, cidxPrev) => {
         let tanquesOk = cl.tanquesDestino.filter(td => td.num).length;
-        return `<span style="background:${['#fef9c3','#fff7ed','#f0fdf4','#eff6ff'][classesClassificacao.indexOf(cl)]||'#f8fafc'};padding:3px 9px;border-radius:12px;font-size:.72rem;font-weight:700;">${cl.emoji}${cl.label} (${cl.pesoMin}g–${cl.pesoMax>=99999?'∞':cl.pesoMax+'g'}, ${tanquesOk} tanque${tanquesOk!==1?'s':''})</span>`;
+        return `<span style="background:${['#fef9c3','#fff7ed','#f0fdf4','#eff6ff'][cidxPrev]||'#f8fafc'};padding:3px 9px;border-radius:12px;font-size:.72rem;font-weight:700;">${cl.emoji}${cl.label} (${cl.pesoMin}g–${cl.pesoMax>=99999?'∞':cl.pesoMax+'g'}, ${tanquesOk} tanque${tanquesOk!==1?'s':''})</span>`;
     }).join(' ');
     div.innerHTML = `<div style="line-height:1.8;">🐟 <strong>${totalPeixes}</strong> peixes serão distribuídos em até ${classesClassificacao.length} classes:<br>${classesBlocos}</div>`;
 }
@@ -4551,13 +4535,7 @@ function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, total
     [info1, info2].filter(Boolean).forEach(info => {
         let tObj = loteOrigem.tanques.find(t => t.num === info.tanque.num);
         if (!tObj) return;
-        // Quantos peixes deste tanque foram alocados
-        let alocadosDeste = alocacoes.filter(a => {
-            // alocações podem vir de t1 ou t2; mas como alocamos por classe, precisamos inferir
-            // Simplificação: tudo alocado vem da origem; se há 2 origens ambas são esvaziadas
-            return true;
-        }).reduce((s, a) => s, 0);
-        // Zerar (todos foram classificados)
+        // Zerar tanque de origem (todos os peixes foram classificados/realocados)
         tObj.qtdPeixes = 0;
         tObj.consumoRacao = 0;
         tObj.ultimaBiomassa = 0;
@@ -4987,7 +4965,7 @@ function concluirDiaAlimentacao() {
     
     if (tanquesProcessados === 0) {
         showMessage("❌ Nenhum consumo registrado hoje para finalizar.", true);
-        return;
+        return; // sai do callback do confirm
     }
     
     // Registrar no histórico de dias
@@ -5064,7 +5042,17 @@ function verificarTodosTanquesConcluidos() {
         }
     }
     
-    if (todosConcluidos && tanquesPendentes.length === 0) {
+    // Só mostrar "todos concluídos" se houve ao menos 1 trato realizado hoje
+    let algumTratadoHoje = false;
+    outer: for (let lote of loadData("lotes")) {
+        for (let tanque of lote.tanques) {
+            if (tanque.qtdPeixes > 0) {
+                let tr = tLoad(tanque.num);
+                if (tr.some(t => t.tratado)) { algumTratadoHoje = true; break outer; }
+            }
+        }
+    }
+    if (todosConcluidos && tanquesPendentes.length === 0 && algumTratadoHoje) {
         showConfirm({
             title: '🎉 Todos os Tanques Concluídos!',
             msg: 'TODOS OS TANQUES concluíram os tratos do dia!\n\nDeseja finalizar o dia de alimentação e preparar para amanhã?',
@@ -5082,7 +5070,7 @@ function registrarAlimentacaoComConclusao() {
     let kgRacao = parseFloat(document.getElementById("alimKg").value);
     
     if (!tanqueNum || isNaN(kgRacao) || kgRacao <= 0) {
-        showMessage("Tanque e kg válidos", true);
+        showMessage("❌ Preencha o tanque e informe uma quantidade válida (kg > 0)", true);
         return;
     }
     
@@ -5311,5 +5299,23 @@ window.atualizarGraficoMortalidade = atualizarGraficoMortalidade;
 window.registrarMortalidadeComData = registrarMortalidadeComData;
 init();
 </script>
+<datalist id="pelletSuggestions">
+  <option value="pó">
+  <option value="0.8-1mm">
+  <option value="1.3-1.5mm">
+  <option value="1.8-2.3mm">
+  <option value="2-3mm">
+  <option value="4-6mm">
+  <option value="6-8mm">
+</datalist>
+<datalist id="pelletSuggestionsCompra">
+  <option value="pó">
+  <option value="0.8-1mm">
+  <option value="1.3-1.5mm">
+  <option value="1.8-2.3mm">
+  <option value="2-3mm">
+  <option value="4-6mm">
+  <option value="6-8mm">
+</datalist>
 </body>
 </html>
