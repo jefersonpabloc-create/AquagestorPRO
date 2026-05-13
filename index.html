@@ -4826,88 +4826,90 @@ function _valorMedioKgEstoque() {
 // ══════════════════════════════════════════════════════════════
 function reconstruirFasesConsumo(tanque, lote) {
     // Retorna array de { tipoIdeal, kg, custo, legado:true }
+    // Estratégia: simular o crescimento do peixe desde o peso inicial
+    // até o peso atual, acumulando ração consumida por faixa de pellet.
+    // Usa GPD real do modelo (obterGPD) para calcular dias em cada faixa.
+
     let kgTotal = tanque.consumoRacao || 0;
     if (kgTotal <= 0) return [];
 
     let vFallback = _valorMedioKgEstoque();
 
-    // Coletar biometrias deste tanque (ou do lote), ordenadas cronologicamente
-    let bios = [];
-    if (lote.biometrias && lote.biometrias.length > 0) {
-        // Preferir biometrias específicas deste tanque; cair para biometrias gerais
-        let biosTanque = lote.biometrias.filter(b => b.tanque === tanque.num);
-        bios = biosTanque.length > 0 ? biosTanque : lote.biometrias;
-        bios = [...bios].sort((a, b) => new Date(a.data) - new Date(b.data));
+    // Pesos limites para a distribuição
+    let pesoInicial = lote.pesoMedioAlevino || 1; // gramas
+    // Peso atual: priorizar ultimoPesoMedio do tanque, depois última biometria, depois peso alevino
+    let pesoAtual = tanque.ultimoPesoMedio || 0;
+    if (!pesoAtual) {
+        let bios = (lote.biometrias || []).filter(b => b.tanque === tanque.num);
+        if (!bios.length) bios = lote.biometrias || [];
+        if (bios.length) pesoAtual = bios[bios.length - 1].pesoMedio;
+    }
+    if (!pesoAtual || pesoAtual <= pesoInicial) pesoAtual = pesoInicial;
+
+    // Faixas de pellet em gramas (mesmo mapeamento de tipoRacaoPorPeso)
+    const FAIXAS = [
+        { min: 0,   max:  1,    tipo: '🍼 Pó (55% PB)' },
+        { min: 1,   max:  2,    tipo: '⚫ 0.8–1mm (45% PB)' },
+        { min: 2,   max:  6,    tipo: '🟤 1.3–1.5mm (45% PB)' },
+        { min: 6,   max:  15,   tipo: '🟠 1.8–2.3mm (40% PB)' },
+        { min: 15,  max:  50,   tipo: '🟡 2–3mm (36% PB)' },
+        { min: 50,  max:  250,  tipo: '🟢 4–6mm (32% PB)' },
+        { min: 250, max:  9999, tipo: '🔵 6–8mm (32% PB)' }
+    ];
+
+    // Simular crescimento dia a dia acumulando "consumo virtual" por faixa
+    // Isso nos dá a PROPORÇÃO de tempo/consumo em cada faixa.
+    // Usamos GPD do modelo para avançar o peso a cada passo.
+    let consumoVirtualPorTipo = {};
+    let consumoVirtualTotal = 0;
+    let pesoSim = pesoInicial;
+    const CA_PADRAO = 1.4;
+    const qtd = tanque.qtdPeixes || 1000;
+    const MAX_ITER = 2000; // segurança contra loop infinito
+    let iter = 0;
+
+    while (pesoSim < pesoAtual && iter < MAX_ITER) {
+        iter++;
+        let gpd = obterGPD ? obterGPD(pesoSim) : Math.max(0.5, pesoSim * 0.03);
+        if (gpd <= 0) gpd = 0.5;
+
+        // Determinar o tipo de ração atual
+        let faixaAtual = FAIXAS.find(f => pesoSim >= f.min && pesoSim < f.max) || FAIXAS[FAIXAS.length - 1];
+        let tipoAtual = faixaAtual.tipo;
+
+        // Quantos dias ficaria nesta faixa antes de sair?
+        let pesoMaxFaixa = Math.min(faixaAtual.max, pesoAtual);
+        let ganhoPrecisa = pesoMaxFaixa - pesoSim;
+        let diasNaFaixa = Math.ceil(ganhoPrecisa / gpd);
+        diasNaFaixa = Math.max(1, Math.min(diasNaFaixa, 365));
+
+        // Consumo estimado neste trecho
+        let biomassaKg = (pesoSim / 1000) * qtd;
+        let racaoDia = biomassaKg * CA_PADRAO;
+        let consumoTrecho = racaoDia * diasNaFaixa;
+
+        if (!consumoVirtualPorTipo[tipoAtual]) consumoVirtualPorTipo[tipoAtual] = 0;
+        consumoVirtualPorTipo[tipoAtual] += consumoTrecho;
+        consumoVirtualTotal += consumoTrecho;
+
+        pesoSim = Math.min(pesoMaxFaixa, pesoAtual);
+        if (pesoSim >= pesoAtual) break;
     }
 
-    // Se não houver nenhuma biometria, um único "bloco" com peso alevino → peso atual
-    if (bios.length === 0) {
-        let pesoInicial = lote.pesoMedioAlevino || 5;
-        let pesoFinal   = tanque.ultimoPesoMedio || pesoInicial;
-        // Distribuir linearmente entre os tipos cruzados
-        return _distribuirPorFaixas(pesoInicial, pesoFinal, kgTotal, vFallback, tanque.ultimaBiometriaData || null);
+    // Se não houve progressão (peso inicial = peso atual), usar faixa pontual
+    if (consumoVirtualTotal === 0 || Object.keys(consumoVirtualPorTipo).length === 0) {
+        let faixaAtual = FAIXAS.find(f => pesoAtual >= f.min && pesoAtual < f.max) || FAIXAS[FAIXAS.length-1];
+        return [{ tipoIdeal: faixaAtual.tipo, kg: kgTotal, custo: kgTotal * vFallback, legado: true }];
     }
 
-    // Construir lista de "checkpoints": peso no início + cada biometria
-    let checkpoints = [];
-    let dataEstocagem = lote.dataEstocagem ? new Date(lote.dataEstocagem) : null;
-    checkpoints.push({ peso: lote.pesoMedioAlevino || 5, data: dataEstocagem });
-    for (let b of bios) {
-        checkpoints.push({ peso: b.pesoMedio, data: new Date(b.data) });
-    }
-
-    // Calcular duração de cada segmento e o consumo estimado por GPD/CA
-    let segmentos = [];
-    let totalDias = 0;
-    let consumoEstimadoTotal = 0;
-    let CA_PADRAO = 1.4;
-
-    for (let i = 0; i < checkpoints.length - 1; i++) {
-        let p0 = checkpoints[i].peso;
-        let p1 = checkpoints[i+1].peso;
-        let d0 = checkpoints[i].data;
-        let d1 = checkpoints[i+1].data;
-        let dias = (d0 && d1) ? Math.max(1, Math.round((d1 - d0) / 86400000)) : 30;
-        let pesoMedSeg = (p0 + p1) / 2;
-        // GPD médio no segmento
-        let gpd = obterGPD ? obterGPD(pesoMedSeg) : (pesoMedSeg < 50 ? 1.5 : pesoMedSeg < 250 ? 3 : 5);
-        let ganhoBiomassaKgDia = (tanque.qtdPeixes || 1000) * gpd / 1000;
-        let racaoDia = ganhoBiomassaKgDia * CA_PADRAO;
-        let consumoSeg = racaoDia * dias;
-        totalDias += dias;
-        consumoEstimadoTotal += consumoSeg;
-        segmentos.push({ p0, p1, dias, pesoMedSeg, consumoEstimado: consumoSeg });
-    }
-
-    // Adicionar segmento final (última biometria → hoje)
-    if (checkpoints.length >= 1) {
-        let pUlt = checkpoints[checkpoints.length-1].peso;
-        let dUlt = checkpoints[checkpoints.length-1].data;
-        let dHoje = new Date();
-        let dias = dUlt ? Math.max(1, Math.round((dHoje - dUlt) / 86400000)) : 30;
-        let gpd = obterGPD ? obterGPD(pUlt) : 3;
-        let racaoDia = (tanque.qtdPeixes || 1000) * gpd / 1000 * CA_PADRAO;
-        let consumoSeg = racaoDia * dias;
-        consumoEstimadoTotal += consumoSeg;
-        segmentos.push({ p0: pUlt, p1: pUlt, dias, pesoMedSeg: pUlt, consumoEstimado: consumoSeg });
-    }
-
-    // Distribuir kgTotal proporcionalmente entre segmentos
-    // e agrupar por tipo de ração
-    let porTipo = {};
-    for (let seg of segmentos) {
-        let proporcao = consumoEstimadoTotal > 0 ? seg.consumoEstimado / consumoEstimadoTotal : 1 / segmentos.length;
-        let kgSeg = kgTotal * proporcao;
-        // Determinar tipo para a faixa de peso deste segmento
-        let tipos = _distribuirPorFaixas(seg.p0, seg.p1, kgSeg, vFallback, null);
-        for (let t of tipos) {
-            if (!porTipo[t.tipoIdeal]) porTipo[t.tipoIdeal] = { kg: 0, custo: 0, legado: true };
-            porTipo[t.tipoIdeal].kg    += t.kg;
-            porTipo[t.tipoIdeal].custo += t.custo;
-        }
-    }
-
-    return Object.entries(porTipo).map(([tipoIdeal, d]) => ({ tipoIdeal, kg: d.kg, custo: d.custo, legado: true }));
+    // Distribuir kgTotal real proporcionalmente ao consumo virtual por tipo
+    return Object.entries(consumoVirtualPorTipo)
+        .filter(([, v]) => v > 0)
+        .map(([tipoIdeal, consumoVirt]) => {
+            let proporcao = consumoVirt / consumoVirtualTotal;
+            let kg = kgTotal * proporcao;
+            return { tipoIdeal, kg, custo: kg * vFallback, legado: true };
+        });
 }
 
 // Dado um intervalo de pesos p0→p1, distribuir kgTotal pelos tipos de ração cruzados
