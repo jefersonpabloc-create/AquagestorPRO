@@ -1050,7 +1050,7 @@ function renderGerenciadorPisciculturas() {
             nTanques = (JSON.parse(localStorage.getItem(pref + 'tanques')) || []).length;
             nLotes = (JSON.parse(localStorage.getItem(pref + 'lotes')) || []).length;
         } catch(e) {}
-        return `<div class="pisc-item ${isAtiva?'active':''}" onclick="${isAtiva?'':` trocarParaPiscicultura('${p.id}')`}">
+        return `<div class="pisc-item ${isAtiva?'active':''}" ${!isAtiva ? `onclick="trocarParaPiscicultura('${p.id}')"` : ''}>
             <div>
                 <div class="pisc-item-name">🏭 ${p.nome} ${isAtiva?'<span class="pisc-badge">ATIVA</span>':''}</div>
                 <div class="pisc-item-sub">📅 ${p.criadaEm} · ${nTanques} tanques · ${nLotes} lotes</div>
@@ -1369,8 +1369,8 @@ function addLote() {
     for (let t of tanquesSel) { if (isTanqueOcupado(t)) { showMessage(`❌ Tanque ${t} já está ocupado`, true); return; } }
     
     let qtdPorTanque = Math.floor(qtd / tanquesSel.length);
-    let biomassaInicial = isNaN(pesoMedioAlevino) ? 0 : (pesoMedioAlevino / 1000) * qtd;
-    let tipoRacao = tipoRacaoPorPeso(isNaN(pesoMedioAlevino) ? 5 : pesoMedioAlevino);
+    let biomassaInicial = (!isNaN(pesoMedioAlevino) && pesoMedioAlevino > 0) ? (pesoMedioAlevino / 1000) * qtd : 0;
+    let tipoRacao = tipoRacaoPorPeso(!isNaN(pesoMedioAlevino) ? pesoMedioAlevino : 5);
     
     // BUG FIX: usar ID compacto de 4 dígitos baseado em sequência
     let lotes = loadData("lotes");
@@ -1424,7 +1424,16 @@ function atualizarTipoRacaoLote() {
 function toggleTanqueHist(cardId) {
     let body = document.getElementById('thb_' + cardId);
     if (!body) return;
-    body.classList.toggle('open');
+    let isOpen = body.classList.toggle('open');
+    // Rotate the arrow indicator in the header
+    let header = body.previousElementSibling;
+    if (header) {
+        let arrow = header.querySelector('span[style*="▼"]') || header.querySelector('span:last-child');
+        if (arrow && arrow.textContent.trim() === '▼') {
+            arrow.style.transform = isOpen ? 'rotate(180deg)' : '';
+            arrow.style.transition = 'transform .2s';
+        }
+    }
 }
 
 function toggleTanqueTimeline(cardId) {
@@ -2187,8 +2196,7 @@ function extrairDiametroPellet(tipoRacao) {
         .trim()
         .toLowerCase();
     // Caso especial: "pó" / "po"
-    if (texto.includes('p') && texto.includes('\xf3')) return "po";
-    if (/\bpo\b/.test(texto) || texto.includes('p\xf3')) return "po";
+    if (/\bp[oó]\b/i.test(texto) || texto.includes('pó') || texto.includes('po')) return "po";
     // Padrão numérico: "4-6mm", "1.3-1.5mm", "0.8-1mm", "2-3mm"
     let match = texto.match(/([0-9]+[.,]?[0-9]*)\s*-\s*([0-9]+[.,]?[0-9]*)\s*mm/i);
     if (match) {
@@ -2341,6 +2349,7 @@ function preencherTodosTratos(tanqueNum) {
     }
     let kgPorTrato = racaoDiaria / tratos.length;
     let estoque = loadData("estoqueRacao");
+    let estoqueSnapshot = estoque.map(i => ({...i}));
     let totalNecessario = tratos.filter(t => !t.tratado).length * kgPorTrato;
     let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
     if (totalEstoque < totalNecessario) { showMessage(`Estoque insuficiente! Necessário: ${totalNecessario.toFixed(1)}kg`, true); return; }
@@ -2405,7 +2414,7 @@ function fornecerUmTratoParaTodosTanques() {
     let tanquesProcessados = 0;
     let erros = [];
     if (horariosTratos.length === 0) {
-        showMessage("Configure os horários dos tratos primeiro! Clique em 'Calcular Horários dos Tratos'", true);
+        showMessage("⚙️ Configure os horários dos tratos primeiro! Vá em 'Config' → 'Calcular Horários'.", true);
         return;
     }
     let numTratos = horariosTratos.length;
@@ -2661,7 +2670,9 @@ function resetarDiaTodosTanques() {
                                 if (loteEncontrado) { let tanqueLote = loteEncontrado.tanques.find(t => t.num === tanque.num); if (tanqueLote) tanqueLote.consumoRacao = Math.max(0, (tanqueLote.consumoRacao || 0) - kgTanque); }
                             }
                         }
-                        tSave(tanque.num, horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 })));
+                        tSave(tanque.num, horariosTratos.length > 0
+                            ? horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }))
+                            : []);
                         tanquesResetados++;
                     }
                 }
@@ -2720,7 +2731,7 @@ function registrarAlimentacao() {
 
     let custoR = dets.reduce((s, d) => s + d.custoTotal, 0);
     showMessage(`✅ ${kgRacao.toFixed(2)}kg registrado para ${tanqueNum} | R$ ${custoR.toFixed(2)}`);
-    renderEstoqueRacao(); renderConsumoDiario(); renderLotes(); atualizarDashboard();
+    renderEstoqueRacao(); renderConsumoDiario(); renderLotes(); renderTratosTanques(); atualizarDashboard();
     document.getElementById("alimKg").value = "";
 }
 
@@ -2808,7 +2819,9 @@ function verificarENovoDia() {
         for (let lote of lotes) {
             for (let tanque of lote.tanques) {
                 if (tanque.qtdPeixes > 0) {
-                    let novosTratos = horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }));
+                    let novosTratos = horariosTratos.length > 0
+                        ? horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0 }))
+                        : [];
                     tSave(tanque.num, novosTratos);
                     tanquesResetados++;
                 }
@@ -2837,8 +2850,9 @@ function adicionarAmostra() {
     let peso = parseFloat(document.getElementById("amostraPeso").value);
     let qtde = parseInt(document.getElementById("amostraQtde").value);
     if (!tanqueNum || tanqueNum === "") { showMessage("❌ Selecione um tanque primeiro", true); return; }
-    if (isNaN(peso) || peso <= 0) { showMessage("❌ Informe o peso total da amostra (kg)", true); return; }
-    if (isNaN(qtde) || qtde <= 0) { showMessage("❌ Informe a quantidade de peixes na amostra", true); return; }
+    if (isNaN(peso) || peso <= 0) { showMessage("❌ Informe o peso total da amostra em kg (ex: 1.85)", true); return; }
+    if (isNaN(qtde) || qtde <= 0) { showMessage("❌ Informe a quantidade de peixes na amostra (ex: 10)", true); return; }
+    if (peso / qtde > 5) { showMessage("⚠️ Atenção: peso médio por peixe parece muito alto. Certifique-se que informou o peso em kg.", false); }
     amostrasTemp.push({ peso: peso, qtde: qtde });
     renderAmostras();
     document.getElementById("amostraPeso").value = "";
@@ -2850,7 +2864,7 @@ function renderAmostras() {
     let div = document.getElementById("listaAmostras");
     if (!div) return;
     if (amostrasTemp.length === 0) {
-        div.innerHTML = "<div class='card' style='text-align:center; color:#6b7280;'>Nenhuma amostra adicionada</div>";
+        div.innerHTML = "<div class='card' style='text-align:center; color:#6b7280; border:none; box-shadow:none;'>Nenhuma amostra adicionada</div>";
         return;
     }
     let totalPeixes = amostrasTemp.reduce((sum, a) => sum + a.qtde, 0);
@@ -2878,8 +2892,9 @@ function removerAmostra(index) {
     showMessage("Amostra removida");
 }
 
-function limparAmostras() {
-    if (amostrasTemp.length === 0) return;
+function limparAmostras(silencioso) {
+    if (amostrasTemp.length === 0) { if (!silencioso) renderAmostras(); return; }
+    if (silencioso) { amostrasTemp = []; renderAmostras(); return; }
     showConfirm({
         title: '🗑️ Limpar Amostras',
         msg: 'Deseja limpar todas as amostras adicionadas?',
@@ -2987,6 +3002,7 @@ function calcularMediaAmostras() {
     // Limpar amostras diretamente (sem confirm, pois acabamos de registrar)
     amostrasTemp = [];
     renderAmostras();
+    limparAmostras(true);
     atualizarSelectTanques("bioTanque", "ocupados");
     carregarInfoTanqueBiometria();
 }
@@ -3405,7 +3421,7 @@ function atualizarGraficoMortalidade() {
     
     // Filtrar por tipo
     if (tipo === "geral") {
-        dadosMortes = historicoMortalidade;
+        dadosMortes = [...historicoMortalidade];
         titulo = "Mortalidade Geral - Todos os Tanques";
         totalMortos = dadosMortes.reduce((sum, d) => sum + d.quantidade, 0);
         
@@ -3569,35 +3585,23 @@ function atualizarGraficoMortalidade() {
             },
             scales: {
                 y: {
-                    title: {
-                        display: true,
-                        text: 'Mortalidade (peixes)'
-                    },
+                    title: { display: true, text: 'Mortalidade (peixes)' },
                     beginAtZero: true,
                     position: 'left'
                 },
                 y1: {
-                    title: {
-                        display: true,
-                        text: 'Temperatura (°C)'
-                    },
+                    title: { display: true, text: 'Temperatura (°C)' },
                     position: 'right',
                     beginAtZero: false,
-                    grid: {
-                        drawOnChartArea: false
-                    }
+                    grid: { drawOnChartArea: false },
+                    display: !!(dadosClima.temperaturas && dadosClima.temperaturas.length > 0)
                 },
                 y2: {
-                    title: {
-                        display: true,
-                        text: 'Chuva (mm)'
-                    },
+                    title: { display: true, text: 'Chuva (mm)' },
                     position: 'right',
                     beginAtZero: true,
-                    grid: {
-                        drawOnChartArea: false
-                    },
-                    display: dadosClima.chuvas && dadosClima.chuvas.length > 0
+                    grid: { drawOnChartArea: false },
+                    display: !!(dadosClima.chuvas && dadosClima.chuvas.length > 0)
                 }
             }
         }
@@ -3830,8 +3834,19 @@ function registrarMortalidadeComData() {
     showMessage(`${mortos} peixes mortos registrados em ${new Date().toLocaleDateString()}`);
     renderTanques();
     renderLotes();
+    renderConsumoDiario();
+    atualizarDashboard();
+    atualizarSelectTanques("mortTanque", "ocupados");
+    document.getElementById("mortQtde").value = "";
+    let motivoEl3 = document.getElementById("motivoMorte");
+    if (motivoEl3) motivoEl3.value = "";
 }
-function relEstoqueCompleto() { renderEstoqueRacao(); document.getElementById("resultadoRel").innerHTML = document.getElementById("estoqueRacao").innerHTML; }
+function relEstoqueCompleto() { 
+    renderEstoqueRacao(); 
+    let estoqueDiv = document.getElementById("estoqueRacao");
+    let resultDiv = document.getElementById("resultadoRel");
+    if (estoqueDiv && resultDiv) resultDiv.innerHTML = estoqueDiv.innerHTML;
+}
 function relFinanceiroFolha() { let cols = loadData("colab"); let adiant = loadData("adiantamentos")||[]; let totalFolha = cols.reduce((s,c) => s + (c.tipo==='mensal'?c.valorBase:c.valorBase*22),0); let totalAdiant = adiant.reduce((s,a)=>s+a.valor,0); document.getElementById("resultadoRel").innerHTML = `<div class='card'><strong>👥 Folha</strong><br>💰 Folha: R$ ${totalFolha.toFixed(2)}<br>💸 Vales: R$ ${totalAdiant.toFixed(2)}</div>`; }
 function relCurvaCrescimento() {
     let lotes = loadData("lotes");
@@ -3908,10 +3923,12 @@ function atualizarCurva() {
     let cor = "#0a7ea4";
     
     if (tipo === "tanque") {
-        // Formato: tanque_T01_123456
-        let parts = itemValue.split("_");
-        let tanqueNum = parts[1];
-        let loteId = parseInt(parts[2]);
+        // Formato: tanque_T01_123456 — split seguro para nomes com underscore
+        let firstUnderscore = itemValue.indexOf("_");
+        let rest = itemValue.substring(firstUnderscore + 1); // "T01_123456"
+        let lastUnderscore = rest.lastIndexOf("_");
+        let tanqueNum = rest.substring(0, lastUnderscore); // "T01"
+        let loteId = parseInt(rest.substring(lastUnderscore + 1)); // 123456
         let lote = lotes.find(l => l.id === loteId);
         
         if (lote) {
@@ -4762,9 +4779,9 @@ function nav(sectionId) {
     if(sectionId === "biometria") { 
         atualizarSelectTanques("bioTanque", "ocupados"); 
         renderBiometrias(); 
-        limparAmostras();
+        limparAmostras(true);
         let bioSelect = document.getElementById("bioTanque"); 
-        bioSelect.onchange = function() { carregarInfoTanqueBiometria(); limparAmostras(); }; 
+        bioSelect.onchange = function() { carregarInfoTanqueBiometria(); limparAmostras(true); }; 
         carregarInfoTanqueBiometria(); 
     }
     if(sectionId === "racao") { renderModelosRacao(); renderEstoqueRacao(); }
@@ -5212,12 +5229,9 @@ function concluirDiaAlimentacao() {
     for (let lote of lotes) {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
-                let novosTratos = horariosTratos.map(ht => ({
-                    hora: ht.hora,
-                    tratado: false,
-                    kgFornecidos: 0,
-                    kgRecomendado: 0
-                }));
+                let novosTratos = horariosTratos.length > 0
+                    ? horariosTratos.map(ht => ({ hora: ht.hora, tratado: false, kgFornecidos: 0, kgRecomendado: 0 }))
+                    : [];
                 tSave(tanque.num, novosTratos);
             }
         }
@@ -5509,16 +5523,18 @@ window.executarClassificacaoNova = executarClassificacaoNova;
 window.adicionarAmostra = adicionarAmostra;
 window.calcularMediaAmostras = calcularMediaAmostras;
 window.limparAmostras = limparAmostras;
+window.limparAmostras = limparAmostras;
 window.relCustosDetalhados = relCustosDetalhados;
 window.calcularCustoPorKGLote = calcularCustoPorKGLote;
 window.calcularCALote = calcularCALote;
 window.concluirDiaAlimentacao = concluirDiaAlimentacao;
 window.verificarTodosTanquesConcluidos = verificarTodosTanquesConcluidos;
 window.registrarAlimentacaoComConclusao = registrarAlimentacaoComConclusao;
-window.relCurvaCrescimento = relCurvaCrescimento;
 window.atualizarCurva = atualizarCurva;
 window.removerAmostra = removerAmostra;
-window.toggleTank = toggleTank;
+window.atualizarTipoRacaoLote = atualizarTipoRacaoLote;
+window.toggleTanqueHist = toggleTanqueHist;
+window.toggleTanqueTimeline = toggleTanqueTimeline;
 window.toggleRelGroup = toggleRelGroup;
 window.toggleLoteCard = toggleLoteCard;
 window.toggleFormTanque = toggleFormTanque;
