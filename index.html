@@ -1461,30 +1461,34 @@ function renderTanqueHistCard(t, lote) {
             totalKg += kg;
             totalCusto += custoItem;
         }
-        // Verificar se há kg residual legado (consumoRacao > soma detalhada)
+        // Residual legado (consumoRacao > soma detalhada) — RECONSTITUIR por fases
         let kgResidual = (t.consumoRacao || 0) - totalKg;
         if (kgResidual > 0.1) {
             temDadosLegados = true;
-            let tipoFase = tipoRacaoPorPeso(pesoMedio);
-            let vFallback = _valorMedioKgEstoque();
-            let chave = tipoFase;
-            if (!porTipo[chave]) porTipo[chave] = { kg: 0, custo: 0, valorKgPonderado: 0, marcas: new Set(), legado: true };
-            porTipo[chave].kg += kgResidual;
-            porTipo[chave].custo += kgResidual * vFallback;
-            porTipo[chave].valorKgPonderado += vFallback * kgResidual;
-            porTipo[chave].legado = true;
-            totalKg += kgResidual;
-            totalCusto += kgResidual * vFallback;
+            let tanqueResidual2 = { ...t, consumoRacao: kgResidual };
+            let fasesRes2 = reconstruirFasesConsumo(tanqueResidual2, lote);
+            for (let fase of fasesRes2) {
+                if (!porTipo[fase.tipoIdeal]) porTipo[fase.tipoIdeal] = { kg: 0, custo: 0, valorKgPonderado: 0, marcas: new Set(), legado: true };
+                porTipo[fase.tipoIdeal].kg             += fase.kg;
+                porTipo[fase.tipoIdeal].custo          += fase.custo;
+                porTipo[fase.tipoIdeal].valorKgPonderado += fase.custo;
+                porTipo[fase.tipoIdeal].legado          = true;
+                totalKg    += fase.kg;
+                totalCusto += fase.custo;
+            }
         }
-    // Caso 2: só consumoRacao (dados legados totalmente sem detalhe)
+    // Caso 2: só consumoRacao (legado) — RECONSTITUIR por fases usando biometrias
     } else if ((t.consumoRacao || 0) > 0) {
         temDadosLegados = true;
-        let kgLegado = t.consumoRacao;
-        let tipoFase = tipoRacaoPorPeso(pesoMedio);
-        let vFallback = _valorMedioKgEstoque();
-        porTipo[tipoFase] = { kg: kgLegado, custo: kgLegado * vFallback, valorKgPonderado: vFallback * kgLegado, marcas: new Set(), legado: true };
-        totalKg = kgLegado;
-        totalCusto = kgLegado * vFallback;
+        let fases = reconstruirFasesConsumo(t, lote);
+        for (let fase of fases) {
+            if (!porTipo[fase.tipoIdeal]) porTipo[fase.tipoIdeal] = { kg: 0, custo: 0, valorKgPonderado: 0, marcas: new Set(), legado: true };
+            porTipo[fase.tipoIdeal].kg             += fase.kg;
+            porTipo[fase.tipoIdeal].custo          += fase.custo;
+            porTipo[fase.tipoIdeal].valorKgPonderado += fase.custo;
+            totalKg    += fase.kg;
+            totalCusto += fase.custo;
+        }
     }
 
     let legadoAviso = temDadosLegados
@@ -1493,32 +1497,64 @@ function renderTanqueHistCard(t, lote) {
            </div>`
         : '';
 
-    let tiposHTML = Object.entries(porTipo).length > 0
-        ? `<div class="racao-section-title">📊 Consumo por fase de ração (${Object.entries(porTipo).length} tipo${Object.entries(porTipo).length>1?'s':''})</div>
-           ${Object.entries(porTipo).map(([tipo, d]) => {
-               let pct = totalKg > 0 ? ((d.kg / totalKg) * 100).toFixed(0) : 0;
+    // Ordenar fases pela progressão lógica de engorda
+    const _ORDEM_FASES_TANQ = ["Pó","0.8","1.3","1.8","2–3","2-3","4–6","4-6","6–8","6-8"];
+    function _ordFaseTanq(tipo) { for(let i=0;i<_ORDEM_FASES_TANQ.length;i++) if(tipo.includes(_ORDEM_FASES_TANQ[i])) return i; return 99; }
+    const _CORES_FASE_TANQ = ['#7c3aed','#2563eb','#0891b2','#0f766e','#15803d','#b45309','#c2410c'];
+    let _fasesSortedTanq = Object.entries(porTipo).sort((a,b)=>_ordFaseTanq(a[0])-_ordFaseTanq(b[0]));
+
+    let tiposHTML = _fasesSortedTanq.length > 0
+        ? `<!-- Barra segmentada proporcional -->
+           <div style="display:flex;height:7px;margin:8px 14px 2px;border-radius:8px;overflow:hidden;gap:1px;">
+               ${_fasesSortedTanq.map(([,d],i) => {
+                   let pct = totalKg > 0 ? (d.kg/totalKg*100).toFixed(1) : 0;
+                   return `<div style="width:${pct}%;background:${_CORES_FASE_TANQ[Math.min(i,_CORES_FASE_TANQ.length-1)]};min-width:${pct>0?'3px':'0'};" title="${pct}%"></div>`;
+               }).join('')}
+           </div>
+           <div style="padding:6px 14px 2px;font-size:.68rem;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);display:flex;justify-content:space-between;">
+               <span>📊 Rastreabilidade por fase de ração (${_fasesSortedTanq.length} fase${_fasesSortedTanq.length>1?'s':''})</span>
+               <span style="font-weight:600;">${totalKg.toFixed(1)} kg · R$ ${totalCusto.toFixed(2)}</span>
+           </div>
+           ${_fasesSortedTanq.map(([tipo, d], i) => {
+               let pct = totalKg > 0 ? ((d.kg / totalKg) * 100).toFixed(1) : 0;
                let vMedioKg = d.kg > 0 ? d.valorKgPonderado / d.kg : 0;
                let marcasArr = Array.from(d.marcas);
-               let custoFase = d.custo;
-               let legadoTag = d.legado ? `<span style="font-size:.6rem;background:var(--amber-l);color:var(--amber);padding:1px 6px;border-radius:8px;margin-left:4px;">estimado</span>` : '';
-               return `<div class="racao-tipo-row">
-                   <div class="racao-tipo-nome">${tipo}${legadoTag}
-                       <br><span style="font-size:.65rem;color:var(--text3);font-weight:500;">${pct}% do total${marcasArr.length ? ' · ' + marcasArr.join(', ') : ''}</span>
-                   </div>
-                   <div class="racao-tipo-vals">
-                       <div class="racao-tipo-val"><span>Consumido</span><strong>${d.kg.toFixed(2)} kg</strong></div>
-                       <div class="racao-tipo-val"><span>R$/kg fase</span><strong>R$ ${vMedioKg.toFixed(2)}</strong></div>
-                       <div class="racao-tipo-val"><span>Custo fase</span><strong class="green">R$ ${custoFase.toFixed(2)}</strong></div>
+               let cor = _CORES_FASE_TANQ[Math.min(i,_CORES_FASE_TANQ.length-1)];
+               let badge = d.legado
+                   ? `<span style="font-size:.57rem;background:#fef3c7;color:#b45309;padding:1px 5px;border-radius:6px;margin-left:4px;font-weight:700;">estimado</span>`
+                   : `<span style="font-size:.57rem;background:#dcfce7;color:#15803d;padding:1px 5px;border-radius:6px;margin-left:4px;font-weight:700;">✓ real</span>`;
+               return `<div style="display:grid;grid-template-columns:auto 1fr;gap:0;border-bottom:1px solid var(--surf3);">
+                   <!-- Indicador lateral colorido -->
+                   <div style="width:4px;background:${cor};border-radius:0;"></div>
+                   <div style="padding:8px 12px 7px 10px;">
+                       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+                           <div>
+                               <div style="font-size:.78rem;font-weight:800;color:var(--text);line-height:1.2;">${tipo}${badge}</div>
+                               ${marcasArr.length ? `<div style="font-size:.62rem;color:var(--text3);margin-top:1px;">🏷️ ${marcasArr.join(', ')}</div>` : ''}
+                               <!-- Mini barra proporcional -->
+                               <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+                                   <div style="width:70px;height:4px;background:var(--border);border-radius:4px;overflow:hidden;">
+                                       <div style="width:${pct}%;height:100%;background:${cor};"></div>
+                                   </div>
+                                   <span style="font-size:.6rem;color:var(--text3);font-weight:600;">${pct}%</span>
+                               </div>
+                           </div>
+                           <div style="text-align:right;flex-shrink:0;">
+                               <div style="font-size:.85rem;font-weight:800;color:var(--text);">${d.kg.toFixed(2)} kg</div>
+                               <div style="font-size:.7rem;color:var(--green);font-weight:700;">R$ ${d.custo.toFixed(2)}</div>
+                               <div style="font-size:.6rem;color:var(--text3);">R$ ${vMedioKg.toFixed(2)}/kg</div>
+                           </div>
+                       </div>
                    </div>
                </div>`;
            }).join('')}
            ${legadoAviso}
-           <div class="racao-tipo-row" style="background:var(--surf2);">
-               <div class="racao-tipo-nome" style="font-weight:800;color:var(--text);">📦 TOTAL GERAL</div>
-               <div class="racao-tipo-vals">
-                   <div class="racao-tipo-val"><span>Total kg</span><strong>${totalKg.toFixed(2)} kg</strong></div>
-                   <div class="racao-tipo-val"><span>R$/kg médio</span><strong>R$ ${totalKg > 0 ? (totalCusto/totalKg).toFixed(2) : '0.00'}</strong></div>
-                   <div class="racao-tipo-val"><span>Custo total</span><strong class="green" style="font-size:.9rem;">R$ ${totalCusto.toFixed(2)}</strong></div>
+           <!-- Totalizador -->
+           <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:var(--surf2);border-top:1.5px solid var(--border);">
+               <span style="font-size:.73rem;font-weight:800;color:var(--text);">📦 TOTAL ACUMULADO</span>
+               <div style="text-align:right;">
+                   <div style="font-size:.82rem;font-weight:800;color:var(--text);">${totalKg.toFixed(2)} kg</div>
+                   <div style="font-size:.7rem;color:var(--green);font-weight:700;">R$ ${totalCusto.toFixed(2)} · R$ ${totalKg>0?(totalCusto/totalKg).toFixed(2):'0.00'}/kg</div>
                </div>
            </div>`
         : `<div style="padding:10px 14px;font-size:.75rem;color:var(--text3);">Nenhum consumo registrado ainda.</div>`;
@@ -1610,20 +1646,8 @@ function renderLotes() {
         let biomassaTotal = calcularBiomassaTotalLote(l);
         let ca = calcularCALote(l);
         let custos = calcularCustoPorKGLote(l);
-        // FIX: usar o maior ultimoPesoMedio entre os tanques ativos do lote
-        // (cada tanque pode ter biometria independente — o maior peso define a fase do lote)
-        let _tanquesAtivosLote = (l.tanques || []).filter(t => t.qtdPeixes > 0);
-        let pesoMedioAtual = 0;
-        if (_tanquesAtivosLote.length > 0) {
-            pesoMedioAtual = Math.max(..._tanquesAtivosLote.map(t => {
-                if (t.ultimoPesoMedio) return t.ultimoPesoMedio;
-                let _bSpec = (l.biometrias||[]).slice().reverse().find(b=>b.tanque===t.num);
-                return _bSpec ? _bSpec.pesoMedio : (l.pesoMedioAlevino || 0);
-            }));
-        } else {
-            let ultimaBiometria = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length-1] : null;
-            pesoMedioAtual = ultimaBiometria ? ultimaBiometria.pesoMedio : (l.pesoMedioAlevino || 0);
-        }
+        let ultimaBiometria = l.biometrias && l.biometrias.length ? l.biometrias[l.biometrias.length - 1] : null;
+        let pesoMedioAtual = ultimaBiometria ? ultimaBiometria.pesoMedio : (l.pesoMedioAlevino || 0);
         
         let custoRacaoDetalhado = calcularCustoRacaoLoteReal(l);
 
@@ -1632,34 +1656,67 @@ function renderLotes() {
         let totalKgRacao = tiposRacaoEntries.reduce((s,[,d]) => s + d.kg, 0);
         let blocoRacaoHTML = "";
         if (tiposRacaoEntries.length > 0) {
-            let rows = tiposRacaoEntries.map(([tipo, d]) => {
-                let pct = totalKgRacao > 0 ? ((d.kg / totalKgRacao) * 100).toFixed(0) : 0;
+            // Ordenar fases pela progressão lógica de engorda
+            const _ORDEM_LR = ["Pó","0.8","1.3","1.8","2–3","2-3","4–6","4-6","6–8","6-8"];
+            let _sortedLR = [...tiposRacaoEntries].sort((a,b)=>{
+                let ia=99,ib=99;
+                for(let i=0;i<_ORDEM_LR.length;i++){if(a[0].includes(_ORDEM_LR[i]))ia=i;if(b[0].includes(_ORDEM_LR[i]))ib=i;}
+                return ia-ib;
+            });
+            const _CORES_LR = ['#7c3aed','#2563eb','#0891b2','#0f766e','#15803d','#b45309','#c2410c'];
+            let _barraPropLR = `<div style="display:flex;height:5px;overflow:hidden;gap:1px;">
+                ${_sortedLR.map(([,d],i)=>{
+                    let p=totalKgRacao>0?(d.kg/totalKgRacao*100).toFixed(1):0;
+                    return `<div style="width:${p}%;background:${_CORES_LR[Math.min(i,_CORES_LR.length-1)]};min-width:${p>0?'3px':'0'};"></div>`;
+                }).join('')}
+            </div>`;
+            let rows = _sortedLR.map(([tipo, d], i) => {
+                let pct = totalKgRacao > 0 ? ((d.kg / totalKgRacao) * 100).toFixed(1) : 0;
                 let vMedio = d.kg > 0 ? (d.custo / d.kg).toFixed(2) : "0.00";
-                let marcasStr = d.marcas && d.marcas.length ? d.marcas.join(", ") : "";
-                let legadoTag = d.legado ? `<span style="font-size:.6rem;background:var(--amber-l);color:var(--amber);padding:1px 6px;border-radius:8px;margin-left:4px;">estimado</span>` : '';
-                return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--surf3);gap:6px;flex-wrap:wrap;background:#fff;">
-                    <div style="flex:1;min-width:0;">
-                        <div style="font-size:.78rem;font-weight:700;color:var(--text);">🌾 ${tipo}${legadoTag}</div>
-                        ${marcasStr ? `<div style="font-size:.65rem;color:var(--text3);">${marcasStr}</div>` : ""}
-                    </div>
-                    <div style="display:flex;gap:14px;flex-shrink:0;text-align:right;">
-                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">Consumido</span><strong>${d.kg.toFixed(2)} kg</strong></div>
-                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">R$/kg</span><strong>R$ ${vMedio}</strong></div>
-                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">Custo fase</span><strong style="color:var(--green);">R$ ${d.custo.toFixed(2)}</strong></div>
-                        <div style="font-size:.72rem;"><span style="color:var(--text3);font-size:.62rem;display:block;">% do total</span><strong>${pct}%</strong></div>
+                let marcasArr = d.marcas && d.marcas.length ? (Array.isArray(d.marcas)?d.marcas:Array.from(d.marcas)) : [];
+                let cor = _CORES_LR[Math.min(i,_CORES_LR.length-1)];
+                let badge = d.legado
+                    ? `<span style="font-size:.57rem;background:#fef3c7;color:#b45309;padding:1px 5px;border-radius:6px;margin-left:4px;">estimado</span>`
+                    : `<span style="font-size:.57rem;background:#dcfce7;color:#15803d;padding:1px 5px;border-radius:6px;margin-left:4px;">✓ real</span>`;
+                return `<div style="display:grid;grid-template-columns:4px 1fr;border-bottom:1px solid var(--surf3);">
+                    <div style="background:${cor};"></div>
+                    <div style="padding:8px 12px 7px 10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:.77rem;font-weight:800;color:var(--text);">🌾 ${tipo}${badge}</div>
+                            ${marcasArr.length ? `<div style="font-size:.62rem;color:var(--text3);margin-top:1px;">🏷️ ${marcasArr.join(', ')}</div>` : ''}
+                            <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+                                <div style="width:60px;height:3px;background:var(--border);border-radius:3px;overflow:hidden;">
+                                    <div style="width:${pct}%;height:100%;background:${cor};"></div>
+                                </div>
+                                <span style="font-size:.6rem;color:var(--text3);">${pct}%</span>
+                            </div>
+                        </div>
+                        <div style="text-align:right;flex-shrink:0;">
+                            <div style="font-size:.82rem;font-weight:800;color:var(--text);">${d.kg.toFixed(2)} kg</div>
+                            <div style="font-size:.7rem;color:var(--green);font-weight:700;">R$ ${d.custo.toFixed(2)}</div>
+                            <div style="font-size:.6rem;color:var(--text3);">R$ ${vMedio}/kg</div>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
             let legadoNotaLote = custoRacaoDetalhado.temDadosLegados
-                ? `<div style="padding:5px 12px 6px;font-size:.67rem;color:var(--amber);font-weight:600;background:#fffbeb;border-top:1px solid #fde68a;">⚠️ Parte do consumo foi registrada antes do sistema de custos — valores marcados como "estimado" usam o preço médio do estoque atual</div>`
+                ? `<div style="padding:5px 12px 6px;font-size:.66rem;color:#b45309;font-weight:600;background:#fffbeb;border-top:1px solid #fde68a;">⚠️ Distribuição estimada proporcionalmente pelas biometrias do lote. Registre tratos pelo sistema para rastreabilidade real (✓ real).</div>`
                 : '';
             blocoRacaoHTML = `<div style="margin:10px 0;border-radius:var(--r-md);overflow:hidden;border:1.5px solid var(--border);">
-                <div style="background:var(--surf3);padding:7px 12px;font-size:.65rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);display:flex;justify-content:space-between;">
-                    <span>🌾 Gasto por fase de ração (${tiposRacaoEntries.length} tipo${tiposRacaoEntries.length>1?'s':''})</span>
-                    <span>Total: ${totalKgRacao.toFixed(2)} kg | R$ ${custoRacaoDetalhado.custoTotal.toFixed(2)}</span>
+                ${_barraPropLR}
+                <div style="background:var(--surf3);padding:6px 12px;font-size:.64rem;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--text2);display:flex;justify-content:space-between;align-items:center;">
+                    <span>🌾 Rastreabilidade de ração — ${_sortedLR.length} fase${_sortedLR.length>1?'s':''}</span>
+                    <span>${totalKgRacao.toFixed(2)} kg · R$ ${custoRacaoDetalhado.custoTotal.toFixed(2)}</span>
                 </div>
                 ${rows}
                 ${legadoNotaLote}
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surf2);border-top:1.5px solid var(--border);">
+                    <span style="font-size:.72rem;font-weight:800;color:var(--text);">📦 TOTAL RAÇÃO</span>
+                    <div style="text-align:right;">
+                        <div style="font-size:.8rem;font-weight:800;color:var(--text);">${totalKgRacao.toFixed(2)} kg</div>
+                        <div style="font-size:.7rem;color:var(--green);font-weight:700;">R$ ${custoRacaoDetalhado.custoTotal.toFixed(2)} · R$ ${totalKgRacao>0?(custoRacaoDetalhado.custoTotal/totalKgRacao).toFixed(2):'0.00'}/kg</div>
+                    </div>
+                </div>
             </div>`;
         }
 
@@ -1686,7 +1743,7 @@ function renderLotes() {
                         <span>📦 <strong>${biomassaTotal.toFixed(1)} kg</strong></span>
                         <span>💰 <strong>R$ ${custos.custoPorKg.toFixed(2)}/kg</strong></span>
                         <span style="color:${ca<1.5?'var(--green)':ca<1.8?'var(--amber)':'var(--red)'};">CA ${ca.toFixed(2)} ${ca<1.5?'✅':ca<1.8?'👍':'⚠️'}</span>
-                        <span style="background:var(--blue-xl);color:var(--blue);padding:1px 7px;border-radius:20px;font-weight:700;">🌾 ${tipoRacaoPorPeso(pesoMedioAtual)}</span>
+                        <span style="background:var(--blue-xl);color:var(--blue);padding:1px 7px;border-radius:20px;font-weight:700;">🌾 ${(l.tipoRacao || tipoRacaoPorPeso(pesoMedioAtual))}</span>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
@@ -1987,18 +2044,9 @@ function renderTratosTanques() {
     for (let lote of lotes) {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
-                // FIX: usar ultimoPesoMedio do tanque específico (atualizado por biometria individual)
-                let pesoMedio = tanque.ultimoPesoMedio || 0;
-                if (!pesoMedio) {
-                    // fallback: biometria específica deste tanque
-                    let _bioSpec = (lote.biometrias || []).slice().reverse().find(b => b.tanque === tanque.num);
-                    if (_bioSpec) pesoMedio = _bioSpec.pesoMedio;
-                    else {
-                        let _bioGeral = lote.biometrias && lote.biometrias.length
-                            ? lote.biometrias[lote.biometrias.length - 1] : null;
-                        pesoMedio = _bioGeral ? _bioGeral.pesoMedio : (lote.pesoMedioAlevino || 5);
-                    }
-                }
+                let ultimaBiometria = lote.biometrias && lote.biometrias.length
+                    ? lote.biometrias[lote.biometrias.length - 1] : null;
+                let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (lote.pesoMedioAlevino || 5);
                 let caEl = document.getElementById("caSelectRacao");
                 let caSelecionado = caEl ? (parseFloat(caEl.value) || 1.4) : 1.4;
                 let gpd = obterGPD(pesoMedio);
@@ -2009,16 +2057,11 @@ function renderTratosTanques() {
                 if (tratosSalvos.length === 0 && horariosTratos.length > 0) {
                     tratosSalvos = horariosTratos.map(t => ({ hora: t.hora, tratado: false, kgFornecidos: 0 }));
                 }
-                let tipoRacaoAtual = tipoRacaoPorPeso(pesoMedio);
-                // Detectar se a fase mudou recentemente (último trato usava tipo diferente)
-                let ultimoTratoComTipo = tratosSalvos.slice().reverse().find(t => t.tratado && t.tipoIdeal);
-                let faseRecemMudou = ultimoTratoComTipo && ultimoTratoComTipo.tipoIdeal !== tipoRacaoAtual;
                 tanquesOcupados.push({
                     num: tanque.num, qtdPeixes: tanque.qtdPeixes, pesoMedio, loteId: lote.id,
                     gpd, ca, racaoDiariaRecomendada,
-                    tipoRacao: tipoRacaoAtual, tratos: tratosSalvos,
-                    suspenso: suspensos.includes(tanque.num),
-                    faseRecemMudou: faseRecemMudou
+                    tipoRacao: tipoRacaoPorPeso(pesoMedio), tratos: tratosSalvos,
+                    suspenso: suspensos.includes(tanque.num)
                 });
             }
         }
@@ -2098,11 +2141,7 @@ function renderTratosTanques() {
                     <div class="tank-name">🏞️ Tanque ${t.num}
                         <small style="font-weight:500;color:var(--text3);font-size:.65rem;display:inline;margin-left:5px;">Lote #${t.loteId}</small>
                     </div>
-                    <div class="tank-meta">
-                        ${t.qtdPeixes} peixes · ${t.pesoMedio.toFixed(0)}g · 
-                        <span style="color:var(--teal);font-weight:700;">${t.tipoRacao}</span>
-                        ${t.faseRecemMudou ? `<span style="background:#fef3c7;color:#b45309;font-size:.6rem;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:3px;">🔄 Fase atualizada</span>` : ''}
-                    </div>
+                    <div class="tank-meta">${t.qtdPeixes} peixes · ${t.pesoMedio.toFixed(0)}g · ${t.tipoRacao}</div>
                     <div class="tank-progress-wrap">
                         <div class="tank-progress-bar">
                             <div class="tank-progress-fill ${barClass}" style="width:${progPct.toFixed(1)}%"></div>
@@ -2199,21 +2238,9 @@ function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
     let info = getInfoTanqueOcupado(tanqueNum);
     if (!info) { showMessage("Tanque não ocupado", true); return; }
 
-    // FIX: usar ultimoPesoMedio do tanque específico (atualizado pela biometria deste tanque)
-    // Se não houver, fallback para última biometria do lote, depois peso alevino
-    let pesoMedioTanqueAtual = info.tanque.ultimoPesoMedio || 0;
-    if (!pesoMedioTanqueAtual) {
-        // Tentar biometria específica deste tanque
-        let bioEspecifica = (info.lote.biometrias || []).slice().reverse().find(b => b.tanque === info.tanque.num);
-        if (bioEspecifica) pesoMedioTanqueAtual = bioEspecifica.pesoMedio;
-        else {
-            // Fallback para última biometria do lote ou peso alevino
-            let ultimaBio = info.lote.biometrias && info.lote.biometrias.length
-                ? info.lote.biometrias[info.lote.biometrias.length - 1] : null;
-            pesoMedioTanqueAtual = ultimaBio ? ultimaBio.pesoMedio : (info.lote.pesoMedioAlevino || 5);
-        }
-    }
-    let pesoMedio = pesoMedioTanqueAtual;
+    let ultimaBiometria = info.lote.biometrias && info.lote.biometrias.length
+        ? info.lote.biometrias[info.lote.biometrias.length - 1] : null;
+    let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (info.lote.pesoMedioAlevino || 5);
     let tipoRacaoNecessario = tipoRacaoPorPeso(pesoMedio);
 
     let estoque = loadData("estoqueRacao");
@@ -2283,13 +2310,7 @@ function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
     tanque.consumoRacao = (tanque.consumoRacao || 0) + kgRecomendado;
     saveData("lotes", lotes);
 
-    tratos[tratoIndex] = {
-        ...tratos[tratoIndex],
-        tratado: true,
-        kgFornecidos: kgRecomendado,
-        tipoIdeal: tipoRacaoNecessario,        // FIX: gravar fase vigente neste trato
-        pesoMedioNoTrato: pesoMedio            // FIX: gravar peso no momento do trato
-    };
+    tratos[tratoIndex] = { ...tratos[tratoIndex], tratado: true, kgFornecidos: kgRecomendado };
     tSave(tanqueNum, tratos);
 
     let custoReal = detalhesConsumo.reduce((sum, d) => sum + d.custoTotal, 0);
@@ -2310,10 +2331,8 @@ function preencherTodosTratos(tanqueNum) {
     let info = getInfoTanqueOcupado(tanqueNum);
     let racaoDiaria = 0;
     if (info) {
-        // FIX: usar ultimoPesoMedio do tanque específico
-        let _bioTanqueSpec = info ? (info.lote.biometrias||[]).slice().reverse().find(b => b.tanque === info.tanque?.num) : null;
-        let pesoMedio = (info.tanque?.ultimoPesoMedio) || (_bioTanqueSpec?.pesoMedio) ||
-            (info.lote.biometrias?.length ? info.lote.biometrias[info.lote.biometrias.length-1].pesoMedio : (info.lote.pesoMedioAlevino || 5));
+        let pesoMedio = info.lote.biometrias && info.lote.biometrias.length ?
+            info.lote.biometrias[info.lote.biometrias.length - 1].pesoMedio : (info.lote.pesoMedioAlevino || 5);
         let caSelecionado = parseFloat(document.getElementById("caSelectRacao").value) || 1.4;
         let gpd = obterGPD(pesoMedio);
         let ca = getCAEfetiva(pesoMedio, caSelecionado);
@@ -2388,16 +2407,9 @@ function fornecerUmTratoParaTodosTanques() {
     for (let lote of lotes) {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
-                // FIX: usar ultimoPesoMedio do tanque específico
-                let pesoMedio = tanque.ultimoPesoMedio || 0;
-                if (!pesoMedio) {
-                    let _bSpec = (lote.biometrias||[]).slice().reverse().find(b=>b.tanque===tanque.num);
-                    if (_bSpec) pesoMedio = _bSpec.pesoMedio;
-                    else {
-                        let _bGeral = lote.biometrias && lote.biometrias.length ? lote.biometrias[lote.biometrias.length-1] : null;
-                        pesoMedio = _bGeral ? _bGeral.pesoMedio : (lote.pesoMedioAlevino || 5);
-                    }
-                }
+                let ultimaBiometria = null;
+                if (lote.biometrias && lote.biometrias.length) ultimaBiometria = lote.biometrias[lote.biometrias.length - 1];
+                let pesoMedio = ultimaBiometria ? ultimaBiometria.pesoMedio : (lote.pesoMedioAlevino || 5);
                 let gpd = obterGPD(pesoMedio);
                 let ca = getCAEfetiva(pesoMedio, caSelecionado);
                 let ganhoBiomassaKg = (tanque.qtdPeixes * gpd) / 1000;
@@ -2927,37 +2939,7 @@ function calcularMediaAmostras() {
         else { biomassaTotalLote += (lote.pesoMedioAlevino / 1000) * t.qtdPeixes; }
     }
     lote.biomassaAtual = biomassaTotalLote;
-
-    // ── FIX: atualizar tipoRacao do LOTE com base no maior peso médio atual ──
-    // Usar o maior pesoMedio entre todos os tanques ativos (mais avançado = define a fase)
-    let maiorPesoMedioAtual = 0;
-    for (let t of lote.tanques) {
-        if (t.qtdPeixes > 0) {
-            let pm = t.ultimoPesoMedio || lote.pesoMedioAlevino || 0;
-            if (pm > maiorPesoMedioAtual) maiorPesoMedioAtual = pm;
-        }
-    }
-    let novoTipoRacao = tipoRacaoPorPeso(maiorPesoMedioAtual);
-    let tipoRacaoAnterior = lote.tipoRacao || '';
-    lote.tipoRacao = novoTipoRacao;
-
     saveData("lotes", lotes);
-
-    // Notificar mudança de fase de ração ao usuário
-    if (tipoRacaoAnterior && tipoRacaoAnterior !== novoTipoRacao) {
-        setTimeout(() => showMessage(
-            `🔄 Mudança de fase detectada!
-
-` +
-            `De: ${tipoRacaoAnterior}
-` +
-            `Para: ${novoTipoRacao}
-
-` +
-            `A partir de agora a ração recomendada para o Lote #${lote.id} é ${novoTipoRacao}. Verifique seu estoque!`,
-            false
-        ), 800);
-    }
     let caElBio = document.getElementById("caSelectRacao");
     let caSelecionado = caElBio ? (parseFloat(caElBio.value) || 1.4) : 1.4;
     let gpd = obterGPD(pesoMedioGramas);
@@ -2970,19 +2952,11 @@ function calcularMediaAmostras() {
         for (let i = 0; i < tratos.length; i++) {
             if (!tratos[i].tratado) {
                 tratos[i].kgRecomendado = novoKgPorTrato;
-                // FIX: atualizar tipoIdeal dos tratos pendentes com a nova fase
-                tratos[i].tipoIdealPendente = novoTipoRacao;
             }
         }
         tSave(tanqueNum, tratos);
     }
-    let msgFase = (tipoRacaoAnterior && tipoRacaoAnterior !== novoTipoRacao)
-        ? `\n\n🔄 NOVA FASE: ${novoTipoRacao}`
-        : `\n• Fase atual: ${novoTipoRacao}`;
-    let msgTratos = horariosTratos.length > 0
-        ? `\n• ${horariosTratos.length} tratos de ${(novaRacaoDiaria/horariosTratos.length).toFixed(2)} kg cada`
-        : '';
-    showMessage(`✅ BIOMETRIA ATUALIZADA!\n\n📊 Tanque ${tanqueNum}:\n• Peso médio: ${pesoMedioGramas.toFixed(0)} g\n• Biomassa: ${biomassa.toFixed(1)} kg\n• Ração diária: ${novaRacaoDiaria.toFixed(2)} kg${msgTratos}${msgFase}`);
+    showMessage(`✅ BIOMETRIA ATUALIZADA!\n\n📊 Tanque ${tanqueNum}:\n• Peso médio: ${pesoMedioGramas.toFixed(0)} g\n• Biomassa: ${biomassa.toFixed(1)} kg\n• Nova ração diária: ${novaRacaoDiaria.toFixed(2)} kg\n• ${horariosTratos.length} tratos de ${(novaRacaoDiaria / horariosTratos.length).toFixed(2)} kg cada`);
     renderBiometrias();
     renderLotes();
     renderTratosTanques();
@@ -4845,6 +4819,138 @@ function _valorMedioKgEstoque() {
     return totalValor / totalKg;
 }
 
+// ══════════════════════════════════════════════════════════════
+// RECONSTITUIÇÃO DE HISTÓRICO DE FASES A PARTIR DE BIOMETRIAS
+// Quando não há consumoDetalhado, reconstruir proporcionalmente
+// quanto foi consumido em cada fase usando as biometrias do lote.
+// ══════════════════════════════════════════════════════════════
+function reconstruirFasesConsumo(tanque, lote) {
+    // Retorna array de { tipoIdeal, kg, custo, legado:true }
+    let kgTotal = tanque.consumoRacao || 0;
+    if (kgTotal <= 0) return [];
+
+    let vFallback = _valorMedioKgEstoque();
+
+    // Coletar biometrias deste tanque (ou do lote), ordenadas cronologicamente
+    let bios = [];
+    if (lote.biometrias && lote.biometrias.length > 0) {
+        // Preferir biometrias específicas deste tanque; cair para biometrias gerais
+        let biosTanque = lote.biometrias.filter(b => b.tanque === tanque.num);
+        bios = biosTanque.length > 0 ? biosTanque : lote.biometrias;
+        bios = [...bios].sort((a, b) => new Date(a.data) - new Date(b.data));
+    }
+
+    // Se não houver nenhuma biometria, um único "bloco" com peso alevino → peso atual
+    if (bios.length === 0) {
+        let pesoInicial = lote.pesoMedioAlevino || 5;
+        let pesoFinal   = tanque.ultimoPesoMedio || pesoInicial;
+        // Distribuir linearmente entre os tipos cruzados
+        return _distribuirPorFaixas(pesoInicial, pesoFinal, kgTotal, vFallback, tanque.ultimaBiometriaData || null);
+    }
+
+    // Construir lista de "checkpoints": peso no início + cada biometria
+    let checkpoints = [];
+    let dataEstocagem = lote.dataEstocagem ? new Date(lote.dataEstocagem) : null;
+    checkpoints.push({ peso: lote.pesoMedioAlevino || 5, data: dataEstocagem });
+    for (let b of bios) {
+        checkpoints.push({ peso: b.pesoMedio, data: new Date(b.data) });
+    }
+
+    // Calcular duração de cada segmento e o consumo estimado por GPD/CA
+    let segmentos = [];
+    let totalDias = 0;
+    let consumoEstimadoTotal = 0;
+    let CA_PADRAO = 1.4;
+
+    for (let i = 0; i < checkpoints.length - 1; i++) {
+        let p0 = checkpoints[i].peso;
+        let p1 = checkpoints[i+1].peso;
+        let d0 = checkpoints[i].data;
+        let d1 = checkpoints[i+1].data;
+        let dias = (d0 && d1) ? Math.max(1, Math.round((d1 - d0) / 86400000)) : 30;
+        let pesoMedSeg = (p0 + p1) / 2;
+        // GPD médio no segmento
+        let gpd = obterGPD ? obterGPD(pesoMedSeg) : (pesoMedSeg < 50 ? 1.5 : pesoMedSeg < 250 ? 3 : 5);
+        let ganhoBiomassaKgDia = (tanque.qtdPeixes || 1000) * gpd / 1000;
+        let racaoDia = ganhoBiomassaKgDia * CA_PADRAO;
+        let consumoSeg = racaoDia * dias;
+        totalDias += dias;
+        consumoEstimadoTotal += consumoSeg;
+        segmentos.push({ p0, p1, dias, pesoMedSeg, consumoEstimado: consumoSeg });
+    }
+
+    // Adicionar segmento final (última biometria → hoje)
+    if (checkpoints.length >= 1) {
+        let pUlt = checkpoints[checkpoints.length-1].peso;
+        let dUlt = checkpoints[checkpoints.length-1].data;
+        let dHoje = new Date();
+        let dias = dUlt ? Math.max(1, Math.round((dHoje - dUlt) / 86400000)) : 30;
+        let gpd = obterGPD ? obterGPD(pUlt) : 3;
+        let racaoDia = (tanque.qtdPeixes || 1000) * gpd / 1000 * CA_PADRAO;
+        let consumoSeg = racaoDia * dias;
+        consumoEstimadoTotal += consumoSeg;
+        segmentos.push({ p0: pUlt, p1: pUlt, dias, pesoMedSeg: pUlt, consumoEstimado: consumoSeg });
+    }
+
+    // Distribuir kgTotal proporcionalmente entre segmentos
+    // e agrupar por tipo de ração
+    let porTipo = {};
+    for (let seg of segmentos) {
+        let proporcao = consumoEstimadoTotal > 0 ? seg.consumoEstimado / consumoEstimadoTotal : 1 / segmentos.length;
+        let kgSeg = kgTotal * proporcao;
+        // Determinar tipo para a faixa de peso deste segmento
+        let tipos = _distribuirPorFaixas(seg.p0, seg.p1, kgSeg, vFallback, null);
+        for (let t of tipos) {
+            if (!porTipo[t.tipoIdeal]) porTipo[t.tipoIdeal] = { kg: 0, custo: 0, legado: true };
+            porTipo[t.tipoIdeal].kg    += t.kg;
+            porTipo[t.tipoIdeal].custo += t.custo;
+        }
+    }
+
+    return Object.entries(porTipo).map(([tipoIdeal, d]) => ({ tipoIdeal, kg: d.kg, custo: d.custo, legado: true }));
+}
+
+// Dado um intervalo de pesos p0→p1, distribuir kgTotal pelos tipos de ração cruzados
+function _distribuirPorFaixas(p0, p1, kgTotal, vFallback, data) {
+    const FAIXAS = [
+        { max:  1, tipo: '🍼 Pó (55% PB)' },
+        { max:  2, tipo: '⚫ 0.8–1mm (45% PB)' },
+        { max:  6, tipo: '🟤 1.3–1.5mm (45% PB)' },
+        { max: 15, tipo: '🟠 1.8–2.3mm (40% PB)' },
+        { max: 50, tipo: '🟡 2–3mm (36% PB)' },
+        { max:250, tipo: '🟢 4–6mm (32% PB)' },
+        { max:9999,tipo: '🔵 6–8mm (32% PB)' }
+    ];
+    let resultado = [];
+    let p_min = Math.min(p0, p1);
+    let p_max = Math.max(p0, p1);
+    if (p_min === p_max) {
+        // Peso pontual — tudo num único tipo
+        let tipo = FAIXAS.find(f => p_min <= f.max) || FAIXAS[FAIXAS.length-1];
+        return [{ tipoIdeal: tipo.tipo, kg: kgTotal, custo: kgTotal * vFallback, legado: true }];
+    }
+    // Calcular sobreposição de cada faixa com [p_min, p_max]
+    let totalSpan = p_max - p_min;
+    let prev = 0;
+    for (let f of FAIXAS) {
+        let fMin = prev;
+        let fMax = f.max;
+        let overlap = Math.max(0, Math.min(fMax, p_max) - Math.max(fMin, p_min));
+        if (overlap > 0) {
+            let proporcao = overlap / totalSpan;
+            let kg = kgTotal * proporcao;
+            resultado.push({ tipoIdeal: f.tipo, kg, custo: kg * vFallback, legado: true });
+        }
+        prev = f.max;
+        if (prev >= p_max) break;
+    }
+    if (resultado.length === 0) {
+        let tipo = FAIXAS.find(f => p_max <= f.max) || FAIXAS[FAIXAS.length-1];
+        resultado.push({ tipoIdeal: tipo.tipo, kg: kgTotal, custo: kgTotal * vFallback, legado: true });
+    }
+    return resultado;
+}
+
 function calcularCustoRacaoLoteReal(lote) {
     let custoTotalRacao = 0;
     let consumoPorTipo = {}; // chave: tipo canônico, valor: { kg, custo, valorKgTotal, qtdRegistros, marcas, legado }
@@ -4875,39 +4981,40 @@ function calcularCustoRacaoLoteReal(lote) {
                 if (consumo.marca) consumoPorTipo[chave].marcas.add(consumo.marca);
             }
 
-            // Se há kg total maior que o detalhado (parte registrada sem detalhe), adicionar legado residual
+            // Se há kg residual legado (consumoRacao > soma detalhada), reconstituir por fases
             let kgResidual = kgTotalTanque - kgDetalhado;
             if (kgResidual > 0.1) {
                 temDadosLegados = true;
-                if (valorMedioFallback === null) valorMedioFallback = _valorMedioKgEstoque();
-                let pesoMedio = tanque.ultimoPesoMedio || lote.pesoMedioAlevino || 5;
-                let tipoFase = tipoRacaoPorPeso(pesoMedio);
-                let chave = tipoFase;
-                if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: true };
-                let custoResidual = kgResidual * valorMedioFallback;
-                consumoPorTipo[chave].kg += kgResidual;
-                consumoPorTipo[chave].custo += custoResidual;
-                consumoPorTipo[chave].valorKgTotal += valorMedioFallback * kgResidual;
-                consumoPorTipo[chave].qtdRegistros += 1;
-                consumoPorTipo[chave].legado = true;
-                custoTotalRacao += custoResidual;
+                // Criar tanque virtual com só o consumo residual para reconstruir fases
+                let tanqueResidual = { ...tanque, consumoRacao: kgResidual };
+                let fasesResidual = reconstruirFasesConsumo(tanqueResidual, lote);
+                for (let fase of fasesResidual) {
+                    let chave = fase.tipoIdeal;
+                    if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: true };
+                    consumoPorTipo[chave].kg          += fase.kg;
+                    consumoPorTipo[chave].custo        += fase.custo;
+                    consumoPorTipo[chave].valorKgTotal += fase.custo;
+                    consumoPorTipo[chave].qtdRegistros += 1;
+                    consumoPorTipo[chave].legado        = true;
+                    custoTotalRacao += fase.custo;
+                }
             }
 
         // ── Caso 2: só tem consumoRacao (dados legados sem consumoDetalhado) ──
+        // RECONSTITUIR histórico de fases usando biometrias do lote
         } else if (kgTotalTanque > 0) {
             temDadosLegados = true;
-            if (valorMedioFallback === null) valorMedioFallback = _valorMedioKgEstoque();
-            let pesoMedio = tanque.ultimoPesoMedio || lote.pesoMedioAlevino || 5;
-            let tipoFase = tipoRacaoPorPeso(pesoMedio);
-            let chave = tipoFase;
-            if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: true };
-            let custoEstimado = kgTotalTanque * valorMedioFallback;
-            consumoPorTipo[chave].kg += kgTotalTanque;
-            consumoPorTipo[chave].custo += custoEstimado;
-            consumoPorTipo[chave].valorKgTotal += valorMedioFallback * kgTotalTanque;
-            consumoPorTipo[chave].qtdRegistros += 1;
-            consumoPorTipo[chave].legado = true;
-            custoTotalRacao += custoEstimado;
+            let fases = reconstruirFasesConsumo(tanque, lote);
+            for (let fase of fases) {
+                let chave = fase.tipoIdeal;
+                if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: true };
+                consumoPorTipo[chave].kg          += fase.kg;
+                consumoPorTipo[chave].custo        += fase.custo;
+                consumoPorTipo[chave].valorKgTotal += fase.custo; // custo já é kg * valorMedio
+                consumoPorTipo[chave].qtdRegistros += 1;
+                consumoPorTipo[chave].legado        = true;
+                custoTotalRacao += fase.custo;
+            }
         }
     }
 
@@ -5104,67 +5211,19 @@ function concluirDiaAlimentacao() {
 function verificarUltimoTrato(tanqueNum, tratoIndex, kgRecomendado) {
     let tratos = tLoad(tanqueNum);
     let proximoTratoIndex = tratoIndex + 1;
-    // É o último trato se não há próximo trato ou o próximo já foi tratado
-    let isUltimoDoTanque = (proximoTratoIndex >= tratos.length) ||
-        tratos.slice(proximoTratoIndex).every(t => t.tratado);
-
-    // Verificar se todos os outros tanques também estão no último trato
-    let lotes = loadData("lotes");
-    let todosNoUltimo = true;
-    let totalPendentes = 0;
-    for (let lote of lotes) {
-        for (let tanq of lote.tanques) {
-            if (tanq.qtdPeixes > 0) {
-                let tr = tLoad(tanq.num);
-                let pendentes = tr.filter(t => !t.tratado);
-                if (tanq.num === tanqueNum) {
-                    // Este tanque: depois deste trato, restam os posteriores
-                    let restaraoAposEste = tr.slice(tratoIndex + 1).filter(t => !t.tratado).length;
-                    totalPendentes += restaraoAposEste;
-                    if (restaraoAposEste > 0) todosNoUltimo = false;
-                } else {
-                    totalPendentes += pendentes.length;
-                    if (pendentes.length > 0) todosNoUltimo = false;
-                }
-            }
-        }
-    }
-
-    if (isUltimoDoTanque && todosNoUltimo) {
-        // Este é o ÚLTIMO TRATO DE TODOS OS TANQUES → oferecer finalizar o dia
+    let isUltimo = (proximoTratoIndex >= tratos.length) ||
+        (tratos[proximoTratoIndex] && tratos[proximoTratoIndex].tratado);
+    
+    if (isUltimo) {
         showConfirm({
-            title: '🌅 Último Trato do Dia!',
-            msg: `🎉 Este é o ÚLTIMO TRATO do dia em TODOS os tanques!
-
-Fornecer ${kgRecomendado.toFixed(2)}kg para ${tanqueNum} e finalizar o dia de alimentação?`,
-            icon: '🌅', type: 'success', okLabel: '✔ Fornecer e Finalizar Dia',
-            onConfirm: () => {
-                registrarTrato(tanqueNum, tratoIndex, kgRecomendado);
-                // Pequeno delay para garantir que o render terminou
-                setTimeout(() => concluirDiaAlimentacao(), 300);
-            }
+            title: '🍽️ Último Trato do Dia',
+            msg: `Este é o ÚLTIMO TRATO do dia para o tanque ${tanqueNum}.\n\nFornecer ${kgRecomendado.toFixed(2)}kg e finalizar o dia deste tanque?`,
+            icon: '🍽️', type: 'success', okLabel: '✔ Fornecer e Finalizar',
+            onConfirm: () => { registrarTrato(tanqueNum, tratoIndex, kgRecomendado); verificarTodosTanquesConcluidos(); }
         });
         return true;
     }
-
-    if (isUltimoDoTanque) {
-        // Último trato deste tanque, mas outros tanques ainda têm tratos
-        showConfirm({
-            title: '🍽️ Último Trato deste Tanque',
-            msg: `Este é o último trato do dia para ${tanqueNum}.
-
-Fornecer ${kgRecomendado.toFixed(2)}kg?
-
-⚠️ Ainda há ${totalPendentes} trato(s) pendente(s) em outros tanques.`,
-            icon: '🍽️', type: 'success', okLabel: '✔ Fornecer',
-            onConfirm: () => {
-                registrarTrato(tanqueNum, tratoIndex, kgRecomendado);
-                verificarTodosTanquesConcluidos();
-            }
-        });
-        return true;
-    }
-
+    
     registrarTrato(tanqueNum, tratoIndex, kgRecomendado);
     return true;
 }
