@@ -1462,9 +1462,14 @@ function renderTanqueHistCard(t, lote) {
     let totalKg = 0, totalCusto = 0;
     let temDadosLegados = false;
 
-    // Caso 1: consumoDetalhado populado
-    if (t.consumoDetalhado && t.consumoDetalhado.length > 0) {
-        for (let c of t.consumoDetalhado) {
+    // Filtrar apenas alimentações reais (excluir transferências proporcionais da classificação)
+    let consumoRealDetalhado = (t.consumoDetalhado || []).filter(c =>
+        !(c.origem && c.origem.startsWith('Transferido via classificação'))
+    );
+
+    // Caso 1: consumoDetalhado populado com alimentações reais
+    if (consumoRealDetalhado.length > 0) {
+        for (let c of consumoRealDetalhado) {
             let chave = c.tipoIdeal || c.tipo || c.tipoRacao || 'Não identificado';
             let kg = c.kg || 0;
             let custoItem = c.custoTotal || 0;
@@ -1477,8 +1482,9 @@ function renderTanqueHistCard(t, lote) {
             totalKg += kg;
             totalCusto += custoItem;
         }
-        // Residual legado (consumoRacao > soma detalhada) — RECONSTITUIR por fases
-        let kgResidual = (t.consumoRacao || 0) - totalKg;
+        // Residual legado (consumoRacao > soma detalhada real) — RECONSTITUIR por fases
+        let kgDetalhado = consumoRealDetalhado.reduce((s, c) => s + (c.kg || 0), 0);
+        let kgResidual = (t.consumoRacao || 0) - kgDetalhado;
         if (kgResidual > 0.1) {
             temDadosLegados = true;
             let tanqueResidual2 = { ...t, consumoRacao: kgResidual };
@@ -1577,12 +1583,16 @@ function renderTanqueHistCard(t, lote) {
 
     // ── Linha do tempo (agrupado por dia) ─────────────────────────────
     let timelineHTML = '';
-    if (t.consumoDetalhado && t.consumoDetalhado.length > 0) {
+    // Exibir apenas alimentações reais feitas neste tanque (excluir proporções herdadas da classificação)
+    let consumoRealTimeline = (t.consumoDetalhado || []).filter(c =>
+        !(c.origem && c.origem.startsWith('Transferido via classificação'))
+    );
+    if (consumoRealTimeline.length > 0) {
         // Ordenar do mais recente para o mais antigo
-        let sorted = [...t.consumoDetalhado].sort((a, b) => new Date(b.data) - new Date(a.data));
+        let sorted = [...consumoRealTimeline].sort((a, b) => new Date(b.data) - new Date(a.data));
         timelineHTML = `
             <div class="timeline-toggle" id="ttlbtn_${cardId}" onclick="toggleTanqueTimeline('${cardId}')">
-                <span>📅 Histórico detalhado (${t.consumoDetalhado.length} registros)</span>
+                <span>📅 Histórico detalhado (${consumoRealTimeline.length} registros)</span>
                 <span class="chv">▼</span>
             </div>
             <div class="timeline-body" id="ttl_${cardId}">
@@ -5011,7 +5021,17 @@ function calcularConsumoRacaoLote(lote) {
     let consumoTotal = 0;
     if (lote.tanques) {
         for (let tanque of lote.tanques) {
-            consumoTotal += tanque.consumoRacao || 0;
+            // Se tem consumoDetalhado, somar apenas as alimentações reais (excluir transferências proporcionais)
+            if (tanque.consumoDetalhado && tanque.consumoDetalhado.length > 0) {
+                let consumoReal = tanque.consumoDetalhado
+                    .filter(c => !(c.origem && c.origem.startsWith('Transferido via classificação')))
+                    .reduce((s, c) => s + (c.kg || 0), 0);
+                // Se consumoRacao é maior que o consumoDetalhado real (dados legados), usar consumoRacao
+                let consumoRacaoBase = tanque.consumoRacao || 0;
+                consumoTotal += Math.max(consumoReal, consumoRacaoBase > consumoReal ? consumoRacaoBase : consumoReal);
+            } else {
+                consumoTotal += tanque.consumoRacao || 0;
+            }
         }
     }
     // Também somar consumo de tanques que já foram desativados (se houver histórico)
@@ -5203,16 +5223,22 @@ function calcularCustoRacaoLoteReal(lote) {
     if (!lote.tanques) return { custoTotal: 0, porTipo: {}, temDadosLegados: false };
 
     let temDadosLegados = false;
-    let valorMedioFallback = null; // calculado sob demanda
 
     for (let tanque of lote.tanques) {
-        let kgTotalTanque = tanque.consumoRacao || 0;
+        // ── NOVO: ignorar entradas de consumoDetalhado que são transferências proporcionais
+        // vindas do lote de origem (marcadas com "Transferido via classificação").
+        // Só contabilizar alimentações reais feitas NESTE lote.
+        let consumosFiltrados = (tanque.consumoDetalhado || []).filter(c =>
+            !(c.origem && c.origem.startsWith('Transferido via classificação'))
+        );
 
-        // ── Caso 1: tem consumoDetalhado populado ─────────────────────────────
-        if (tanque.consumoDetalhado && tanque.consumoDetalhado.length > 0) {
-            let kgDetalhado = tanque.consumoDetalhado.reduce((s, c) => s + (c.kg || 0), 0);
+        let kgTotalTanque = consumosFiltrados.reduce((s, c) => s + (c.kg || 0), 0);
+        // Para consumoRacao (legado), também descontar o que foi transferido para outros lotes
+        let consumoRacaoBase = tanque.consumoRacao || 0;
 
-            for (let consumo of tanque.consumoDetalhado) {
+        // ── Caso 1: tem consumoDetalhado com alimentações reais ──────────────
+        if (consumosFiltrados.length > 0) {
+            for (let consumo of consumosFiltrados) {
                 let kg = consumo.kg || 0;
                 let custoItem = consumo.custoTotal || 0;
                 let valorKg = consumo.valorPorKg || 0;
@@ -5226,11 +5252,10 @@ function calcularCustoRacaoLoteReal(lote) {
                 if (consumo.marca) consumoPorTipo[chave].marcas.add(consumo.marca);
             }
 
-            // Se há kg residual legado (consumoRacao > soma detalhada), reconstituir por fases
-            let kgResidual = kgTotalTanque - kgDetalhado;
+            // Residual legado (consumoRacao > soma detalhada real)
+            let kgResidual = consumoRacaoBase - kgTotalTanque;
             if (kgResidual > 0.1) {
                 temDadosLegados = true;
-                // Criar tanque virtual com só o consumo residual para reconstruir fases
                 let tanqueResidual = { ...tanque, consumoRacao: kgResidual };
                 let fasesResidual = reconstruirFasesConsumo(tanqueResidual, lote);
                 for (let fase of fasesResidual) {
@@ -5245,20 +5270,42 @@ function calcularCustoRacaoLoteReal(lote) {
                 }
             }
 
-        // ── Caso 2: só tem consumoRacao (dados legados sem consumoDetalhado) ──
-        // RECONSTITUIR histórico de fases usando biometrias do lote
-        } else if (kgTotalTanque > 0) {
+        // ── Caso 2: só consumoRacao legado (sem consumoDetalhado real) ──────
+        } else if (consumoRacaoBase > 0) {
             temDadosLegados = true;
-            let fases = reconstruirFasesConsumo(tanque, lote);
+            let tanqueParaFases = { ...tanque, consumoRacao: consumoRacaoBase };
+            let fases = reconstruirFasesConsumo(tanqueParaFases, lote);
             for (let fase of fases) {
                 let chave = fase.tipoIdeal;
                 if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: true };
                 consumoPorTipo[chave].kg          += fase.kg;
                 consumoPorTipo[chave].custo        += fase.custo;
-                consumoPorTipo[chave].valorKgTotal += fase.custo; // custo já é kg * valorMedio
+                consumoPorTipo[chave].valorKgTotal += fase.custo;
                 consumoPorTipo[chave].qtdRegistros += 1;
                 consumoPorTipo[chave].legado        = true;
                 custoTotalRacao += fase.custo;
+            }
+        }
+    }
+
+    // ── NOVO: Para lotes híbridos, incluir o custo de ração transferido recebido ──
+    // O custo financeiro da ração consumida antes da classificação já veio do lote de origem.
+    // Aqui somamos esse valor para que o custo total do lote receptor seja correto.
+    if (lote.transferenciasRecebidas && lote.transferenciasRecebidas.length > 0) {
+        for (let tr of lote.transferenciasRecebidas) {
+            let custoRecebido = tr.custoTransferido || 0;
+            if (custoRecebido > 0) {
+                custoTotalRacao += custoRecebido;
+                let chave = '🔀 Ração anterior à classificação';
+                if (!consumoPorTipo[chave]) consumoPorTipo[chave] = { kg: 0, custo: 0, valorKgTotal: 0, qtdRegistros: 0, marcas: new Set(), legado: false };
+                // Estimar kg proporcionalmente (custoRecebido / preço médio)
+                let valorMedio = _valorMedioKgEstoque() || 3.5;
+                let kgEstimado = valorMedio > 0 ? custoRecebido / valorMedio : 0;
+                consumoPorTipo[chave].kg += kgEstimado;
+                consumoPorTipo[chave].custo += custoRecebido;
+                consumoPorTipo[chave].valorKgTotal += custoRecebido;
+                consumoPorTipo[chave].qtdRegistros += 1;
+                consumoPorTipo[chave].marcas.add(`Lote #${tr.loteOrigemId}`);
             }
         }
     }
@@ -5282,19 +5329,39 @@ function calcularCustoRacaoLote(lote) {
 // Calcular Custo por Kg do Lote
 function calcularCustoPorKGLote(lote) {
     let custoAlevinos = lote.valorAlevinos || 0;
+
+    // Custo de ração já considera:
+    // - alimentações reais registradas nos tanques (excluindo transferências proporcionais)
+    // - custo recebido via transferência de classificação (transferenciasRecebidas)
     let custoRacao = calcularCustoRacaoLoteReal(lote).custoTotal;
-    let custoTotal = custoAlevinos + custoRacao;
+
+    // Custo de alevinos: se parte dos peixes foi enviada para outro lote via classificação,
+    // descontar proporcionalmente o custo de alevinos que "saiu" do lote.
+    // Os peixes que ficaram no lote ainda têm seu custo de alevinos completo.
+    let custoAlevinosEfetivo = custoAlevinos;
+    if (lote.transferenciasEnviadas && lote.transferenciasEnviadas.length > 0) {
+        let totalEnviados = lote.transferenciasEnviadas.reduce((s, tr) => s + (tr.qtdPeixes || 0), 0);
+        // qtdTotal já foi atualizado após classificação (reflete apenas os que ficaram)
+        let totalOriginal = (lote.qtdTotal || 0) + totalEnviados;
+        if (totalOriginal > 0) {
+            // Manter custo de alevinos proporcional aos peixes ainda neste lote
+            let ratioFicou = totalOriginal > 0 ? (lote.qtdTotal || 0) / totalOriginal : 1;
+            custoAlevinosEfetivo = custoAlevinos * ratioFicou;
+        }
+    }
+
+    let custoTotal = custoAlevinosEfetivo + custoRacao;
     let biomassaTotal = calcularBiomassaTotalLote(lote);
-    
+
     if (biomassaTotal > 0) {
         return {
             custoTotal: custoTotal,
             custoPorKg: custoTotal / biomassaTotal,
-            custoAlevinos: custoAlevinos,
+            custoAlevinos: custoAlevinosEfetivo,
             custoRacao: custoRacao
         };
     }
-    return { custoTotal: custoTotal, custoPorKg: 0, custoAlevinos: 0, custoRacao: 0 };
+    return { custoTotal: custoTotal, custoPorKg: 0, custoAlevinos: custoAlevinosEfetivo, custoRacao: custoRacao };
 }
 
 // Calcular CA (Conversão Alimentar) do Lote
@@ -5326,10 +5393,14 @@ function calcularCustoTanque(lote, tanqueNum) {
 
     // Custo de ração: calcular diretamente pelo consumoDetalhado do tanque
     // + fallback para dados legados (sem consumoDetalhado)
+    // Excluir transferências proporcionais vindas da classificação (não são custo deste tanque)
     let custoRacaoTanque = 0;
-    if (tanque.consumoDetalhado && tanque.consumoDetalhado.length > 0) {
+    let consumoRealDetalhado = (tanque.consumoDetalhado || []).filter(c =>
+        !(c.origem && c.origem.startsWith('Transferido via classificação'))
+    );
+    if (consumoRealDetalhado.length > 0) {
         let kgDetalhado = 0;
-        for (let c of tanque.consumoDetalhado) {
+        for (let c of consumoRealDetalhado) {
             custoRacaoTanque += c.custoTotal || 0;
             kgDetalhado += c.kg || 0;
         }
