@@ -1790,6 +1790,28 @@ function renderLotes() {
                         html += `<div style="font-size:.68rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#94a3b8;padding:${ativos.length>0?'10px':' 2px'} 0 4px;margin-top:${ativos.length>0?'4px':'0'};">${despescados.length} Tanque${despescados.length>1?'s':''} Despescado${despescados.length>1?'s':''}</div>`;
                         html += despescados.map(t => renderTanqueHistCard(t, l)).join('');
                     }
+                    // Transferências recebidas de outros lotes
+                    if (l.transferenciasRecebidas && l.transferenciasRecebidas.length > 0) {
+                        html += `<div style="margin-top:10px;background:#eff6ff;border-radius:10px;padding:8px 12px;border:1.5px solid #bfdbfe;">
+                            <div style="font-size:.68rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#2563eb;margin-bottom:6px;">🔀 Transferências Recebidas (${l.transferenciasRecebidas.length})</div>
+                            ${l.transferenciasRecebidas.map(tr => `
+                                <div style="font-size:.74rem;padding:5px 0;border-bottom:1px solid #dbeafe;">
+                                    📅 ${tr.data} — <strong>${tr.qtdPeixes} peixes</strong> do Lote #${String(tr.loteOrigemId).slice(-4)} → Tanque ${tr.tanqueDestino}
+                                    (${tr.pesoMedio ? tr.pesoMedio.toFixed(0)+'g' : '—'} · ${tr.biomassaKg ? tr.biomassaKg.toFixed(1)+'kg' : '—'} · R$ ${tr.custoTransferido ? tr.custoTransferido.toFixed(2) : '0.00'} custo transferido)
+                                </div>`).join('')}
+                        </div>`;
+                    }
+                    // Transferências enviadas para outros lotes
+                    if (l.transferenciasEnviadas && l.transferenciasEnviadas.length > 0) {
+                        html += `<div style="margin-top:8px;background:#f0fdf4;border-radius:10px;padding:8px 12px;border:1.5px solid #86efac;">
+                            <div style="font-size:.68rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#15803d;margin-bottom:6px;">📤 Transferências Enviadas (${l.transferenciasEnviadas.length})</div>
+                            ${l.transferenciasEnviadas.map(tr => `
+                                <div style="font-size:.74rem;padding:5px 0;border-bottom:1px solid #bbf7d0;">
+                                    📅 ${tr.data} — <strong>${tr.qtdPeixes} peixes</strong> para Lote #${String(tr.loteDestinoId).slice(-4)} / Tanque ${tr.tanqueDestino}
+                                    (${tr.pesoMedio ? tr.pesoMedio.toFixed(0)+'g' : '—'} · ${tr.biomassaKg ? tr.biomassaKg.toFixed(1)+'kg' : '—'} · R$ ${tr.custoTransferido ? tr.custoTransferido.toFixed(2) : '0.00'} custo transferido)
+                                </div>`).join('')}
+                        </div>`;
+                    }
                     return html;
                 })()}
                 </div><!-- /tanques details -->
@@ -4334,7 +4356,12 @@ function seedExemplo() {
 // Obter tanques disponíveis (vazios)
 function getTanquesDisponiveis() {
     let tanques = loadData("tanques");
-    return tanques.filter(t => !isTanqueOcupado(t.num));
+    // Retorna todos os tanques (disponíveis e ocupados) para permitir transferência para tanques ativos
+    return tanques.map(t => {
+        let ocupado = isTanqueOcupado(t.num);
+        let info = ocupado ? getInfoTanqueOcupado(t.num) : null;
+        return { ...t, ocupado, loteId: info ? info.loteId : null, qtdPeixes: info ? info.qtdPeixes : 0 };
+    });
 }
 
 const TAMANHOS_PADRAO = [
@@ -4403,12 +4430,8 @@ function removerTanqueDaClasse(classId, tanqueDestId) {
 function lerValoresClasses() {
     // Ler todos os valores dos inputs antes de executar
     for (let cl of classesClassificacao) {
-        let pesoMinEl = document.getElementById(`cl_pmin_${cl.id}`);
-        let pesoMaxEl = document.getElementById(`cl_pmax_${cl.id}`);
         let qtdEl     = document.getElementById(`cl_qtd_${cl.id}`);
         let pmRealEl  = document.getElementById(`cl_pm_${cl.id}`);
-        if (pesoMinEl) cl.pesoMin = parseFloat(pesoMinEl.value) || 0;
-        if (pesoMaxEl) cl.pesoMax = parseFloat(pesoMaxEl.value) || 99999;
         if (qtdEl)     cl.qtdPeixes = parseInt(qtdEl.value) || 0;
         if (pmRealEl)  cl.pesoMedioReal = parseFloat(pmRealEl.value) || 0;
         for (let td of cl.tanquesDestino) {
@@ -4440,18 +4463,6 @@ function renderClassesContainer() {
                 ${classesClassificacao.length > 1 ? `<button onclick="removerClasse(${cl.id})" class="btn-danger btn-xs" style="margin:0;">🗑️</button>` : ''}
             </div>
 
-            <!-- Faixa de peso -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-                <div class="field" style="margin:0;">
-                    <label style="font-size:.65rem;">Peso mínimo (g)</label>
-                    <input type="number" id="cl_pmin_${cl.id}" value="${cl.pesoMin}" placeholder="0" step="1" style="padding:7px 10px;">
-                </div>
-                <div class="field" style="margin:0;">
-                    <label style="font-size:.65rem;">Peso máximo (g) — 99999=sem limite</label>
-                    <input type="number" id="cl_pmax_${cl.id}" value="${cl.pesoMax >= 99999 ? '' : cl.pesoMax}" placeholder="Sem limite" step="1" style="padding:7px 10px;">
-                </div>
-            </div>
-
             <!-- Qtd contada + Peso médio estimado -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
                 <div class="field" style="margin:0;">
@@ -4477,7 +4488,7 @@ function renderClassesContainer() {
                     <span style="font-size:.7rem;color:#64748b;min-width:16px;">${tidx+1}.</span>
                     <select id="td_num_${td.id}" onchange="lerValoresClasses();renderClassesContainer();" style="flex:2;padding:6px 8px;font-size:.78rem;">
                         <option value="">— Tanque —</option>
-                        ${tanquesParaEsteSlot.map(t => `<option value="${t.num}" ${td.num===t.num?'selected':''}>${t.num} (${t.vol}m³)</option>`).join('')}
+                        ${tanquesParaEsteSlot.map(t => { let lbl = t.ocupado ? `${t.num} (${t.vol}m³) 🐟 Lote#${String(t.loteId).slice(-4)} [OCUPADO]` : `${t.num} (${t.vol}m³) ✅ Livre`; return `<option value="${t.num}" ${td.num===t.num?\'selected\':\'\'}>${lbl}</option>`; }).join(\'\')}
                     </select>
                     <input type="number" id="td_cap_${td.id}" placeholder="Cap. máx." value="${td.capMax||''}" step="1" style="flex:1;padding:6px 8px;font-size:.78rem;" title="Capacidade máxima de peixes neste tanque (0 = sem limite)">
                     ${cl.tanquesDestino.length > 1 ? `<button onclick="removerTanqueDaClasse(${cl.id},${td.id})" class="btn-xs btn-danger" style="margin:0;padding:4px 8px;">✕</button>` : ''}
@@ -4614,7 +4625,7 @@ function executarClassificacaoNova() {
             if (!td.num) continue;
             if (todosDestNums.includes(td.num)) { showMessage(`❌ Tanque ${td.num} está selecionado em mais de uma classe!`, true); return; }
             if (origens.includes(td.num)) { showMessage(`❌ Tanque ${td.num} é origem e destino ao mesmo tempo!`, true); return; }
-            if (isTanqueOcupado(td.num)) { showMessage(`❌ Tanque destino ${td.num} já está ocupado!`, true); return; }
+            // Tanques ocupados agora são permitidos como destino (lote híbrido)
             todosDestNums.push(td.num);
         }
     }
@@ -4724,36 +4735,102 @@ function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, total
 
     // ── 2. Adicionar peixes nos tanques destino ───────────────────────────
     for (let aloc of alocacoes) {
-        let existente = loteOrigem.tanques.find(t => t.num === aloc.tanqueDestNum);
-        if (existente) {
-            // Já existe (não deveria pois validamos destinos vazios, mas por segurança)
-            let totalQ = existente.qtdPeixes + aloc.qtdPeixes;
-            let pmAtual = existente.ultimoPesoMedio || loteOrigem.pesoMedioAlevino || 5;
-            existente.ultimoPesoMedio = (existente.qtdPeixes * pmAtual + aloc.qtdPeixes * aloc.pesoMedio) / totalQ;
-            existente.qtdPeixes = totalQ;
-            existente.ultimaBiomassa = (existente.ultimaBiomassa || 0) + aloc.biomassa;
-        } else {
-            loteOrigem.tanques.push({
-                num: aloc.tanqueDestNum,
+        let tanqueDestOcupado = isTanqueOcupado(aloc.tanqueDestNum);
+        let infoDestino = tanqueDestOcupado ? getInfoTanqueOcupado(aloc.tanqueDestNum) : null;
+
+        if (tanqueDestOcupado && infoDestino && infoDestino.loteId !== loteOrigem.id) {
+            // ── Destino é tanque de OUTRO lote → criar lote híbrido ──────────
+            let loteDestino = lotes.find(l => l.id === infoDestino.loteId);
+            let tanqueDestObj = loteDestino.tanques.find(t => t.num === aloc.tanqueDestNum);
+
+            // Calcular custo proporcional pelo peso a transferir do lote origem
+            let biomassaOrigem = loteOrigem.tanques.reduce((s,t) => s + (t.qtdPeixes > 0 ? (t.ultimaBiomassa || (t.ultimoPesoMedio||loteOrigem.pesoMedioAlevino||5)/1000*t.qtdPeixes) : 0), 0);
+            let biomassaTransf = aloc.biomassa;
+            let proporcaoTransf = biomassaOrigem > 0 ? biomassaTransf / (biomassaOrigem + aloc.biomassa) : 0;
+            let custosOrigem = calcularCustoPorKGLote(loteOrigem);
+            let custoTransferido = custosOrigem.custoTotal * proporcaoTransf;
+
+            // Criar lote híbrido (merge no lote destino)
+            let totalQNovo = tanqueDestObj.qtdPeixes + aloc.qtdPeixes;
+            let pmDest = tanqueDestObj.ultimoPesoMedio || loteDestino.pesoMedioAlevino || 5;
+            tanqueDestObj.ultimoPesoMedio = (tanqueDestObj.qtdPeixes * pmDest + aloc.qtdPeixes * aloc.pesoMedio) / totalQNovo;
+            tanqueDestObj.qtdPeixes = totalQNovo;
+            tanqueDestObj.ultimaBiomassa = (tanqueDestObj.ultimaBiomassa || 0) + aloc.biomassa;
+            loteDestino.qtdTotal = loteDestino.tanques.reduce((s,t) => s+(t.qtdPeixes||0), 0);
+
+            // Registrar histórico de transferência recebida no lote destino
+            if (!loteDestino.transferenciasRecebidas) loteDestino.transferenciasRecebidas = [];
+            loteDestino.transferenciasRecebidas.push({
+                data: dataAgora,
+                loteOrigemId: loteOrigem.id,
+                tanqueDestino: aloc.tanqueDestNum,
                 qtdPeixes: aloc.qtdPeixes,
-                mortalidade: 0,
-                consumoRacao: 0,
-                consumoDetalhado: [],
-                ultimoPesoMedio: aloc.pesoMedio,
-                ultimaBiomassa: aloc.biomassa,
-                ultimaBiometriaData: dataAgora,
-                classeClassificacao: aloc.classeLabel
+                pesoMedio: aloc.pesoMedio,
+                biomassaKg: aloc.biomassa,
+                custoTransferido: custoTransferido,
+                classeClassificacao: aloc.classeLabel,
+                observacao: `Recebeu ${aloc.qtdPeixes} peixes do Lote #${loteOrigem.id} (classe ${aloc.classeEmoji}${aloc.classeLabel}, ${aloc.pesoMedio.toFixed(0)}g)`
+            });
+            if (!loteDestino.hibrido) loteDestino.hibrido = true;
+            if (!loteDestino.lotesOrigem) loteDestino.lotesOrigem = [];
+            if (!loteDestino.lotesOrigem.includes(loteOrigem.id)) loteDestino.lotesOrigem.push(loteOrigem.id);
+
+            // Registrar no lote origem que enviou peixes
+            if (!loteOrigem.transferenciasEnviadas) loteOrigem.transferenciasEnviadas = [];
+            loteOrigem.transferenciasEnviadas.push({
+                data: dataAgora,
+                loteDestinoId: loteDestino.id,
+                tanqueDestino: aloc.tanqueDestNum,
+                qtdPeixes: aloc.qtdPeixes,
+                pesoMedio: aloc.pesoMedio,
+                biomassaKg: aloc.biomassa,
+                custoTransferido: custoTransferido,
+                observacao: `Transferiu ${aloc.qtdPeixes} peixes para Lote #${loteDestino.id} / Tanque ${aloc.tanqueDestNum}`
+            });
+
+            // Biometria no lote destino
+            if (!loteDestino.biometrias) loteDestino.biometrias = [];
+            loteDestino.biometrias.push({
+                data: dataAgora,
+                tanque: aloc.tanqueDestNum,
+                pesoMedio: tanqueDestObj.ultimoPesoMedio,
+                biomassa: tanqueDestObj.ultimaBiomassa,
+                observacao: `Recebeu ${aloc.qtdPeixes} peixes do Lote #${loteOrigem.id} via classificação`
+            });
+
+        } else {
+            // ── Destino vazio (ou mesmo lote) ────────────────────────────────
+            let existente = loteOrigem.tanques.find(t => t.num === aloc.tanqueDestNum);
+            if (existente && existente.qtdPeixes > 0) {
+                let totalQ = existente.qtdPeixes + aloc.qtdPeixes;
+                let pmAtual = existente.ultimoPesoMedio || loteOrigem.pesoMedioAlevino || 5;
+                existente.ultimoPesoMedio = (existente.qtdPeixes * pmAtual + aloc.qtdPeixes * aloc.pesoMedio) / totalQ;
+                existente.qtdPeixes = totalQ;
+                existente.ultimaBiomassa = (existente.ultimaBiomassa || 0) + aloc.biomassa;
+            } else {
+                loteOrigem.tanques.push({
+                    num: aloc.tanqueDestNum,
+                    qtdPeixes: aloc.qtdPeixes,
+                    mortalidade: 0,
+                    consumoRacao: 0,
+                    consumoDetalhado: [],
+                    ultimoPesoMedio: aloc.pesoMedio,
+                    ultimaBiomassa: aloc.biomassa,
+                    ultimaBiometriaData: dataAgora,
+                    classeClassificacao: aloc.classeLabel
+                });
+            }
+            // Biometria no lote origem
+            if (!loteOrigem.biometrias) loteOrigem.biometrias = [];
+            loteOrigem.biometrias.push({
+                data: dataAgora,
+                tanque: aloc.tanqueDestNum,
+                pesoMedio: aloc.pesoMedio,
+                biomassa: aloc.biomassa,
+                observacao: `Classificação ${aloc.classeEmoji}${aloc.classeLabel} — origem: ${origens.join('+')}`
             });
         }
-        // Biometria
-        if (!loteOrigem.biometrias) loteOrigem.biometrias = [];
-        loteOrigem.biometrias.push({
-            data: dataAgora,
-            tanque: aloc.tanqueDestNum,
-            pesoMedio: aloc.pesoMedio,
-            biomassa: aloc.biomassa,
-            observacao: `Classificação ${aloc.classeEmoji}${aloc.classeLabel} — origem: ${origens.join('+')}`
-        });
+
         // Tratos
         if (horariosTratos.length > 0) {
             let caSel = parseFloat(document.getElementById("caSelectRacao")?.value || 1.4);
