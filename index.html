@@ -4700,11 +4700,23 @@ function executarClassificacaoNova() {
 function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, totalAlocado, sobras, origens) {
     let dataAgora = new Date().toLocaleString();
 
-    // ── 1. Reduzir/zerar tanques de origem ───────────────────────────────
+    // ── 0. Capturar totais da origem ANTES de qualquer modificação ────────
     let totalAlocadoTotal = alocacoes.reduce((s,a) => s + a.qtdPeixes, 0);
     let totalOrigem = (info1.qtdPeixes || 0) + (info2 ? info2.qtdPeixes || 0 : 0);
-    let ficamNaOrigem = totalOrigem - totalAlocadoTotal; // peixes que não foram distribuídos
+    let ficamNaOrigem = totalOrigem - totalAlocadoTotal;
 
+    // Consumo de ração total dos tanques de origem (antes de qualquer modificação)
+    let consumoRacaoOrigemTotal = 0;
+    let consumoDetalhOrigemTotal = [];
+    [info1, info2].filter(Boolean).forEach(info => {
+        let tObj = loteOrigem.tanques.find(t => t.num === info.tanque.num);
+        if (tObj) {
+            consumoRacaoOrigemTotal += (tObj.consumoRacao || 0);
+            consumoDetalhOrigemTotal.push(...(tObj.consumoDetalhado || []));
+        }
+    });
+
+    // ── 1. Reduzir/zerar tanques de origem ───────────────────────────────
     [info1, info2].filter(Boolean).forEach(info => {
         let tObj = loteOrigem.tanques.find(t => t.num === info.tanque.num);
         if (!tObj) return;
@@ -4753,14 +4765,35 @@ function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, total
             let loteDestino = lotes.find(l => l.id === infoDestino.loteId);
             let tanqueDestObj = loteDestino.tanques.find(t => t.num === aloc.tanqueDestNum);
 
-            // Calcular custo proporcional pelo peso a transferir do lote origem
-            let biomassaOrigem = loteOrigem.tanques.reduce((s,t) => s + (t.qtdPeixes > 0 ? (t.ultimaBiomassa || (t.ultimoPesoMedio||loteOrigem.pesoMedioAlevino||5)/1000*t.qtdPeixes) : 0), 0);
-            let biomassaTransf = aloc.biomassa;
-            let proporcaoTransf = biomassaOrigem > 0 ? biomassaTransf / (biomassaOrigem + aloc.biomassa) : 0;
-            let custosOrigem = calcularCustoPorKGLote(loteOrigem);
-            let custoTransferido = custosOrigem.custoTotal * proporcaoTransf;
+            // ── Custo proporcional: transferir do lote matriz para o lote híbrido ──
+            // Proporção baseada na quantidade de peixes transferidos vs total de origem
+            let proporcaoCusto = totalOrigem > 0 ? aloc.qtdPeixes / totalOrigem : 0;
+            let consumoRacaoTransferido = consumoRacaoOrigemTotal * proporcaoCusto;
 
-            // Criar lote híbrido (merge no lote destino)
+            // Descontar do lote origem (registrar como transferido para não duplicar no custo total)
+            loteOrigem.consumoRacaoTransferido = (loteOrigem.consumoRacaoTransferido || 0) + consumoRacaoTransferido;
+
+            // Adicionar consumo ao tanque destino (lote híbrido)
+            tanqueDestObj.consumoRacao = (tanqueDestObj.consumoRacao || 0) + consumoRacaoTransferido;
+
+            // Transferir detalhes de consumo proporcionalmente
+            if (consumoDetalhOrigemTotal.length > 0) {
+                if (!tanqueDestObj.consumoDetalhado) tanqueDestObj.consumoDetalhado = [];
+                for (let d of consumoDetalhOrigemTotal) {
+                    let kgTransf = (d.kg || 0) * proporcaoCusto;
+                    let custoTransf = (d.custoTotal || 0) * proporcaoCusto;
+                    if (kgTransf < 0.001) continue;
+                    tanqueDestObj.consumoDetalhado.push({
+                        ...d,
+                        data: dataAgora,
+                        kg: kgTransf,
+                        custoTotal: custoTransf,
+                        origem: `Transferido via classificação do Lote #${loteOrigem.id} (${(proporcaoCusto*100).toFixed(1)}%)`
+                    });
+                }
+            }
+
+            // Mesclar peixes e recalcular peso médio ponderado
             let totalQNovo = tanqueDestObj.qtdPeixes + aloc.qtdPeixes;
             let pmDest = tanqueDestObj.ultimoPesoMedio || loteDestino.pesoMedioAlevino || 5;
             tanqueDestObj.ultimoPesoMedio = (tanqueDestObj.qtdPeixes * pmDest + aloc.qtdPeixes * aloc.pesoMedio) / totalQNovo;
@@ -4777,8 +4810,7 @@ function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, total
                 qtdPeixes: aloc.qtdPeixes,
                 pesoMedio: aloc.pesoMedio,
                 biomassaKg: aloc.biomassa,
-                custoTransferido: custoTransferido,
-                classeClassificacao: aloc.classeLabel,
+                custoTransferido: consumoRacaoTransferido,
                 observacao: `Recebeu ${aloc.qtdPeixes} peixes do Lote #${loteOrigem.id} (classe ${aloc.classeEmoji}${aloc.classeLabel}, ${aloc.pesoMedio.toFixed(0)}g)`
             });
             if (!loteDestino.hibrido) loteDestino.hibrido = true;
@@ -4794,8 +4826,8 @@ function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, total
                 qtdPeixes: aloc.qtdPeixes,
                 pesoMedio: aloc.pesoMedio,
                 biomassaKg: aloc.biomassa,
-                custoTransferido: custoTransferido,
-                observacao: `Transferiu ${aloc.qtdPeixes} peixes para Lote #${loteDestino.id} / Tanque ${aloc.tanqueDestNum}`
+                custoTransferido: consumoRacaoTransferido,
+                observacao: `Transferiu ${aloc.qtdPeixes} peixes para Lote #${loteDestino.id} / Tanque ${aloc.tanqueDestNum} (ração: ${consumoRacaoTransferido.toFixed(2)}kg)`
             });
 
             // Biometria no lote destino
@@ -4882,8 +4914,17 @@ function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, total
     atualizarSelectTanques("bioTanque", "ocupados");
     atualizarSelectTanques("alimTanque", "ocupados");
     atualizarSelectTanques("mortTanque", "ocupados");
-    carregarInfoOrigem();
+
+    // ── 5. Limpar formulários após classificação ──────────────────────────
+    let origemEl = document.getElementById("origemTanque");
+    if (origemEl) origemEl.value = "";
+    let origem2El = document.getElementById("origemTanque2");
+    if (origem2El) origem2El.value = "";
+    // Resetar classes para o estado padrão (limpar qtds e tanques destino)
+    initClassesDefault();
     renderClassesContainer();
+    carregarInfoOrigem();
+    atualizarPreviewClassificacao();
 
     showMessage(`✅ Classificação concluída! ${totalAlocado} peixes em ${alocacoes.length} tanque(s).${sobras>0?' ⚠️ '+sobras+' peixes não alocados.':''}`)
 }
@@ -4977,7 +5018,11 @@ function calcularConsumoRacaoLote(lote) {
     if (lote.consumoRacaoHistorico) {
         consumoTotal += lote.consumoRacaoHistorico;
     }
-    return consumoTotal;
+    // Subtrair custo de ração que foi transferido para lotes híbridos
+    if (lote.consumoRacaoTransferido) {
+        consumoTotal -= lote.consumoRacaoTransferido;
+    }
+    return Math.max(0, consumoTotal);
 }
 
 // Calcular biomassa total atual do lote
