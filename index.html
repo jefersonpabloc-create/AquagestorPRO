@@ -963,6 +963,8 @@ function criarNovaPiscicultura() {
 
 function trocarParaPiscicultura(id) {
     setPiscAtiva(id);
+    horariosTratos = []; // limpar tratos da piscicultura anterior
+    loadHorariosTratos(); // carregar da nova piscicultura
     fecharGerenciadorPisciculturas();
     // Re-inicializar tudo
     renderTanques();
@@ -1007,7 +1009,7 @@ function resetarDadosPiscicultura() {
             let prefix = ativa === 'default' ? '' : ativa + '__';
             let keysParaRemover = ['tanques','lotes','estoqueRacao','colab','adiantamentos','modelosRacao',
                 'historicoMortalidade','historicoDiasAlimentacao','alimentacaoSuspensa',
-                'historicoClassificacoes','ultimaDataReset'];
+                'historicoClassificacoes','ultimaDataReset','horariosTratos'];
             keysParaRemover.forEach(k => localStorage.removeItem(prefix + k));
             Object.keys(localStorage).filter(k => k.startsWith(prefix + 'tratos_')).forEach(k => localStorage.removeItem(k));
             if (ativa === 'default') {
@@ -1015,6 +1017,7 @@ function resetarDadosPiscicultura() {
                 Object.keys(localStorage).filter(k => k.startsWith('tratos_')).forEach(k => localStorage.removeItem(k));
             }
             fecharGerenciadorPisciculturas();
+            horariosTratos = [];
             seedExemplo();
             renderTanques(); renderLotes(); renderColab(); renderEstoqueRacao(); atualizarDashboard();
             nav('menu');
@@ -1098,9 +1101,10 @@ function setUltimaDataReset(d) { localStorage.setItem(pKey('ultimaDataReset'), d
 
 function showMessage(msg, isError = false) {
     const toast = document.getElementById('toastMessage');
-    // Pick icon
+    // Remover quebras de linha (toast usa white-space:nowrap)
+    const msgLinha = (msg || '').replace(/\n+/g, ' · ').trim();
     const icon = isError ? '❌' : '✅';
-    toast.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+    toast.innerHTML = `<span>${icon}</span><span>${msgLinha}</span>`;
     toast.className = 'message ' + (isError ? 'error' : 'success');
     toast.classList.add('show');
     clearTimeout(toast._timer);
@@ -1165,11 +1169,14 @@ function atualizarSelectTanques(selectId, tipo = 'todos', withEmpty = false) {
             });
         }
     } else if (tipo === 'ocupados') {
-        tanques.forEach(t => {
-            if (isTanqueOcupado(t.num)) {
+        let ocupados = tanques.filter(t => isTanqueOcupado(t.num));
+        if (ocupados.length === 0 && !withEmpty) {
+            options.push('<option value="" disabled selected>Nenhum tanque ocupado</option>');
+        } else {
+            ocupados.forEach(t => {
                 options.push(`<option value="${t.num}">${t.num} (${t.vol}m³) ${t.malha ? `- ${t.malha}` : ''}</option>`);
-            }
-        });
+            });
+        }
     } else {
         tanques.forEach(t => {
             options.push(`<option value="${t.num}">${t.num} (${t.vol}m³)</option>`);
@@ -1321,7 +1328,7 @@ function liberarTanque(numTanque) {
             tanqueRemovido.dataDespesca = new Date().toLocaleDateString('pt-BR');
             tanqueRemovido.qtdDespescada = peixesRemovidos;
             tanqueRemovido.qtdPeixes = 0;
-            lote.qtdTotal = Math.max(0, (lote.qtdTotal || 0) - peixesRemovidos);
+            lote.qtdTotal = lote.tanques.reduce((s, t) => s + (t.qtdPeixes || 0), 0);
             // Se não há mais tanques ativos, encerrar o lote
             let ativos = lote.tanques.filter(t => !t.despescado && t.qtdPeixes > 0);
             if (ativos.length === 0) {
@@ -1769,7 +1776,7 @@ function renderLotes() {
                 <div class="stat-row">
                     <div class="stat-cell"><strong>R$ ${custos.custoTotal.toFixed(2)}</strong><span>💰 Custo total</span></div>
                     <div class="stat-cell"><strong>R$ ${custos.custoPorKg.toFixed(2)}/kg</strong><span>📊 Custo por kg</span></div>
-                    <div class="stat-cell"><strong>R$ ${l.valorAlevinos.toFixed(2)}</strong><span>🎣 Custo alevinos</span></div>
+                    <div class="stat-cell"><strong>R$ ${(l.valorAlevinos || 0).toFixed(2)}</strong><span>🎣 Custo alevinos</span></div>
                     <div class="stat-cell"><strong>R$ ${custoRacaoDetalhado.custoTotal.toFixed(2)}</strong><span>🌾 Custo ração</span></div>
                     <div class="stat-cell"><strong>${consumoTotal.toFixed(2)} kg</strong><span>🌾 Ração consumida</span></div>
                     <div class="stat-cell"><strong>${l.tanques.filter(t=>!t.despescado&&t.qtdPeixes>0).length} ativos${l.tanques.filter(t=>t.despescado).length>0?' / '+l.tanques.filter(t=>t.despescado).length+' despescados':''}</strong><span>🏞️ Tanques</span></div>
@@ -2017,6 +2024,18 @@ function aplicarRacaoTanque(tanqueNum, kgRacao) {
 // ==================== SISTEMA DE TRATOS DIÁRIOS ====================
 let horariosTratos = [];
 
+function saveHorariosTratos() {
+    saveData('horariosTratos', horariosTratos);
+}
+function loadHorariosTratos() {
+    let arr = loadData('horariosTratos');
+    if (Array.isArray(arr) && arr.length > 0) {
+        horariosTratos = arr;
+        return true;
+    }
+    return false;
+}
+
 function configurarTratos() {
     let primeira = document.getElementById("horaPrimeiraRacao").value;
     let ultima = document.getElementById("horaUltimaRacao").value;
@@ -2040,6 +2059,7 @@ function configurarTratos() {
         html += `<span style="display:inline-block; background:#e2e8f0; padding:4px 12px; border-radius:20px; margin:4px;">${idx+1}º: ${t.hora}</span> `;
     });
     document.getElementById("horariosTratos").innerHTML = html;
+    saveHorariosTratos();
     showMessage(`${numTratos} tratos configurados entre ${primeira} e ${ultima}`);
     padronizarTratosTodosTanques();
 }
@@ -2363,6 +2383,10 @@ function registrarTrato(tanqueNum, tratoIndex, kgRecomendado) {
 
 function preencherTodosTratos(tanqueNum) {
     let tratos = tLoad(tanqueNum);
+    if (tratos.length === 0) {
+        showMessage("⚙️ Configure os horários dos tratos primeiro! Clique em 'Config' → 'Calcular Horários'.", true);
+        return;
+    }
     let info = getInfoTanqueOcupado(tanqueNum);
     let racaoDiaria = 0;
     if (info) {
@@ -2376,7 +2400,6 @@ function preencherTodosTratos(tanqueNum) {
     }
     let kgPorTrato = racaoDiaria / tratos.length;
     let estoque = loadData("estoqueRacao");
-    let estoqueSnapshot = estoque.map(i => ({...i}));
     let totalNecessario = tratos.filter(t => !t.tratado).length * kgPorTrato;
     let totalEstoque = estoque.reduce((s, i) => s + i.kgTotal, 0);
     if (totalEstoque < totalNecessario) { showMessage(`Estoque insuficiente! Necessário: ${totalNecessario.toFixed(1)}kg`, true); return; }
@@ -2483,7 +2506,7 @@ function fornecerUmTratoParaTodosTanques() {
     }
     if (tanquesParaProcessar.length === 0) { showMessage("Todos os tanques já receberam o primeiro trato hoje!", true); return; }
     if (totalEstoque < totalKgNecessario) { showMessage(`Estoque insuficiente! Necessário: ${totalKgNecessario.toFixed(1)}kg, Disponível: ${totalEstoque.toFixed(1)}kg`, true); return; }
-    let estoqueAtual = [...estoque];
+    let estoqueAtual = estoque.map(i => ({...i})); // cópia profunda: estoque original fica intacto para rastreamento de custos
     for (let item of tanquesParaProcessar) {
         let t = item.tanque;
         let kgPorTrato = item.kgPorTrato;
@@ -2779,9 +2802,9 @@ function registrarMortalidade() {
     // Registrar no lote
     tanque.mortalidade = (tanque.mortalidade || 0) + mortos;
     tanque.qtdPeixes -= mortos;
-    lote.qtdTotal = Math.max(0, (lote.qtdTotal || 0) - mortos);
+    // Recalcular qtdTotal sempre a partir dos tanques (evitar dessincronização acumulada)
+    lote.qtdTotal = lote.tanques.reduce((s, t) => s + (t.qtdPeixes || 0), 0);
     
-    // Registrar no histórico de mortalidade com data
     let historico = loadData("historicoMortalidade") || [];
     historico.push({
         data: new Date().toISOString(),
@@ -2812,6 +2835,7 @@ function registrarMortalidade() {
 
 function renderConsumoDiario() {
     let div = document.getElementById("consumoDiario");
+    if (!div) return;
     let lotes = loadData("lotes");
     let consumos = [];
     lotes.forEach(l => l.tanques.forEach(t => { if(t.consumoRacao) consumos.push(`📊 Tanque ${t.num}: ${t.consumoRacao.toFixed(1)}kg`); }));
@@ -2954,6 +2978,7 @@ function carregarInfoTanqueBiometria() {
 function renderBiometrias() {
     let lotes = loadData("lotes");
     let div = document.getElementById("biometriasLista");
+    if (!div) return;
     let items = [];
     lotes.forEach(l => {
         if (l.biometrias?.length) {
@@ -2964,9 +2989,11 @@ function renderBiometrias() {
     div.innerHTML = items.slice(-5).reverse().map(b => {
         let amostrasInfo = "";
         if (b.amostras && b.amostras.length) {
-            amostrasInfo = `<br>📊 ${b.amostras.length} amostra(s) | ${b.totalPeixesAmostrados} peixes amostrados`;
+            amostrasInfo = `<br>📊 ${b.amostras.length} amostra(s) | ${b.totalPeixesAmostrados || 0} peixes amostrados`;
         }
-        return `<div class='card'>🐟 Lote ${b.loteId} | ${b.data}<br>📏 Peso médio: ${b.pesoMedio.toFixed(0)}g | ⚖️ Biomassa: ${b.biomassa.toFixed(1)}kg${amostrasInfo}</div>`;
+        let pm = (b.pesoMedio || 0).toFixed(0);
+        let bio = (b.biomassa || 0).toFixed(1);
+        return `<div class='card'>🐟 Lote ${b.loteId} | ${b.data}<br>📏 Peso médio: ${pm}g | ⚖️ Biomassa: ${bio}kg${amostrasInfo}</div>`;
     }).join('');
 }
 
@@ -3022,7 +3049,10 @@ function calcularMediaAmostras() {
         }
         tSave(tanqueNum, tratos);
     }
-    showMessage(`✅ BIOMETRIA ATUALIZADA!\n\n📊 Tanque ${tanqueNum}:\n• Peso médio: ${pesoMedioGramas.toFixed(0)} g\n• Biomassa: ${biomassa.toFixed(1)} kg\n• Nova ração diária: ${novaRacaoDiaria.toFixed(2)} kg\n• ${horariosTratos.length} tratos de ${(novaRacaoDiaria / horariosTratos.length).toFixed(2)} kg cada`);
+    let msgBio = horariosTratos.length > 0
+        ? `✅ Biometria registrada! Tanque ${tanqueNum} · ${pesoMedioGramas.toFixed(0)}g · ${biomassa.toFixed(1)}kg · Ração/dia: ${novaRacaoDiaria.toFixed(2)}kg (${horariosTratos.length} tratos de ${(novaRacaoDiaria / horariosTratos.length).toFixed(2)}kg)`
+        : `✅ Biometria registrada! Tanque ${tanqueNum} · ${pesoMedioGramas.toFixed(0)}g · ${biomassa.toFixed(1)}kg · Ração diária estimada: ${novaRacaoDiaria.toFixed(2)}kg`;
+    showMessage(msgBio);
     renderBiometrias();
     renderLotes();
     renderTratosTanques();
@@ -3285,7 +3315,7 @@ function renderColab() {
     if(!colaboradores.length) { div.innerHTML = "<div class='card'>Nenhum colaborador</div>"; return; }
     div.innerHTML = colaboradores.map(col => {
         let totalAdiant = adiantamentos.filter(a => a.idColab === col.id).reduce((s,a) => s + a.valor, 0);
-        return `<div class='card'><strong>${col.nome}</strong> (ID: ${col.id}) | ${col.tipo} | Base: R$ ${col.valorBase.toFixed(2)} | Vales: R$ ${totalAdiant.toFixed(2)}<button onclick="excluirColab(${col.id})" class="btn-danger btn-sm" style="float:right">🗑️</button></div>`;
+        return `<div class='card'><strong>${col.nome}</strong> (ID: ${col.id}) | ${col.tipo} | Base: R$ ${(col.valorBase||0).toFixed(2)} | Vales: R$ ${totalAdiant.toFixed(2)}<button onclick="excluirColab(${col.id})" class="btn-danger btn-sm" style="float:right">🗑️</button></div>`;
     }).join(''); 
 }
 
@@ -3493,7 +3523,7 @@ function atualizarGraficoMortalidade() {
     let dadosAgrupados = agruparDadosMortalidade(dadosMortes, agrupamento);
     
     // Obter dados de clima (simulados ou reais via API)
-    let dadosClima = obterDadosClimaParaDatas(dadosAgrupados.map(d => d.periodo));
+    let dadosClima = obterDadosClimaParaDatas(dadosAgrupados.map(d => d.periodo), dadosAgrupados);
     
     if (dadosAgrupados.length === 0) {
         document.getElementById("mortalidadeStats").innerHTML = "<div class='card' style='background:#fef2f2;'>⚠️ Nenhum registro de mortalidade encontrado para o período selecionado.</div>";
@@ -3647,7 +3677,7 @@ function atualizarGraficoMortalidade() {
     
     for (let i = 0; i < dadosAgrupados.length; i++) {
         let d = dadosAgrupados[i];
-        let estacao = obterEstacaoAno(d.periodo);
+        let estacao = obterEstacaoAnoDate(d.data instanceof Date ? d.data : new Date());
         let temperatura = dadosClima.temperaturas?.[i] || 'N/A';
         let chuva = dadosClima.chuvas?.[i] || 'N/A';
         let analise = '';
@@ -3738,16 +3768,17 @@ function obterEstacaoAno(dataStr) {
     }
 }
 
-function obterDadosClimaParaDatas(periodos) {
-    // Simulação de dados de clima baseados na época do ano
-    // Em produção, isso poderia ser substituído por uma API real como OpenWeatherMap
+function obterDadosClimaParaDatas(periodos, dadosAgrupados) {
+    // dadosAgrupados já tem o campo .data como objeto Date
     let temperaturas = [];
     let chuvas = [];
     
-    for (let periodo of periodos) {
-        let data = new Date(periodo);
-        let mes = data.getMonth();
-        let estacao = obterEstacaoAno(periodo);
+    for (let i = 0; i < periodos.length; i++) {
+        // Usar a data real do objeto agrupado se disponível
+        let data = (dadosAgrupados && dadosAgrupados[i] && dadosAgrupados[i].data instanceof Date)
+            ? dadosAgrupados[i].data
+            : new Date();
+        let estacao = obterEstacaoAnoDate(data);
         
         // Temperatura simulada por estação
         let tempBase;
@@ -3769,6 +3800,17 @@ function obterDadosClimaParaDatas(periodos) {
     }
     
     return { temperaturas, chuvas };
+}
+
+// Versão que aceita um objeto Date diretamente (evita parse de string localizada)
+function obterEstacaoAnoDate(data) {
+    if (!(data instanceof Date) || isNaN(data.getTime())) data = new Date();
+    let mes = data.getMonth() + 1;
+    let dia = data.getDate();
+    if ((mes === 12 && dia >= 22) || mes === 1 || mes === 2 || (mes === 3 && dia <= 20)) return { nome: 'Verão', icone: '☀️', cor: '#f59e0b' };
+    if ((mes === 3 && dia >= 21) || mes === 4 || mes === 5 || (mes === 6 && dia <= 20)) return { nome: 'Outono', icone: '🍂', cor: '#d97706' };
+    if ((mes === 6 && dia >= 21) || mes === 7 || mes === 8 || (mes === 9 && dia <= 22)) return { nome: 'Inverno', icone: '❄️', cor: '#3b82f6' };
+    return { nome: 'Primavera', icone: '🌸', cor: '#10b981' };
 }
 
 function gerarHistoricoMortalidadeSimulado(lotes) {
@@ -3821,52 +3863,13 @@ function gerarHistoricoMortalidadeSimulado(lotes) {
         }
     }
     
-    saveData("historicoMortalidade", historico);
+    // Dados simulados não são persistidos — apenas retornados em memória
     return historico;
 }
 
-// Função para registrar mortalidade com data
+// Alias mantido por compatibilidade — a lógica completa está em registrarMortalidade()
 function registrarMortalidadeComData() {
-    let tanqueNum = document.getElementById("mortTanque").value;
-    let mortos = parseInt(document.getElementById("mortQtde").value);
-    if(!tanqueNum || isNaN(mortos) || mortos <= 0) { showMessage("Dados inválidos", true); return; }
-    
-    let info = getInfoTanqueOcupado(tanqueNum);
-    if(!info) { showMessage("Tanque não ocupado", true); return; }
-    
-    let lotes = loadData("lotes");
-    let lote = lotes.find(l => l.id === info.loteId);
-    let tanque = lote.tanques.find(t => t.num === tanqueNum);
-    
-    if(tanque.qtdPeixes < mortos) { showMessage("Mortalidade maior que população", true); return; }
-    
-    // Registrar no lote
-    tanque.mortalidade = (tanque.mortalidade || 0) + mortos;
-    tanque.qtdPeixes -= mortos;
-    lote.qtdTotal = Math.max(0, (lote.qtdTotal || 0) - mortos);
-    
-    // Registrar no histórico com data
-    let historico = loadData("historicoMortalidade") || [];
-    historico.push({
-        data: new Date().toISOString(),
-        tanque: tanqueNum,
-        loteId: info.loteId,
-        quantidade: mortos,
-        temperatura: null, // Poderia buscar de API real
-        chuva: null
-    });
-    saveData("historicoMortalidade", historico);
-    
-    saveData("lotes", lotes);
-    showMessage(`${mortos} peixes mortos registrados em ${new Date().toLocaleDateString()}`);
-    renderTanques();
-    renderLotes();
-    renderConsumoDiario();
-    atualizarDashboard();
-    atualizarSelectTanques("mortTanque", "ocupados");
-    document.getElementById("mortQtde").value = "";
-    let motivoEl3 = document.getElementById("motivoMorte");
-    if (motivoEl3) motivoEl3.value = "";
+    registrarMortalidade();
 }
 function relEstoqueCompleto() { 
     renderEstoqueRacao(); 
@@ -3874,7 +3877,14 @@ function relEstoqueCompleto() {
     let resultDiv = document.getElementById("resultadoRel");
     if (estoqueDiv && resultDiv) resultDiv.innerHTML = estoqueDiv.innerHTML;
 }
-function relFinanceiroFolha() { let cols = loadData("colab"); let adiant = loadData("adiantamentos")||[]; let totalFolha = cols.reduce((s,c) => s + (c.tipo==='mensal'?c.valorBase:c.valorBase*22),0); let totalAdiant = adiant.reduce((s,a)=>s+a.valor,0); document.getElementById("resultadoRel").innerHTML = `<div class='card'><strong>👥 Folha</strong><br>💰 Folha: R$ ${totalFolha.toFixed(2)}<br>💸 Vales: R$ ${totalAdiant.toFixed(2)}</div>`; }
+function relFinanceiroFolha() {
+    let cols = loadData("colab");
+    let adiant = loadData("adiantamentos") || [];
+    let totalFolha = cols.reduce((s, c) => s + (c.tipo === 'mensal' ? (c.valorBase || 0) : (c.valorBase || 0) * 22), 0);
+    let totalAdiant = adiant.reduce((s, a) => s + (a.valor || 0), 0);
+    let div = document.getElementById("resultadoRel");
+    if (div) div.innerHTML = `<div class='card'><strong>👥 Folha de Pagamento</strong><br>💰 Total Folha: R$ ${totalFolha.toFixed(2)}<br>💸 Total Vales/Adiantamentos: R$ ${totalAdiant.toFixed(2)}<br>🧾 Líquido a pagar: R$ ${(totalFolha - totalAdiant).toFixed(2)}</div>`;
+}
 function relCurvaCrescimento() {
     let lotes = loadData("lotes");
     let tanquesOcupados = [];
@@ -4488,7 +4498,7 @@ function renderClassesContainer() {
                     <span style="font-size:.7rem;color:#64748b;min-width:16px;">${tidx+1}.</span>
                     <select id="td_num_${td.id}" onchange="lerValoresClasses();renderClassesContainer();" style="flex:2;padding:6px 8px;font-size:.78rem;">
                         <option value="">— Tanque —</option>
-                        ${tanquesParaEsteSlot.map(t => { let lbl = t.ocupado ? `${t.num} (${t.vol}m³) 🐟 Lote#${String(t.loteId).slice(-4)} [OCUPADO]` : `${t.num} (${t.vol}m³) ✅ Livre`; return `<option value="${t.num}" ${td.num===t.num?\'selected\':\'\'}>${lbl}</option>`; }).join(\'\')}
+                        ${tanquesParaEsteSlot.map(t => { let lbl = t.ocupado ? `${t.num} (${t.vol}m³) 🐟 Lote#${String(t.loteId).slice(-4)} [OCUPADO]` : `${t.num} (${t.vol}m³) ✅ Livre`; return `<option value="${t.num}" ${td.num===t.num?'selected':''}>${lbl}</option>`; }).join('')}
                     </select>
                     <input type="number" id="td_cap_${td.id}" placeholder="Cap. máx." value="${td.capMax||''}" step="1" style="flex:1;padding:6px 8px;font-size:.78rem;" title="Capacidade máxima de peixes neste tanque (0 = sem limite)">
                     ${cl.tanquesDestino.length > 1 ? `<button onclick="removerTanqueDaClasse(${cl.id},${td.id})" class="btn-xs btn-danger" style="margin:0;padding:4px 8px;">✕</button>` : ''}
@@ -5433,7 +5443,7 @@ function verificarTodosTanquesConcluidos() {
     
     // Só mostrar "todos concluídos" se houve ao menos 1 trato realizado hoje
     let algumTratadoHoje = false;
-    outer: for (let lote of loadData("lotes")) {
+    outer: for (let lote of lotes) {
         for (let tanque of lote.tanques) {
             if (tanque.qtdPeixes > 0) {
                 let tr = tLoad(tanque.num);
@@ -5510,7 +5520,11 @@ function registrarAlimentacaoComConclusao() {
                 for (let det of detalhesManual) tanque.consumoDetalhado.push(det);
                 saveData("lotes", lotes);
                 for (let i = 0; i < tratos.length; i++) {
-                    if (!tratos[i].tratado) tratos[i] = { ...tratos[i], tratado: true, kgFornecidos: kgRacao / (tratos.length - i) };
+                    if (!tratos[i].tratado) {
+                        // O primeiro pendente recebe o kg registrado; os demais ficam com 0 (encerramento do dia)
+                        let kgTrato = (i === tratos.findIndex(t => !t.tratado)) ? kgRacao : 0;
+                        tratos[i] = { ...tratos[i], tratado: true, kgFornecidos: kgTrato };
+                    }
                 }
                 tSave(tanqueNum, tratos);
                 showMessage(`✅ ${kgRacao}kg registrado. Dia finalizado para o tanque ${tanqueNum}`);
@@ -5606,6 +5620,17 @@ function toggleFormLote() {
 function init() {
     initPisciculturas();
     seedExemplo();
+    // Restaurar horários dos tratos do localStorage
+    if (loadHorariosTratos()) {
+        let horariosDiv = document.getElementById("horariosTratos");
+        if (horariosDiv && horariosTratos.length > 0) {
+            let html = "<strong>📅 Horários restaurados:</strong><br>";
+            horariosTratos.forEach((t, idx) => {
+                html += `<span style="display:inline-block; background:#e2e8f0; padding:4px 12px; border-radius:20px; margin:4px;">${idx+1}º: ${t.hora}</span> `;
+            });
+            horariosDiv.innerHTML = html;
+        }
+    }
     renderTanques();
     renderLotes();
     renderColab();
@@ -5669,7 +5694,6 @@ window.removerTanqueDaClasse = removerTanqueDaClasse;
 window.executarClassificacaoNova = executarClassificacaoNova;
 window.adicionarAmostra = adicionarAmostra;
 window.calcularMediaAmostras = calcularMediaAmostras;
-window.limparAmostras = limparAmostras;
 window.limparAmostras = limparAmostras;
 window.relCustosDetalhados = relCustosDetalhados;
 window.calcularCustoPorKGLote = calcularCustoPorKGLote;
