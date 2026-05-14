@@ -558,7 +558,7 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
     <!-- PASSO 2: Tamanhos -->
     <div class="card" style="border-left:3px solid var(--amber);">
         <div class="card-title">📏 PASSO 2 — DEFINIR CLASSES DE TAMANHO</div>
-        <small style="display:block;margin-bottom:10px;">Configure quantos tanques destino cada tamanho vai ocupar e a capacidade de cada tanque. Os peixes preenchem sequencialmente.</small>
+        <small style="display:block;margin-bottom:10px;">Informe quantos peixes foram contados em cada tamanho durante a classificação física, o peso médio estimado e os tanques de destino.</small>
 
         <div id="classesContainer">
             <!-- renderizado dinamicamente -->
@@ -1605,12 +1605,17 @@ function renderTanqueHistCard(t, lote) {
             </div>`;
     }
 
+    let isClassificado = isDespescado && t.motivoDespesca === "Classificação por tamanho";
     let statusBadge = isDespescado
-        ? `<span class="tanque-hist-badge despescado">🎣 Despescado em ${t.dataDespesca || '—'}</span>`
+        ? (isClassificado
+            ? `<span class="tanque-hist-badge despescado">🔀 Classificado em ${t.dataClassificacao || '—'}</span>`
+            : `<span class="tanque-hist-badge despescado">🎣 Despescado em ${t.dataDespesca || '—'}</span>`)
         : `<span class="tanque-hist-badge ativo">✅ Ativo</span>`;
 
     let qtdLabel = isDespescado
-        ? `${t.qtdDespescada || 0} peixes despescados`
+        ? (isClassificado
+            ? `🔀 Origem de classificação · ${t.consumoRacao ? t.consumoRacao.toFixed(1)+'kg consumidos' : 'sem consumo'}`
+            : `${t.qtdDespescada || 0} peixes despescados`)
         : `${t.qtdPeixes} peixes · ${pesoMedio.toFixed(0)}g`;
 
     return `<div class="tanque-hist-card${isDespescado ? ' despescado' : ''}">
@@ -4344,10 +4349,10 @@ let classesClassificacao = []; // [{label, emoji, pesoMin, pesoMax, descricao, t
 
 function initClassesDefault() {
     classesClassificacao = [
-        { id: 1, label: "P",  emoji: "🟡", descricao: "Pequeno",      pesoMin: 0,   pesoMax: 100, tanquesDestino: [{ id: Date.now()+1, num: "", capMax: 0 }] },
-        { id: 2, label: "M",  emoji: "🟠", descricao: "Médio",        pesoMin: 100, pesoMax: 300, tanquesDestino: [{ id: Date.now()+2, num: "", capMax: 0 }] },
-        { id: 3, label: "G",  emoji: "🟢", descricao: "Grande",       pesoMin: 300, pesoMax: 600, tanquesDestino: [{ id: Date.now()+3, num: "", capMax: 0 }] },
-        { id: 4, label: "GG", emoji: "🔵", descricao: "Muito Grande", pesoMin: 600, pesoMax: 99999, tanquesDestino: [{ id: Date.now()+4, num: "", capMax: 0 }] }
+        { id: 1, label: "P",  emoji: "🟡", descricao: "Pequeno",      pesoMin: 0,   pesoMax: 100,  qtdPeixes: 0, pesoMedioReal: 0, tanquesDestino: [{ id: Date.now()+1, num: "", capMax: 0 }] },
+        { id: 2, label: "M",  emoji: "🟠", descricao: "Médio",        pesoMin: 100, pesoMax: 300,  qtdPeixes: 0, pesoMedioReal: 0, tanquesDestino: [{ id: Date.now()+2, num: "", capMax: 0 }] },
+        { id: 3, label: "G",  emoji: "🟢", descricao: "Grande",       pesoMin: 300, pesoMax: 600,  qtdPeixes: 0, pesoMedioReal: 0, tanquesDestino: [{ id: Date.now()+3, num: "", capMax: 0 }] },
+        { id: 4, label: "GG", emoji: "🔵", descricao: "Muito Grande", pesoMin: 600, pesoMax: 99999, qtdPeixes: 0, pesoMedioReal: 0, tanquesDestino: [{ id: Date.now()+4, num: "", capMax: 0 }] }
     ];
 }
 
@@ -4368,6 +4373,8 @@ function adicionarClasse() {
         descricao: tamPadrao.descricao,
         pesoMin: ultimo ? (ultimo.pesoMax || 0) : 0,
         pesoMax: 99999,
+        qtdPeixes: 0,
+        pesoMedioReal: 0,
         tanquesDestino: [{ id: Date.now() + Math.random(), num: "", capMax: 0 }]
     });
     renderClassesContainer();
@@ -4398,8 +4405,12 @@ function lerValoresClasses() {
     for (let cl of classesClassificacao) {
         let pesoMinEl = document.getElementById(`cl_pmin_${cl.id}`);
         let pesoMaxEl = document.getElementById(`cl_pmax_${cl.id}`);
+        let qtdEl     = document.getElementById(`cl_qtd_${cl.id}`);
+        let pmRealEl  = document.getElementById(`cl_pm_${cl.id}`);
         if (pesoMinEl) cl.pesoMin = parseFloat(pesoMinEl.value) || 0;
         if (pesoMaxEl) cl.pesoMax = parseFloat(pesoMaxEl.value) || 99999;
+        if (qtdEl)     cl.qtdPeixes = parseInt(qtdEl.value) || 0;
+        if (pmRealEl)  cl.pesoMedioReal = parseFloat(pmRealEl.value) || 0;
         for (let td of cl.tanquesDestino) {
             let numEl  = document.getElementById(`td_num_${td.id}`);
             let capEl  = document.getElementById(`td_cap_${td.id}`);
@@ -4413,7 +4424,7 @@ function renderClassesContainer() {
     let div = document.getElementById("classesContainer");
     if (!div) return;
     let tanquesDisp = getTanquesDisponiveis();
-    // Também incluir tanques já selecionados em outras classes (para validar depois)
+    // Coletar todos os tanques já selecionados em qualquer slot de qualquer classe
     let jaUsados = new Set();
     classesClassificacao.forEach(cl => cl.tanquesDestino.forEach(td => { if (td.num) jaUsados.add(td.num); }));
 
@@ -4428,6 +4439,8 @@ function renderClassesContainer() {
                 </div>
                 ${classesClassificacao.length > 1 ? `<button onclick="removerClasse(${cl.id})" class="btn-danger btn-xs" style="margin:0;">🗑️</button>` : ''}
             </div>
+
+            <!-- Faixa de peso -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
                 <div class="field" style="margin:0;">
                     <label style="font-size:.65rem;">Peso mínimo (g)</label>
@@ -4438,18 +4451,38 @@ function renderClassesContainer() {
                     <input type="number" id="cl_pmax_${cl.id}" value="${cl.pesoMax >= 99999 ? '' : cl.pesoMax}" placeholder="Sem limite" step="1" style="padding:7px 10px;">
                 </div>
             </div>
+
+            <!-- Qtd contada + Peso médio estimado -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                <div class="field" style="margin:0;">
+                    <label style="font-size:.65rem;">🐟 Qtd. de peixes contada</label>
+                    <input type="number" id="cl_qtd_${cl.id}" value="${cl.qtdPeixes || ''}" placeholder="0" step="1" min="0" oninput="lerValoresClasses();atualizarPreviewClassificacao();" style="padding:7px 10px;border-color:${corBorda};">
+                </div>
+                <div class="field" style="margin:0;">
+                    <label style="font-size:.65rem;">⚖️ Peso médio estimado (g)</label>
+                    <input type="number" id="cl_pm_${cl.id}" value="${cl.pesoMedioReal || ''}" placeholder="ex: 150" step="1" min="0" style="padding:7px 10px;">
+                </div>
+            </div>
+
             <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:4px;">Tanques de destino (preenchem em ordem):</div>
-            ${cl.tanquesDestino.map((td, tidx) => `
+            ${cl.tanquesDestino.map((td, tidx) => {
+                // Para cada slot, mostrar tanques disponíveis + o tanque já selecionado neste slot
+                // Excluir tanques selecionados em OUTROS slots (de qualquer classe)
+                let tanquesParaEsteSlot = tanquesDisp.filter(t => {
+                    if (t.num === td.num) return true; // sempre mostrar o já selecionado neste slot
+                    return !jaUsados.has(t.num); // excluir os usados em outros slots
+                });
+                return `
                 <div style="display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap;">
                     <span style="font-size:.7rem;color:#64748b;min-width:16px;">${tidx+1}.</span>
-                    <select id="td_num_${td.id}" style="flex:2;padding:6px 8px;font-size:.78rem;">
+                    <select id="td_num_${td.id}" onchange="lerValoresClasses();renderClassesContainer();" style="flex:2;padding:6px 8px;font-size:.78rem;">
                         <option value="">— Tanque —</option>
-                        ${tanquesDisp.map(t => `<option value="${t.num}" ${td.num===t.num?'selected':''}>${t.num} (${t.vol}m³)</option>`).join('')}
+                        ${tanquesParaEsteSlot.map(t => `<option value="${t.num}" ${td.num===t.num?'selected':''}>${t.num} (${t.vol}m³)</option>`).join('')}
                     </select>
-                    <input type="number" id="td_cap_${td.id}" placeholder="Cap. máx. peixes" value="${td.capMax||''}" step="1" style="flex:1;padding:6px 8px;font-size:.78rem;" title="Capacidade máxima de peixes neste tanque (0 = sem limite)">
+                    <input type="number" id="td_cap_${td.id}" placeholder="Cap. máx." value="${td.capMax||''}" step="1" style="flex:1;padding:6px 8px;font-size:.78rem;" title="Capacidade máxima de peixes neste tanque (0 = sem limite)">
                     ${cl.tanquesDestino.length > 1 ? `<button onclick="removerTanqueDaClasse(${cl.id},${td.id})" class="btn-xs btn-danger" style="margin:0;padding:4px 8px;">✕</button>` : ''}
-                </div>
-            `).join('')}
+                </div>`;
+            }).join('')}
             <button onclick="adicionarTanqueNaClasse(${cl.id})" class="btn-xs btn-outline" style="margin-top:4px;">➕ + Tanque neste tamanho</button>
         </div>`;
     }).join('');
@@ -4513,17 +4546,30 @@ function atualizarPreviewClassificacao() {
     let t1num = document.getElementById("origemTanque") ? document.getElementById("origemTanque").value : "";
     let t2El = document.getElementById("origemTanque2");
     let t2num = t2El ? t2El.value : "";
-    let totalPeixes = 0;
+    let totalOrigem = 0;
     [t1num, t2num].filter(Boolean).forEach(num => {
         let info = getInfoTanqueOcupado(num);
-        if (info) totalPeixes += info.qtdPeixes;
+        if (info) totalOrigem += info.qtdPeixes;
     });
-    if (totalPeixes === 0) { div.innerHTML = ""; return; }
+    if (totalOrigem === 0) { div.innerHTML = ""; return; }
+
+    let totalDistribuido = classesClassificacao.reduce((s, cl) => s + (cl.qtdPeixes || 0), 0);
+    let sobra = totalOrigem - totalDistribuido;
+    let corSobra = sobra === 0 ? 'var(--green)' : sobra > 0 ? 'var(--amber)' : 'var(--red)';
+    let sobraLabel = sobra === 0 ? '✅ Total confere!' : sobra > 0 ? `⚠️ Faltam ${sobra} peixes distribuídos` : `❌ Excesso de ${Math.abs(sobra)} peixes (total maior que origem)`;
+
     let classesBlocos = classesClassificacao.map((cl, cidxPrev) => {
         let tanquesOk = cl.tanquesDestino.filter(td => td.num).length;
-        return `<span style="background:${['#fef9c3','#fff7ed','#f0fdf4','#eff6ff'][cidxPrev]||'#f8fafc'};padding:3px 9px;border-radius:12px;font-size:.72rem;font-weight:700;">${cl.emoji}${cl.label} (${cl.pesoMin}g–${cl.pesoMax>=99999?'∞':cl.pesoMax+'g'}, ${tanquesOk} tanque${tanquesOk!==1?'s':''})</span>`;
+        let qtd = cl.qtdPeixes || 0;
+        let bg = ["#fef9c3","#fff7ed","#f0fdf4","#eff6ff"][cidxPrev] || "#f8fafc";
+        return `<span style="background:${bg};padding:3px 9px;border-radius:12px;font-size:.72rem;font-weight:700;">${cl.emoji}${cl.label}: <strong>${qtd}</strong> peixes (${tanquesOk} tanque${tanquesOk!==1?'s':''})</span>`;
     }).join(' ');
-    div.innerHTML = `<div style="line-height:1.8;">🐟 <strong>${totalPeixes}</strong> peixes serão distribuídos em até ${classesClassificacao.length} classes:<br>${classesBlocos}</div>`;
+
+    div.innerHTML = `<div style="line-height:2;">
+        🐟 Origem: <strong>${totalOrigem}</strong> peixes · Distribuídos: <strong>${totalDistribuido}</strong><br>
+        ${classesBlocos}<br>
+        <span style="color:${corSobra};font-weight:700;font-size:.78rem;">${sobraLabel}</span>
+    </div>`;
 }
 
 function executarClassificacaoNova() {
@@ -4549,9 +4595,17 @@ function executarClassificacaoNova() {
 
     let totalPeixesOrigem = infoOrigem1.qtdPeixes + (infoOrigem2 ? infoOrigem2.qtdPeixes : 0);
 
-    // Validar classes
-    let classesValidas = classesClassificacao.filter(cl => cl.tanquesDestino.some(td => td.num));
-    if (classesValidas.length === 0) { showMessage("❌ Configure pelo menos uma classe com tanque de destino", true); return; }
+    // Validar classes — usar as que têm qtd > 0 E tanque destino configurado
+    let classesValidas = classesClassificacao.filter(cl => cl.qtdPeixes > 0 && cl.tanquesDestino.some(td => td.num));
+    if (classesValidas.length === 0) {
+        showMessage("❌ Informe a quantidade de peixes e o tanque de destino em pelo menos uma classe", true); return;
+    }
+
+    // Verificar se total distribuído não excede origem
+    let totalDistribuido = classesValidas.reduce((s, cl) => s + cl.qtdPeixes, 0);
+    if (totalDistribuido > totalPeixesOrigem) {
+        showMessage(`❌ Total distribuído (${totalDistribuido}) excede a quantidade de origem (${totalPeixesOrigem})`, true); return;
+    }
 
     // Verificar tanques duplicados nos destinos
     let todosDestNums = [];
@@ -4565,33 +4619,26 @@ function executarClassificacaoNova() {
         }
     }
 
-    // Calcular peso médio dos peixes de cada origem para classificar
-    let getPesoMedioTanque = (info) => {
-        let ultimaBio = (info.lote.biometrias||[]).slice().reverse().find(b => b.tanque === info.tanque.num);
-        return ultimaBio ? ultimaBio.pesoMedio : (info.lote.pesoMedioAlevino || 5);
-    };
-    let pm1 = getPesoMedioTanque(infoOrigem1);
-    let pm2 = infoOrigem2 ? getPesoMedioTanque(infoOrigem2) : 0;
-
-    // Para classificação real: usamos o peso médio do lote para distribuir os peixes em classes.
-    // A distribuição é SEQUENCIAL: dado que não temos peso individual, simulamos que os peixes do
-    // lote têm um peso médio representativo. O usuário distribuiu por % estimada OU todos vão para
-    // a classe cujo range engloba o peso médio de cada tanque de origem.
-    // LÓGICA: cada tanque de origem vai para a classe que engloba seu peso médio, sequencialmente preenchendo os tanques destino.
-
     let lotes = loadData("lotes");
     let loteOrigem = lotes.find(l => l.id === infoOrigem1.loteId);
     if (!loteOrigem) { showMessage("❌ Lote não encontrado", true); return; }
 
-    // Estrutura: { classId -> [ { tanqueDestNum, qtdAlocada } ] }
-    let alocacoes = []; // [{classeLabel, classIdx, tanqueDestNum, qtdPeixes, pesoMedio, biomassa}]
+    // Montar alocações: distribuir a qtdPeixes de cada classe sequencialmente nos tanques destino
+    let alocacoes = [];
 
-    // Função: alocar N peixes com peso médio PM na classe cl, distribuindo sequencialmente pelos tanques destino
-    function alocarNaClasse(cl, qtdPeixes, pesoMedioAl) {
-        let restante = qtdPeixes;
+    function alocarNaClasse(cl) {
+        let restante = cl.qtdPeixes;
+        // Peso médio: usar o informado pelo usuário, ou fallback para última biometria do lote
+        let getPMFallback = () => {
+            let bios = (loteOrigem.biometrias || []).slice().reverse();
+            let bio = bios.find(b => b.tanque === t1num) || bios[0];
+            return bio ? bio.pesoMedio : (loteOrigem.pesoMedioAlevino || 5);
+        };
+        let pesoMedioAl = cl.pesoMedioReal > 0 ? cl.pesoMedioReal : getPMFallback();
+
         for (let td of cl.tanquesDestino) {
             if (!td.num || restante <= 0) continue;
-            let capMax = td.capMax > 0 ? td.capMax : restante; // 0 = sem limite
+            let capMax = td.capMax > 0 ? td.capMax : restante;
             let alocar = Math.min(restante, capMax);
             if (alocar <= 0) continue;
             alocacoes.push({
@@ -4603,27 +4650,18 @@ function executarClassificacaoNova() {
             });
             restante -= alocar;
         }
-        return restante; // retorna o que sobrou (não alocado — tanques cheios ou sem destino)
+        return restante; // sobras desta classe (tanques cheios)
     }
 
-    // Determinar classe de cada tanque origem por seu peso médio, e alocar
-    let semClasse1 = 0, semClasse2 = 0;
-    let clMatch1 = classesValidas.find(cl => pm1 >= cl.pesoMin && pm1 < (cl.pesoMax >= 99999 ? Infinity : cl.pesoMax));
-    let clMatch2 = infoOrigem2 ? classesValidas.find(cl => pm2 >= cl.pesoMin && pm2 < (cl.pesoMax >= 99999 ? Infinity : cl.pesoMax)) : null;
-
-    if (!clMatch1) { showMessage(`⚠️ Peso médio do tanque ${t1num} (${pm1.toFixed(0)}g) não se encaixa em nenhuma classe. Ajuste os ranges.`, true); return; }
-    semClasse1 = alocarNaClasse(clMatch1, infoOrigem1.qtdPeixes, pm1);
-
-    if (infoOrigem2 && clMatch2) {
-        semClasse2 = alocarNaClasse(clMatch2, infoOrigem2.qtdPeixes, pm2);
-    } else if (infoOrigem2 && !clMatch2) {
-        showMessage(`⚠️ Peso médio do tanque ${t2num} (${pm2.toFixed(0)}g) não se encaixa em nenhuma classe. Ajuste os ranges.`, true); return;
+    let totalSobras = 0;
+    for (let cl of classesValidas) {
+        totalSobras += alocarNaClasse(cl);
     }
 
-    let sobras = semClasse1 + semClasse2;
     if (alocacoes.length === 0) { showMessage("❌ Nenhum peixe foi alocado. Verifique os tanques destino.", true); return; }
 
     let totalAlocado = alocacoes.reduce((s,a) => s + a.qtdPeixes, 0);
+    let sobras = (totalPeixesOrigem - totalDistribuido) + totalSobras; // não distribuídos + sobras de capacidade
 
     // Resumo para confirmação
     let resumoLinhas = alocacoes.map(a =>
@@ -4632,7 +4670,7 @@ function executarClassificacaoNova() {
 
     showConfirm({
         title: '🔀 Confirmar Classificação',
-        msg: `Tanques origem: ${origens.join(' + ')}\nTotal: ${totalAlocado} peixes\n\n${resumoLinhas}${sobras>0?`\n\n⚠️ ${sobras} peixes não alocados (capacidade esgotada)`:''}`,
+        msg: `Tanques origem: ${origens.join(' + ')}\nOrigem: ${totalPeixesOrigem} peixes → Alocando: ${totalAlocado}\n\n${resumoLinhas}${sobras>0?`\n\n⚠️ ${sobras} peixes ficam no tanque origem`:''}`,
         icon: '🔀', type: 'info', okLabel: '✅ Confirmar',
         onConfirm: () => _aplicarClassificacao(lotes, loteOrigem, infoOrigem1, infoOrigem2, alocacoes, totalAlocado, sobras, origens)
     });
@@ -4642,14 +4680,46 @@ function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, total
     let dataAgora = new Date().toLocaleString();
 
     // ── 1. Reduzir/zerar tanques de origem ───────────────────────────────
+    let totalAlocadoTotal = alocacoes.reduce((s,a) => s + a.qtdPeixes, 0);
+    let totalOrigem = (info1.qtdPeixes || 0) + (info2 ? info2.qtdPeixes || 0 : 0);
+    let ficamNaOrigem = totalOrigem - totalAlocadoTotal; // peixes que não foram distribuídos
+
     [info1, info2].filter(Boolean).forEach(info => {
         let tObj = loteOrigem.tanques.find(t => t.num === info.tanque.num);
         if (!tObj) return;
-        // Zerar tanque de origem (todos os peixes foram classificados/realocados)
-        tObj.qtdPeixes = 0;
-        tObj.consumoRacao = 0;
-        tObj.ultimaBiomassa = 0;
-        tRemove(info.tanque.num);
+
+        if (ficamNaOrigem <= 0) {
+            // Classificação total: zerar e marcar como classificado
+            loteOrigem.consumoRacaoHistorico = (loteOrigem.consumoRacaoHistorico || 0) + (tObj.consumoRacao || 0);
+            tObj.qtdPeixes = 0;
+            tObj.ultimaBiomassa = 0;
+            tObj.despescado = true;
+            tObj.dataClassificacao = dataAgora;
+            tObj.motivoDespesca = "Classificação por tamanho";
+            // NÃO zerar consumoRacao — preservar para histórico
+            tRemove(info.tanque.num);
+        } else {
+            // Classificação parcial: reduzir proporcionalmente e manter ativo
+            // Tanque 1 absorve todas as sobras (ou distribuir proporcionalmente)
+            if (info === info1) {
+                tObj.qtdPeixes = ficamNaOrigem;
+                // Atualizar biomassa proporcional
+                let pmAtual = tObj.ultimoPesoMedio || loteOrigem.pesoMedioAlevino || 5;
+                tObj.ultimaBiomassa = (pmAtual / 1000) * ficamNaOrigem;
+                // Preservar consumoRacao proporcionalmente
+                let ratioFicou = ficamNaOrigem / (info.qtdPeixes || 1);
+                tObj.consumoRacao = (tObj.consumoRacao || 0) * ratioFicou;
+            } else {
+                // Tanque 2 na classificação parcial: zerar também (sobras todas no tanque 1)
+                loteOrigem.consumoRacaoHistorico = (loteOrigem.consumoRacaoHistorico || 0) + (tObj.consumoRacao || 0);
+                tObj.qtdPeixes = 0;
+                tObj.ultimaBiomassa = 0;
+                tObj.despescado = true;
+                tObj.dataClassificacao = dataAgora;
+                tObj.motivoDespesca = "Classificação por tamanho";
+                tRemove(info.tanque.num);
+            }
+        }
     });
 
     // ── 2. Adicionar peixes nos tanques destino ───────────────────────────
@@ -4696,9 +4766,9 @@ function _aplicarClassificacao(lotes, loteOrigem, info1, info2, alocacoes, total
     }
 
     // ── 3. Recalcular total do lote ───────────────────────────────────────
-    // Remover tanques zerados
-    loteOrigem.tanques = loteOrigem.tanques.filter(t => t.qtdPeixes > 0);
-    loteOrigem.qtdTotal = loteOrigem.tanques.reduce((s, t) => s + t.qtdPeixes, 0);
+    // NÃO remover tanques zerados — mantê-los com flag despescado para histórico de consumo
+    // Apenas recalcular qtdTotal e biomassaAtual com tanques ativos
+    loteOrigem.qtdTotal = loteOrigem.tanques.reduce((s, t) => s + (t.qtdPeixes || 0), 0);
     loteOrigem.biomassaAtual = loteOrigem.tanques.reduce((s, t) => s + (t.ultimaBiomassa || 0), 0);
 
     saveData("lotes", lotes);
