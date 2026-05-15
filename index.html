@@ -258,7 +258,14 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
 .rel-btn-lbl{line-height:1.2}
 #resultadoRel{border-radius:var(--r-lg);max-height:480px;overflow-y:auto;scrollbar-width:thin}
 
-/* TASK ALERTS */
+/* BIOMETRIA PERFORMANCE BADGES */
+.bio-perf-card{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:.75rem;}
+.bio-perf-title{font-size:.63rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#15803d;margin-bottom:4px;}
+.bio-dens-ok{background:#f0fdf4;border-color:#86efac;}
+.bio-dens-alerta{background:#fffbeb;border-color:#fcd34d;}
+.bio-dens-critico{background:#fef2f2;border-color:#fca5a5;}
+
+
 .task-section{margin:10px 0}
 .task-title{font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .task-title::after{content:'';flex:1;height:1px;background:var(--border)}
@@ -339,9 +346,454 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
   .menu-btn{font-size:.6rem;padding:10px 2px}
   .kpi-grid{grid-template-columns:1fr}
 }
+/* ============================================================
+   AUTH SYSTEM v2 — Login, Cadastro, Recuperação de Senha
+   ============================================================ */
+#authOverlay{
+  position:fixed;inset:0;z-index:99999;overflow-y:auto;
+  background:linear-gradient(145deg,#0b4f6c 0%,#0a7ea4 50%,#065f7c 100%);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:24px 16px 40px;font-family:'Plus Jakarta Sans',sans-serif;
+}
+.auth-card{
+  background:#fff;border-radius:28px;width:100%;max-width:400px;
+  box-shadow:0 32px 96px rgba(0,0,0,.45);
+  overflow:hidden;margin-top:auto;margin-bottom:auto;
+  animation:authIn .32s cubic-bezier(.34,1.4,.64,1) both;
+}
+@keyframes authIn{from{opacity:0;transform:translateY(32px) scale(.95)}to{opacity:1;transform:none}}
+/* Header */
+.auth-hd{background:linear-gradient(135deg,#0e8fc0,#065f7c);padding:26px 28px 20px;text-align:center;}
+.auth-hd-logo{font-size:2.6rem;line-height:1;margin-bottom:5px;}
+.auth-hd-title{font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.auth-hd-sub{font-size:.72rem;color:rgba(255,255,255,.7);margin-top:2px;}
+/* Tabs */
+#authTabs{display:flex;background:#f0f5f8;}
+.auth-tab{flex:1;padding:11px 6px;font-family:inherit;font-size:.8rem;font-weight:700;
+  border:none;background:transparent;color:#64748b;cursor:pointer;
+  border-bottom:2.5px solid transparent;transition:all .18s;}
+.auth-tab.on{color:#0a7ea4;border-bottom-color:#0a7ea4;background:#fff;}
+/* Panels */
+.auth-pnl{display:none;padding:22px 26px 28px;}
+.auth-pnl.on{display:block;animation:pnlIn .2s ease both;}
+@keyframes pnlIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+/* Field */
+.af{margin-bottom:13px;}
+.af label{display:block;font-size:.69rem;font-weight:700;color:#475569;margin-bottom:5px;letter-spacing:.15px;}
+.af input{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:12px;
+  font-family:inherit;font-size:.88rem;background:#f8fafc;color:#1a2c3e;
+  box-sizing:border-box;transition:border-color .15s,box-shadow .15s,background .15s;}
+.af input:focus{outline:none;border-color:#0a7ea4;box-shadow:0 0 0 3px rgba(10,126,164,.12);background:#fff;}
+.af input.val-ok{border-color:#22c55e;}
+.af input.val-err{border-color:#ef4444;}
+/* Password wrap */
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:42px;}
+.pw-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  background:none;border:none;padding:4px;cursor:pointer;font-size:.95rem;
+  color:#94a3b8;line-height:1;}
+.pw-eye:hover{color:#0a7ea4;}
+/* Strength bar */
+.pw-bar{height:4px;background:#e2e8f0;border-radius:4px;margin-top:5px;overflow:hidden;}
+.pw-bar-fill{height:100%;border-radius:4px;width:0;transition:width .3s,background .3s;}
+.pw-bar-lbl{font-size:.62rem;color:#94a3b8;margin-top:2px;}
+/* Main button */
+.auth-btn{width:100%;padding:13px;margin-top:4px;
+  background:linear-gradient(135deg,#0e8fc0,#065f7c);
+  color:#fff;font-family:inherit;font-weight:800;font-size:.9rem;
+  border:none;border-radius:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:filter .18s,transform .15s,box-shadow .18s;}
+.auth-btn:hover{filter:brightness(1.09);transform:translateY(-1px);box-shadow:0 6px 20px rgba(10,126,164,.3);}
+.auth-btn:active{transform:scale(.97);filter:none;}
+/* Feedback messages */
+.auth-msg{display:none;border-radius:10px;padding:10px 14px;font-size:.78rem;
+  font-weight:600;margin-top:11px;text-align:center;line-height:1.45;}
+.auth-msg.err{background:#fee2e2;color:#c2410c;border:1px solid #fecaca;}
+.auth-msg.ok {background:#dcfce7;color:#15803d;border:1px solid #86efac;}
+.auth-msg.inf{background:#e0f7ff;color:#065f7c;border:1px solid #bae6fd;}
+/* Divider */
+.auth-div{display:flex;align-items:center;gap:9px;margin:14px 0;color:#cbd5e1;font-size:.7rem;}
+.auth-div::before,.auth-div::after{content:'';flex:1;height:1px;background:#e8eef3;}
+/* Inline link button */
+.auth-ilk{background:none;border:none;font-family:inherit;font-size:inherit;
+  color:#0a7ea4;font-weight:700;cursor:pointer;padding:0;transition:color .15s;}
+.auth-ilk:hover{color:#065f7c;}
+/* Forgot link */
+.auth-forgot{display:block;text-align:right;margin-top:-4px;margin-bottom:12px;}
+/* Back button */
+.auth-back{display:inline-flex;align-items:center;gap:4px;background:none;border:none;
+  font-family:inherit;font-size:.78rem;font-weight:700;color:#0a7ea4;
+  cursor:pointer;padding:0;margin-bottom:14px;}
+.auth-back:hover{color:#065f7c;}
+/* Step dots */
+.auth-dots{display:flex;gap:6px;justify-content:center;margin-bottom:16px;}
+.auth-dot{width:32px;height:4px;border-radius:4px;background:#e2e8f0;transition:background .28s;}
+.auth-dot.on{background:#0a7ea4;}
+/* Code display box */
+.rec-code-box{background:#e8f7ff;border:1.5px solid #bae6fd;border-radius:12px;
+  padding:14px;text-align:center;margin-bottom:14px;}
+.rec-code-val{font-size:1.8rem;font-weight:900;letter-spacing:10px;color:#0a7ea4;
+  font-family:monospace;display:block;margin-top:4px;}
+
+/* ================================================================
+   ÁREA DO USUÁRIO — Minha Conta
+   ================================================================ */
+/* Avatar */
+.ua-avatar{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,#0e8fc0,#065f7c);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;font-weight:800;color:#fff;
+  box-shadow:0 6px 20px rgba(10,126,164,.35);
+  flex-shrink:0;cursor:pointer;transition:transform .18s;
+  border:3px solid rgba(255,255,255,.25);
+  position:relative;
+}
+.ua-avatar:hover{transform:scale(1.06);}
+.ua-avatar-lg{width:80px;height:80px;font-size:1.9rem;margin:0 auto 12px;}
+
+/* Header menu-btn para "Minha Conta" no header */
+.hdr-user-btn{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+  border-radius:40px;padding:5px 12px 5px 6px;cursor:pointer;
+  transition:all .18s;color:#fff;font-family:inherit;
+  font-size:.75rem;font-weight:700;max-width:160px;
+}
+.hdr-user-btn:hover{background:rgba(255,255,255,.22);}
+.hdr-user-av{
+  width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,#0e8fc0,#09455a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;font-weight:800;color:#fff;flex-shrink:0;
+}
+.hdr-user-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;}
+
+/* Drawer overlay */
+.ua-drawer-overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.ua-drawer-overlay.open{opacity:1;pointer-events:all;}
+
+/* Drawer panel */
+.ua-drawer{
+  position:fixed;top:0;right:0;bottom:0;z-index:1001;
+  width:min(340px,95vw);background:var(--bg,#f8fafc);
+  display:flex;flex-direction:column;
+  box-shadow:-12px 0 60px rgba(0,0,0,.25);
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.32,.72,0,1);
+}
+.ua-drawer.open{transform:translateX(0);}
+
+/* Drawer header */
+.ua-dh{
+  background:linear-gradient(135deg,#0e8fc0,#065f7c);
+  padding:32px 20px 24px;text-align:center;flex-shrink:0;position:relative;
+}
+.ua-dh-close{
+  position:absolute;top:14px;right:14px;background:rgba(255,255,255,.15);
+  border:none;color:#fff;font-size:1.1rem;width:30px;height:30px;border-radius:50%;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.ua-dh-close:hover{background:rgba(255,255,255,.3);}
+.ua-dh-name{font-size:1.05rem;font-weight:800;color:#fff;margin-bottom:2px;}
+.ua-dh-email{font-size:.72rem;color:rgba(255,255,255,.75);}
+.ua-dh-badge{
+  display:inline-block;margin-top:8px;padding:3px 12px;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);
+  border-radius:20px;font-size:.65rem;font-weight:700;color:#fff;
+}
+
+/* Drawer body */
+.ua-db{flex:1;overflow-y:auto;padding:16px;}
+
+/* Section title */
+.ua-sec-title{
+  font-size:.62rem;font-weight:800;letter-spacing:.9px;text-transform:uppercase;
+  color:#94a3b8;padding:0 4px;margin:16px 0 6px;
+}
+.ua-sec-title:first-child{margin-top:0;}
+
+/* Menu items */
+.ua-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:14px;cursor:pointer;
+  transition:background .15s;border:none;background:transparent;
+  font-family:inherit;font-size:.86rem;font-weight:600;color:#1e293b;
+  width:100%;text-align:left;
+}
+.ua-item:hover{background:#f0f7ff;}
+.ua-item-ico{
+  width:38px;height:38px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.ua-item-ico.blue{background:#e0f2fe;}
+.ua-item-ico.green{background:#dcfce7;}
+.ua-item-ico.amber{background:#fef3c7;}
+.ua-item-ico.red{background:#fee2e2;}
+.ua-item-ico.purple{background:#f3e8ff;}
+.ua-item-ico.gray{background:#f1f5f9;}
+.ua-item-lbl{flex:1;}
+.ua-item-lbl small{display:block;font-size:.68rem;font-weight:500;color:#94a3b8;margin-top:1px;}
+.ua-item-arr{font-size:.75rem;color:#cbd5e1;}
+
+/* Danger item */
+.ua-item.danger{color:#c2410c;}
+.ua-item.danger:hover{background:#fee2e2;}
+
+/* Divider */
+.ua-divider{height:1px;background:#e8eef3;margin:8px 0;}
+
+/* ── Sub-tela: Configurações de Conta ── */
+.ua-sub{display:none;flex-direction:column;height:100%;}
+.ua-sub.open{display:flex;}
+.ua-sub-head{
+  display:flex;align-items:center;gap:10px;padding:16px 16px 12px;
+  border-bottom:1px solid #e8eef3;flex-shrink:0;
+}
+.ua-sub-back{
+  background:none;border:none;font-size:1.1rem;cursor:pointer;
+  color:#0a7ea4;padding:4px;border-radius:8px;transition:background .15s;
+}
+.ua-sub-back:hover{background:#e0f2fe;}
+.ua-sub-title{font-weight:800;font-size:.95rem;color:#1e293b;}
+.ua-sub-body{flex:1;overflow-y:auto;padding:16px;}
+
+/* Form fields inside drawer */
+.ua-field{margin-bottom:14px;}
+.ua-field label{display:block;font-size:.7rem;font-weight:700;color:#475569;margin-bottom:5px;}
+.ua-field input{
+  width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:12px;
+  font-family:inherit;font-size:.87rem;background:#f8fafc;color:#1a2c3e;
+  box-sizing:border-box;transition:border-color .15s;
+}
+.ua-field input:focus{outline:none;border-color:#0a7ea4;box-shadow:0 0 0 3px rgba(10,126,164,.1);background:#fff;}
+.ua-field input:disabled{background:#f1f5f9;color:#94a3b8;cursor:not-allowed;}
+
+/* Save button inside drawer */
+.ua-save-btn{
+  width:100%;padding:12px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,#0e8fc0,#065f7c);
+  color:#fff;font-family:inherit;font-weight:800;font-size:.88rem;
+  cursor:pointer;transition:all .18s;margin-top:4px;
+}
+.ua-save-btn:hover{filter:brightness(1.08);}
+
+/* Inline msg */
+.ua-msg{
+  display:none;border-radius:10px;padding:9px 13px;
+  font-size:.78rem;font-weight:600;margin-top:10px;text-align:center;
+}
+.ua-msg.ok{background:#dcfce7;color:#15803d;border:1px solid #86efac;}
+.ua-msg.err{background:#fee2e2;color:#c2410c;border:1px solid #fecaca;}
+
+/* Stats card inside drawer */
+.ua-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;
+}
+.ua-stat{
+  background:#f0f7ff;border-radius:12px;padding:11px 12px;text-align:center;
+}
+.ua-stat-val{font-size:1.1rem;font-weight:800;color:#0a7ea4;}
+.ua-stat-lbl{font-size:.62rem;color:#64748b;margin-top:2px;font-weight:600;}
+
+/* Perfil badge */
+.perfil-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700;
+}
+.perfil-badge.admin{background:#f3e8ff;color:#7c3aed;}
+.perfil-badge.user{background:#e0f2fe;color:#0369a1;}
 </style>
 </head>
 <body>
+
+<!-- ================================================================
+     AUTH OVERLAY — Login | Cadastro | Recuperar Senha
+     ================================================================ -->
+<div id="authOverlay">
+  <div class="auth-card">
+
+    <!-- Header -->
+    <div class="auth-hd">
+      <div class="auth-hd-logo">🐟</div>
+      <div class="auth-hd-title">AquaGestor PRO</div>
+      <div class="auth-hd-sub">ERP completo para Piscicultura</div>
+    </div>
+
+    <!-- Tabs -->
+    <div id="authTabs">
+      <button class="auth-tab on"  onclick="authTab('login')">🔓 Entrar</button>
+      <button class="auth-tab"     onclick="authTab('cadastro')">✨ Criar Conta</button>
+    </div>
+
+    <!-- ═══════════════ PAINEL LOGIN ═══════════════ -->
+    <div class="auth-pnl on" id="pnlLogin">
+      <div class="af">
+        <label>E-mail ou usuário</label>
+        <input type="text" id="lgUser" placeholder="seu@email.com" autocomplete="username"
+          onkeydown="if(event.key==='Enter')document.getElementById('lgPwd').focus()">
+      </div>
+      <div class="af">
+        <label>Senha</label>
+        <div class="pw-wrap">
+          <input type="password" id="lgPwd" placeholder="••••••••" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="pw-eye" onclick="pwToggle('lgPwd',this)" tabindex="-1">👁️</button>
+        </div>
+      </div>
+      <div class="auth-forgot">
+        <button class="auth-ilk" style="font-size:.73rem;" onclick="authGo('recuperar')">Esqueceu a senha?</button>
+      </div>
+      <button class="auth-btn" onclick="doLogin()">🔓 Entrar</button>
+      <div class="auth-msg err" id="lgMsg"></div>
+      <div class="auth-div">ou</div>
+      <p style="text-align:center;font-size:.75rem;color:#64748b;margin:0;">
+        Sem conta? <button class="auth-ilk" onclick="authTab('cadastro')">Criar conta grátis →</button>
+      </p>
+    </div>
+
+    <!-- ═══════════════ PAINEL CADASTRO ═══════════════ -->
+    <div class="auth-pnl" id="pnlCadastro">
+      <div class="af">
+        <label>Nome completo</label>
+        <input type="text" id="rgNome" placeholder="João da Silva" autocomplete="name"
+          oninput="valField(this,'nome')"
+          onkeydown="if(event.key==='Enter')document.getElementById('rgEmail').focus()">
+      </div>
+      <div class="af">
+        <label>E-mail</label>
+        <input type="email" id="rgEmail" placeholder="seu@email.com" autocomplete="email"
+          oninput="valField(this,'email')"
+          onkeydown="if(event.key==='Enter')document.getElementById('rgPwd').focus()">
+      </div>
+      <div class="af">
+        <label>Senha</label>
+        <div class="pw-wrap">
+          <input type="password" id="rgPwd" placeholder="Mínimo 6 caracteres" autocomplete="new-password"
+            oninput="pwStrength(this.value,'pwFill1','pwLbl1');valField(this,'senha')"
+            onkeydown="if(event.key==='Enter')document.getElementById('rgPwdConf').focus()">
+          <button class="pw-eye" onclick="pwToggle('rgPwd',this)" tabindex="-1">👁️</button>
+        </div>
+        <div class="pw-bar"><div class="pw-bar-fill" id="pwFill1"></div></div>
+        <div class="pw-bar-lbl" id="pwLbl1">Digite uma senha</div>
+      </div>
+      <div class="af">
+        <label>Confirmar senha</label>
+        <div class="pw-wrap">
+          <input type="password" id="rgPwdConf" placeholder="Repita a senha" autocomplete="new-password"
+            oninput="valField(this,'conf')"
+            onkeydown="if(event.key==='Enter')doRegister()">
+          <button class="pw-eye" onclick="pwToggle('rgPwdConf',this)" tabindex="-1">👁️</button>
+        </div>
+      </div>
+      <button class="auth-btn" onclick="doRegister()">✨ Criar Minha Conta</button>
+      <div class="auth-msg" id="rgMsg"></div>
+      <div class="auth-div">ou</div>
+      <p style="text-align:center;font-size:.75rem;color:#64748b;margin:0;">
+        Já tem conta? <button class="auth-ilk" onclick="authTab('login')">Entrar →</button>
+      </p>
+    </div>
+
+    <!-- ═══════════════ PAINEL RECUPERAR SENHA ═══════════════ -->
+    <div class="auth-pnl" id="pnlRecuperar">
+
+      <!-- Etapa 1 — Informar e-mail -->
+      <div id="recP1">
+        <button class="auth-back" onclick="authTab('login')">← Voltar ao login</button>
+        <div class="auth-dots">
+          <div class="auth-dot on"></div>
+          <div class="auth-dot"></div>
+          <div class="auth-dot"></div>
+        </div>
+        <div style="text-align:center;margin-bottom:18px;">
+          <div style="font-size:2rem;">🔑</div>
+          <div style="font-weight:800;font-size:.95rem;color:#1a2c3e;margin-top:4px;">Recuperar senha</div>
+          <div style="font-size:.74rem;color:#64748b;margin-top:4px;line-height:1.5;">Informe o e-mail da sua conta e você receberá um código de verificação.</div>
+        </div>
+        <div class="af">
+          <label>E-mail cadastrado</label>
+          <input type="email" id="recEmail" placeholder="seu@email.com"
+            onkeydown="if(event.key==='Enter')recStep1()">
+        </div>
+        <button class="auth-btn" onclick="recStep1()">📨 Enviar Código de Verificação</button>
+        <div class="auth-msg" id="recMsg1"></div>
+      </div>
+
+      <!-- Etapa 2 — Verificar código -->
+      <div id="recP2" style="display:none;">
+        <button class="auth-back" onclick="recShowStep(1)">← Voltar</button>
+        <div class="auth-dots">
+          <div class="auth-dot on"></div>
+          <div class="auth-dot on"></div>
+          <div class="auth-dot"></div>
+        </div>
+        <div style="text-align:center;margin-bottom:14px;">
+          <div style="font-size:2rem;">📬</div>
+          <div style="font-weight:800;font-size:.95rem;color:#1a2c3e;margin-top:4px;">Código de verificação</div>
+          <div style="font-size:.74rem;color:#64748b;margin-top:4px;line-height:1.5;" id="recP2hint">Código gerado (simulação local — em produção seria enviado por e-mail).</div>
+        </div>
+        <div class="rec-code-box">
+          <span style="font-size:.65rem;text-transform:uppercase;letter-spacing:.8px;font-weight:700;color:#0a7ea4;">Seu código de recuperação</span>
+          <span class="rec-code-val" id="recCodeVal">——</span>
+          <span style="font-size:.63rem;color:#94a3b8;">Válido por 10 minutos · Não compartilhe</span>
+        </div>
+        <div class="af">
+          <label>Digite o código de 6 dígitos</label>
+          <input type="text" id="recCode" placeholder="000000" maxlength="6"
+            style="text-align:center;letter-spacing:8px;font-size:1.15rem;font-weight:800;font-family:monospace;"
+            oninput="this.value=this.value.replace(/\D/g,'')"
+            onkeydown="if(event.key==='Enter')recStep2()">
+        </div>
+        <button class="auth-btn" onclick="recStep2()">✅ Verificar Código</button>
+        <div class="auth-msg" id="recMsg2"></div>
+        <p style="text-align:center;font-size:.72rem;color:#94a3b8;margin-top:10px;">
+          Não recebeu? <button class="auth-ilk" style="font-size:.72rem;" onclick="recStep1()">Reenviar →</button>
+        </p>
+      </div>
+
+      <!-- Etapa 3 — Nova senha -->
+      <div id="recP3" style="display:none;">
+        <div class="auth-dots" style="margin-bottom:16px;">
+          <div class="auth-dot on"></div>
+          <div class="auth-dot on"></div>
+          <div class="auth-dot on"></div>
+        </div>
+        <div style="text-align:center;margin-bottom:18px;">
+          <div style="font-size:2rem;">🛡️</div>
+          <div style="font-weight:800;font-size:.95rem;color:#1a2c3e;margin-top:4px;">Criar nova senha</div>
+          <div style="font-size:.74rem;color:#64748b;margin-top:4px;">Escolha uma senha forte para proteger sua conta.</div>
+        </div>
+        <div class="af">
+          <label>Nova senha</label>
+          <div class="pw-wrap">
+            <input type="password" id="recPwd" placeholder="Mínimo 6 caracteres" autocomplete="new-password"
+              oninput="pwStrength(this.value,'pwFill2','pwLbl2')"
+              onkeydown="if(event.key==='Enter')document.getElementById('recPwdConf').focus()">
+            <button class="pw-eye" onclick="pwToggle('recPwd',this)" tabindex="-1">👁️</button>
+          </div>
+          <div class="pw-bar"><div class="pw-bar-fill" id="pwFill2"></div></div>
+          <div class="pw-bar-lbl" id="pwLbl2">Digite uma senha</div>
+        </div>
+        <div class="af">
+          <label>Confirmar nova senha</label>
+          <div class="pw-wrap">
+            <input type="password" id="recPwdConf" placeholder="Repita a senha" autocomplete="new-password"
+              onkeydown="if(event.key==='Enter')recStep3()">
+            <button class="pw-eye" onclick="pwToggle('recPwdConf',this)" tabindex="-1">👁️</button>
+          </div>
+        </div>
+        <button class="auth-btn" onclick="recStep3()">🔑 Redefinir Minha Senha</button>
+        <div class="auth-msg" id="recMsg3"></div>
+      </div>
+
+    </div><!-- /pnlRecuperar -->
+  </div><!-- /.auth-card -->
+</div><!-- /#authOverlay -->
 
 <header>
   <div class="header-inner">
@@ -349,9 +801,260 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
       <h1>🐟 AquaGestor PRO</h1>
       <p>ERP completo para Piscicultura</p>
     </div>
-    <div class="header-badge" id="headerBadge" onclick="abrirGerenciadorPisciculturas()" style="cursor:pointer;">🐟 — peixes</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="header-badge" id="headerBadge" onclick="abrirGerenciadorPisciculturas()" style="cursor:pointer;">🐟 — peixes</div>
+      <button class="hdr-user-btn" id="hdrUserBtn" onclick="uaOpen()" title="Minha Conta">
+        <div class="hdr-user-av" id="hdrUserAv">?</div>
+        <span class="hdr-user-name" id="hdrUserName">Conta</span>
+      </button>
+    </div>
   </div>
 </header>
+
+<!-- ================================================================
+     ÁREA DO USUÁRIO — Drawer lateral
+     ================================================================ -->
+<div class="ua-drawer-overlay" id="uaOverlay" onclick="uaClose()"></div>
+<div class="ua-drawer" id="uaDrawer">
+
+  <!-- ── TELA PRINCIPAL do drawer ── -->
+  <div id="uaMain" style="display:flex;flex-direction:column;height:100%;">
+
+    <!-- Header do drawer -->
+    <div class="ua-dh">
+      <button class="ua-dh-close" onclick="uaClose()">✕</button>
+      <div class="ua-avatar ua-avatar-lg" id="uaAvatarBig" onclick="uaGo('perfil')">?</div>
+      <div class="ua-dh-name" id="uaDhName">—</div>
+      <div class="ua-dh-email" id="uaDhEmail">—</div>
+      <div id="uaDhBadge" class="ua-dh-badge">👤 Usuário</div>
+    </div>
+
+    <!-- Body do drawer -->
+    <div class="ua-db">
+      <!-- Stats rápidas -->
+      <div class="ua-stats" id="uaStatsBlock">
+        <div class="ua-stat">
+          <div class="ua-stat-val" id="uaStatMembro">—</div>
+          <div class="ua-stat-lbl">Membro desde</div>
+        </div>
+        <div class="ua-stat">
+          <div class="ua-stat-val" id="uaStatPerfil">—</div>
+          <div class="ua-stat-lbl">Perfil de acesso</div>
+        </div>
+      </div>
+
+      <!-- CONTA -->
+      <div class="ua-sec-title">Conta</div>
+      <button class="ua-item" onclick="uaGo('perfil')">
+        <div class="ua-item-ico blue">👤</div>
+        <div class="ua-item-lbl">Meu Perfil<small>Nome, e-mail e informações</small></div>
+        <div class="ua-item-arr">›</div>
+      </button>
+      <button class="ua-item" onclick="uaGo('senha')">
+        <div class="ua-item-ico purple">🔑</div>
+        <div class="ua-item-lbl">Alterar Senha<small>Atualize sua senha de acesso</small></div>
+        <div class="ua-item-arr">›</div>
+      </button>
+      <button class="ua-item" onclick="uaGo('notif')">
+        <div class="ua-item-ico amber">🔔</div>
+        <div class="ua-item-lbl">Preferências<small>Tema e configurações visuais</small></div>
+        <div class="ua-item-arr">›</div>
+      </button>
+
+      <!-- SISTEMA -->
+      <div class="ua-sec-title">Sistema</div>
+      <button class="ua-item" onclick="uaGo('sobre')">
+        <div class="ua-item-ico green">ℹ️</div>
+        <div class="ua-item-lbl">Sobre o App<small>Versão e informações</small></div>
+        <div class="ua-item-arr">›</div>
+      </button>
+      <button class="ua-item" onclick="uaExportarDados()">
+        <div class="ua-item-ico gray">💾</div>
+        <div class="ua-item-lbl">Exportar Meus Dados<small>Baixar backup em JSON</small></div>
+        <div class="ua-item-arr">›</div>
+      </button>
+
+      <div class="ua-divider"></div>
+
+      <!-- SAIR -->
+      <button class="ua-item danger" onclick="uaLogout()">
+        <div class="ua-item-ico red">⏻</div>
+        <div class="ua-item-lbl">Sair da Conta<small>Encerrar sessão atual</small></div>
+      </button>
+    </div>
+  </div><!-- /#uaMain -->
+
+  <!-- ════════════════════════════════
+       SUB-TELA: MEU PERFIL
+       ════════════════════════════════ -->
+  <div class="ua-sub" id="uaSubPerfil">
+    <div class="ua-sub-head">
+      <button class="ua-sub-back" onclick="uaBack()">‹</button>
+      <div class="ua-sub-title">👤 Meu Perfil</div>
+    </div>
+    <div class="ua-sub-body">
+      <!-- Avatar grande com inicial -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div class="ua-avatar ua-avatar-lg" id="uaPAvatar" style="margin:0 auto 10px;">?</div>
+        <div id="uaPNome" style="font-weight:800;font-size:1rem;color:#1e293b;">—</div>
+        <div id="uaPEmail" style="font-size:.75rem;color:#94a3b8;margin-top:2px;">—</div>
+        <div id="uaPBadge" style="margin-top:8px;"></div>
+      </div>
+      <div class="ua-field">
+        <label>Nome completo</label>
+        <input type="text" id="uaFNome" placeholder="Seu nome completo">
+      </div>
+      <div class="ua-field">
+        <label>E-mail</label>
+        <input type="email" id="uaFEmail" placeholder="seu@email.com">
+      </div>
+      <div class="ua-field">
+        <label>Usuário (login)</label>
+        <input type="text" id="uaFUsuario" disabled>
+      </div>
+      <div class="ua-field">
+        <label>Perfil de acesso</label>
+        <input type="text" id="uaFPerfil" disabled>
+      </div>
+      <div class="ua-field">
+        <label>Conta criada em</label>
+        <input type="text" id="uaFCriado" disabled>
+      </div>
+      <button class="ua-save-btn" onclick="uaSalvarPerfil()">💾 Salvar Alterações</button>
+      <div class="ua-msg" id="uaMsgPerfil"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SUB-TELA: ALTERAR SENHA
+       ════════════════════════════════ -->
+  <div class="ua-sub" id="uaSubSenha">
+    <div class="ua-sub-head">
+      <button class="ua-sub-back" onclick="uaBack()">‹</button>
+      <div class="ua-sub-title">🔑 Alterar Senha</div>
+    </div>
+    <div class="ua-sub-body">
+      <p style="font-size:.8rem;color:#64748b;margin-bottom:18px;line-height:1.55;">Para alterar sua senha, informe a senha atual e depois a nova senha desejada.</p>
+      <div class="ua-field">
+        <label>Senha atual</label>
+        <div class="pw-wrap">
+          <input type="password" id="uaFSenhaAtual" placeholder="••••••••">
+          <button class="pw-eye" onclick="pwToggle('uaFSenhaAtual',this)" tabindex="-1">👁️</button>
+        </div>
+      </div>
+      <div class="ua-field">
+        <label>Nova senha</label>
+        <div class="pw-wrap">
+          <input type="password" id="uaFSenhaNova" placeholder="Mínimo 6 caracteres"
+            oninput="pwStrength(this.value,'uaPwFill','uaPwLbl')">
+          <button class="pw-eye" onclick="pwToggle('uaFSenhaNova',this)" tabindex="-1">👁️</button>
+        </div>
+        <div class="pw-bar"><div class="pw-bar-fill" id="uaPwFill"></div></div>
+        <div class="pw-bar-lbl" id="uaPwLbl">Digite uma senha</div>
+      </div>
+      <div class="ua-field">
+        <label>Confirmar nova senha</label>
+        <div class="pw-wrap">
+          <input type="password" id="uaFSenhaConf" placeholder="Repita a nova senha">
+          <button class="pw-eye" onclick="pwToggle('uaFSenhaConf',this)" tabindex="-1">👁️</button>
+        </div>
+      </div>
+      <button class="ua-save-btn" onclick="uaAlterarSenha()">🔑 Atualizar Senha</button>
+      <div class="ua-msg" id="uaMsgSenha"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SUB-TELA: PREFERÊNCIAS
+       ════════════════════════════════ -->
+  <div class="ua-sub" id="uaSubNotif">
+    <div class="ua-sub-head">
+      <button class="ua-sub-back" onclick="uaBack()">‹</button>
+      <div class="ua-sub-title">🔔 Preferências</div>
+    </div>
+    <div class="ua-sub-body">
+      <div class="ua-sec-title" style="margin-top:0;">Aparência</div>
+      <!-- Tema -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8fafc;border-radius:14px;margin-bottom:10px;">
+        <div>
+          <div style="font-weight:700;font-size:.86rem;color:#1e293b;">🌙 Tema Escuro</div>
+          <div style="font-size:.7rem;color:#94a3b8;margin-top:1px;">Ativar modo dark no app</div>
+        </div>
+        <label class="ua-toggle">
+          <input type="checkbox" id="uaToggleDark" onchange="uaToggleDarkMode(this.checked)">
+          <span class="ua-toggle-sl"></span>
+        </label>
+      </div>
+      <!-- Tamanho fonte -->
+      <div style="padding:12px 14px;background:#f8fafc;border-radius:14px;margin-bottom:10px;">
+        <div style="font-weight:700;font-size:.86rem;color:#1e293b;margin-bottom:8px;">🔤 Tamanho do Texto</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="uaSetFontSize('small')"  id="fsSmall"  style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-size:.75rem;cursor:pointer;font-weight:700;transition:all .15s;">Pequeno</button>
+          <button onclick="uaSetFontSize('normal')" id="fsNormal" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-size:.85rem;cursor:pointer;font-weight:700;transition:all .15s;">Normal</button>
+          <button onclick="uaSetFontSize('large')"  id="fsLarge"  style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-size:.95rem;cursor:pointer;font-weight:700;transition:all .15s;">Grande</button>
+        </div>
+      </div>
+      <div class="ua-msg ok" id="uaMsgPref" style="display:none;">✅ Preferências salvas!</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SUB-TELA: SOBRE
+       ════════════════════════════════ -->
+  <div class="ua-sub" id="uaSubSobre">
+    <div class="ua-sub-head">
+      <button class="ua-sub-back" onclick="uaBack()">‹</button>
+      <div class="ua-sub-title">ℹ️ Sobre o App</div>
+    </div>
+    <div class="ua-sub-body">
+      <div style="text-align:center;padding:20px 0 24px;">
+        <div style="font-size:3rem;margin-bottom:8px;">🐟</div>
+        <div style="font-weight:900;font-size:1.15rem;color:#0a7ea4;">AquaGestor PRO</div>
+        <div style="font-size:.75rem;color:#94a3b8;margin-top:4px;">Versão 20.0 · Build 2025</div>
+      </div>
+      <div style="background:#f0f7ff;border-radius:14px;padding:14px 16px;font-size:.8rem;color:#334155;line-height:1.7;margin-bottom:12px;">
+        <strong style="color:#0a7ea4;">ERP completo para Piscicultura</strong><br>
+        Gestão de tanques, lotes, biometrias, alimentação, mão de obra, custos e relatórios — tudo em um só arquivo HTML, sem servidor, sem instalação.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;padding:8px 12px;background:#f8fafc;border-radius:10px;">
+          <span style="color:#64748b;">Plataforma</span><strong>HTML5 · Offline</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;padding:8px 12px;background:#f8fafc;border-radius:10px;">
+          <span style="color:#64748b;">Armazenamento</span><strong>LocalStorage</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;padding:8px 12px;background:#f8fafc;border-radius:10px;">
+          <span style="color:#64748b;">Usuários</span><strong id="uaSobreUsers">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;padding:8px 12px;background:#f8fafc;border-radius:10px;">
+          <span style="color:#64748b;">Sessão atual</span><strong id="uaSobreSessao">—</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#uaDrawer -->
+
+<!-- Toggle style for dark mode preference -->
+<style>
+.ua-toggle{position:relative;display:inline-block;width:44px;height:24px;}
+.ua-toggle input{opacity:0;width:0;height:0;}
+.ua-toggle-sl{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:24px;transition:.25s;}
+.ua-toggle-sl::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s;}
+.ua-toggle input:checked + .ua-toggle-sl{background:#0a7ea4;}
+.ua-toggle input:checked + .ua-toggle-sl::before{transform:translateX(20px);}
+/* Dark mode overrides */
+body.dark-mode{--bg:#0f172a;background:#0f172a;color:#f1f5f9;}
+body.dark-mode header{background:linear-gradient(135deg,#0e1f30,#0a3347);}
+body.dark-mode .container{background:transparent;}
+body.dark-mode .card,.dark-mode .dash-card,.dark-mode .kpi-card{background:#1e293b;border-color:#334155;color:#f1f5f9;}
+body.dark-mode .ua-drawer{background:#1e293b;}
+body.dark-mode .ua-item{color:#f1f5f9;}
+body.dark-mode .ua-item:hover{background:#273347;}
+body.dark-mode .ua-field input{background:#0f172a;border-color:#334155;color:#f1f5f9;}
+body.dark-mode .ua-sub-head{border-color:#334155;}
+body.dark-mode .ua-sub-title{color:#f1f5f9;}
+</style>
 
 <div class="container">
     <div id="menu">
@@ -364,6 +1067,7 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
             <button class="menu-btn" onclick="nav('racao')"><span class="m-ico">📦</span>Compras</button>
             <button class="menu-btn" onclick="nav('mao')"><span class="m-ico">👷</span>Mão de Obra</button>
             <button class="menu-btn" onclick="nav('relatorios')"><span class="m-ico">📊</span>Relatórios</button>
+            <button class="menu-btn" onclick="uaOpen()" style="background:linear-gradient(135deg,rgba(14,143,192,.18),rgba(6,95,124,.18));border:1.5px solid rgba(14,143,192,.35);"><span class="m-ico">👤</span>Minha Conta</button>
         </div>
         <div class="dash-card">
             <strong style="font-size:.75rem;opacity:.8;letter-spacing:.8px;text-transform:uppercase;">📌 Painel Rápido</strong>
@@ -523,6 +1227,21 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
                 <button onclick="limparAmostras()" class="btn-outline">🗑️ Limpar Amostras</button>
             </div>
             <small>Adicione quantas amostras quiser. O sistema calculará o peso médio ponderado automaticamente.</small>
+            <hr>
+            <div style="background:#f8fafc;padding:10px;border-radius:14px;margin:8px 0;border:1px solid var(--border);">
+                <div style="font-size:.68rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">🌡️ PARÂMETROS AMBIENTAIS <span style="font-weight:500;text-transform:none;letter-spacing:0;">(opcionais)</span></div>
+                <div class="flex-row" style="margin:0;gap:8px;">
+                    <div class="field" style="flex:1;margin:0;">
+                        <label>Temperatura (°C)</label>
+                        <input type="number" id="bioTemperatura" placeholder="ex: 28.5" step="0.1" min="10" max="40">
+                    </div>
+                    <div class="field" style="flex:1;margin:0;">
+                        <label>Oxigênio (mg/L)</label>
+                        <input type="number" id="bioOxigenio" placeholder="ex: 6.2" step="0.1" min="0" max="20">
+                    </div>
+                </div>
+                <small>Se não preenchidos, os cálculos zootécnicos seguem normalmente sem correlação ambiental.</small>
+            </div>
         </div>
         <div id="biometriasLista" class="scroll-list"></div>
     </div>
@@ -812,6 +1531,7 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
                         <button class="rel-btn-item" onclick="relCurvaCrescimento()"><span class="rel-btn-ico">📊</span><span class="rel-btn-lbl">Curva de Crescimento</span></button>
                         <button class="rel-btn-item" onclick="relBiomassaDetalhada()"><span class="rel-btn-ico">⚖️</span><span class="rel-btn-lbl">Biomassa Detalhada</span></button>
                         <button class="rel-btn-item" onclick="relTanques()"><span class="rel-btn-ico">🏞️</span><span class="rel-btn-lbl">Ocupação de Tanques</span></button>
+                        <button class="rel-btn-item" onclick="relEficienciaDesempenho()" style="grid-column:1/-1;background:var(--blue-xl);border-color:var(--blue);"><span class="rel-btn-ico">🎯</span><span class="rel-btn-lbl" style="color:var(--blue);font-weight:800;">Eficiência e Cenários de Densidade ✨</span></button>
                     </div>
                 </div>
             </div>
@@ -899,6 +1619,513 @@ small{font-size:.7rem;color:var(--text3);display:block;margin-top:3px;line-heigh
 <div id="toastMessage" class="message"></div>
 
 <script>
+// ==================== SISTEMA DE AUTENTICAÇÃO v2 ====================
+const LOGIN_DB_KEY = '__aquagestor_users__';
+
+function _getUsers(){ try{ return JSON.parse(localStorage.getItem(LOGIN_DB_KEY))||[]; }catch(e){return[];} }
+function _setUsers(u){ localStorage.setItem(LOGIN_DB_KEY, JSON.stringify(u)); }
+
+function _hash(s){
+    let h=0;
+    for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}
+    return 'aq_'+Math.abs(h).toString(36);
+}
+
+function _hoje(){ return new Date().toLocaleDateString('pt-BR'); }
+
+function initLoginDB(){
+    if(!_getUsers().length){
+        _setUsers([{id:1,usuario:'admin',email:'admin@aquagestor.com',
+            senhaHash:_hash('admin123'),nome:'Administrador',
+            perfil:'admin',ativo:true,criadoEm:_hoje()}]);
+    }
+}
+
+// ── Utilitários UI ──────────────────────────────────────────────────────────
+function authTab(aba){
+    // Esconder todos os painéis
+    ['pnlLogin','pnlCadastro','pnlRecuperar'].forEach(id=>{
+        let el=document.getElementById(id);
+        if(el){el.classList.remove('on');}
+    });
+    // Atualizar tabs visíveis
+    let tabs = document.getElementById('authTabs');
+    if(tabs) tabs.style.display = (aba==='recuperar') ? 'none' : 'flex';
+    // Ativar tab certa
+    if(tabs){
+        let btns = tabs.querySelectorAll('.auth-tab');
+        btns.forEach((b,i)=> b.classList.toggle('on',
+            (aba==='login'&&i===0)||(aba==='cadastro'&&i===1)));
+    }
+    // Mostrar painel
+    let map = {login:'pnlLogin', cadastro:'pnlCadastro', recuperar:'pnlRecuperar'};
+    let pnl = document.getElementById(map[aba]);
+    if(pnl) pnl.classList.add('on');
+    // Limpar mensagens
+    ['lgMsg','rgMsg','recMsg1','recMsg2','recMsg3'].forEach(id=>{
+        let e=document.getElementById(id); if(e){e.style.display='none';e.textContent='';}
+    });
+}
+
+function authGo(aba){ authTab(aba); }
+
+function showMsg(id, txt, tipo='err'){
+    let el=document.getElementById(id);
+    if(!el) return;
+    el.textContent=txt;
+    el.className='auth-msg '+tipo;
+    el.style.display='block';
+}
+function hideMsg(id){ let e=document.getElementById(id); if(e) e.style.display='none'; }
+
+function pwToggle(id, btn){
+    let inp=document.getElementById(id);
+    if(!inp) return;
+    let show = inp.type==='password';
+    inp.type = show?'text':'password';
+    btn.textContent = show?'🙈':'👁️';
+}
+
+function pwStrength(pwd, fillId, lblId){
+    let s=0;
+    if(pwd.length>=6)  s++;
+    if(pwd.length>=10) s++;
+    if(/[A-Z]/.test(pwd)) s++;
+    if(/[0-9]/.test(pwd)) s++;
+    if(/[^A-Za-z0-9]/.test(pwd)) s++;
+    let cores =['','#ef4444','#f59e0b','#eab308','#22c55e','#16a34a'];
+    let labels=['','Muito fraca','Fraca','Razoável','Forte','Muito forte'];
+    let pcts  =['0%','20%','40%','60%','80%','100%'];
+    let f=document.getElementById(fillId);
+    let l=document.getElementById(lblId);
+    if(f){f.style.width=pcts[s];f.style.background=cores[s]||'#e2e8f0';}
+    if(l) l.textContent = pwd.length ? (labels[s]||'') : 'Digite uma senha';
+}
+
+function valField(inp, tipo){
+    let v=inp.value.trim();
+    let ok=false;
+    if(tipo==='nome')  ok=v.length>=2;
+    else if(tipo==='email') ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    else if(tipo==='senha') ok=v.length>=6;
+    else if(tipo==='conf')  ok=v.length>=6 && v===document.getElementById('rgPwd')?.value;
+    if(v.length>0){ inp.classList.toggle('val-ok',ok); inp.classList.toggle('val-err',!ok); }
+    else{ inp.classList.remove('val-ok','val-err'); }
+}
+
+// ── Login ───────────────────────────────────────────────────────────────────
+function doLogin(){
+    let raw   = (document.getElementById('lgUser')?.value||'').trim().toLowerCase();
+    let senha = document.getElementById('lgPwd')?.value||'';
+    if(!raw||!senha){ showMsg('lgMsg','Preencha e-mail e senha.'); return; }
+    let users = _getUsers();
+    let u = users.find(x=>
+        (x.email?.toLowerCase()===raw || x.usuario?.toLowerCase()===raw) &&
+        x.senhaHash===_hash(senha) && x.ativo!==false
+    );
+    if(u){
+        localStorage.setItem('__aq_sessao__',
+            JSON.stringify({id:u.id,nome:u.nome,email:u.email,perfil:u.perfil,ts:Date.now()}));
+        document.getElementById('authOverlay').style.display='none';
+        hideMsg('lgMsg');
+        let b=document.getElementById('headerBadge');
+        if(b) b.title=`Logado: ${u.nome}`;
+        uaInit(); uaCarregarPrefs();
+    } else {
+        let inat=users.find(x=>(x.email?.toLowerCase()===raw||x.usuario?.toLowerCase()===raw)&&x.ativo===false);
+        showMsg('lgMsg', inat ? 'Conta inativa. Contate o administrador.' : 'E-mail/usuário ou senha incorretos.');
+        document.getElementById('lgPwd').value='';
+        document.getElementById('lgPwd').focus();
+    }
+}
+
+// ── Cadastro ────────────────────────────────────────────────────────────────
+function doRegister(){
+    let nome  = document.getElementById('rgNome')?.value.trim()||'';
+    let email = document.getElementById('rgEmail')?.value.trim().toLowerCase()||'';
+    let senha = document.getElementById('rgPwd')?.value||'';
+    let conf  = document.getElementById('rgPwdConf')?.value||'';
+
+    if(nome.length<2)                          { showMsg('rgMsg','Nome deve ter pelo menos 2 caracteres.'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg('rgMsg','Informe um e-mail válido.'); return; }
+    if(senha.length<6)                         { showMsg('rgMsg','Senha deve ter pelo menos 6 caracteres.'); return; }
+    if(senha!==conf)                           { showMsg('rgMsg','As senhas não coincidem.'); return; }
+
+    let users=_getUsers();
+    if(users.some(x=>x.email?.toLowerCase()===email)){
+        showMsg('rgMsg','Este e-mail já está cadastrado. Faça login ou recupere a senha.');
+        return;
+    }
+
+    let maxId=users.reduce((m,x)=>Math.max(m,x.id||0),0);
+    let uBase=email.split('@')[0].replace(/[^a-z0-9._-]/gi,'').toLowerCase().slice(0,20)||'user';
+    let usuario=uBase, suf=2;
+    while(users.some(x=>x.usuario?.toLowerCase()===usuario)){ usuario=uBase+suf; suf++; }
+
+    let novo={id:maxId+1,usuario,email,senhaHash:_hash(senha),nome,perfil:'user',ativo:true,criadoEm:_hoje()};
+    users.push(novo);
+    _setUsers(users);
+
+    localStorage.setItem('__aq_sessao__',
+        JSON.stringify({id:novo.id,nome:novo.nome,email:novo.email,perfil:novo.perfil,ts:Date.now()}));
+
+    showMsg('rgMsg',`✅ Conta criada! Bem-vindo(a), ${nome}!`,'ok');
+    setTimeout(()=>{
+        document.getElementById('authOverlay').style.display='none';
+        uaInit(); uaCarregarPrefs();
+        showMessage && showMessage(`🎉 Bem-vindo(a) ao AquaGestor, ${nome}!`);
+    },1400);
+}
+
+// ── Recuperação de Senha ─────────────────────────────────────────────────────
+let _recCode=null, _recEmail=null, _recTs=null;
+
+function recShowStep(n){
+    [1,2,3].forEach(i=>{
+        let el=document.getElementById('recP'+i);
+        if(el) el.style.display=(i===n)?'block':'none';
+    });
+}
+
+function recStep1(){
+    let email=(document.getElementById('recEmail')?.value||'').trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg('recMsg1','Informe um e-mail válido.'); return; }
+    let users=_getUsers();
+    let u=users.find(x=>x.email?.toLowerCase()===email && x.ativo!==false);
+    // Gerar código independente (não revelar se e-mail existe — UX segura)
+    _recCode = String(Math.floor(100000+Math.random()*900000));
+    _recEmail = email;
+    _recTs    = Date.now();
+    recShowStep(2);
+    hideMsg('recMsg1');
+    // Mostrar código (sistema offline — sem servidor de e-mail)
+    let disp=document.getElementById('recCodeVal');
+    let hint=document.getElementById('recP2hint');
+    if(disp) disp.textContent = u ? _recCode : '——';
+    if(hint) hint.textContent = u
+        ? `Código para ${email} (modo local — em produção seria enviado por e-mail).`
+        : `Se este e-mail estiver cadastrado, o código apareceria aqui.`;
+    document.getElementById('recCode').value='';
+    document.getElementById('recCode').focus();
+}
+
+function recStep2(){
+    let digitado=(document.getElementById('recCode')?.value||'').trim();
+    if(!_recCode){ showMsg('recMsg2','Solicite um código primeiro.'); return; }
+    if(Date.now()-_recTs > 10*60*1000){ showMsg('recMsg2','Código expirado. Solicite um novo.'); _recCode=null; return; }
+    if(digitado!==_recCode){ showMsg('recMsg2','Código incorreto. Verifique e tente novamente.'); return; }
+    hideMsg('recMsg2');
+    recShowStep(3);
+    document.getElementById('recPwd').focus();
+}
+
+function recStep3(){
+    let p1=document.getElementById('recPwd')?.value||'';
+    let p2=document.getElementById('recPwdConf')?.value||'';
+    if(p1.length<6){ showMsg('recMsg3','Senha deve ter pelo menos 6 caracteres.'); return; }
+    if(p1!==p2)    { showMsg('recMsg3','As senhas não coincidem.'); return; }
+    if(!_recEmail) { showMsg('recMsg3','Sessão expirada. Recomece o processo.'); return; }
+    let users=_getUsers();
+    let idx=users.findIndex(x=>x.email?.toLowerCase()===_recEmail.toLowerCase());
+    if(idx===-1){ showMsg('recMsg3','Conta não encontrada.'); return; }
+    users[idx].senhaHash=_hash(p1);
+    _setUsers(users);
+    _recCode=null; _recEmail=null; _recTs=null;
+    showMsg('recMsg3','✅ Senha redefinida com sucesso! Faça login com a nova senha.','ok');
+    setTimeout(()=>authTab('login'),2000);
+}
+
+// ── Verificar sessão ao iniciar ──────────────────────────────────────────────
+function verificarSessao(){
+    initLoginDB();
+    let s=null;
+    try{ s=JSON.parse(localStorage.getItem('__aq_sessao__')); }catch(e){}
+    if(s && s.ts && (Date.now()-s.ts)<12*3600*1000){
+        document.getElementById('authOverlay').style.display='none';
+        let b=document.getElementById('headerBadge');
+        if(b) b.title=`Logado: ${s.nome}`;
+        setTimeout(()=>{ uaInit(); uaCarregarPrefs(); },0);
+    } else {
+        document.getElementById('authOverlay').style.display='flex';
+        authTab('login');
+    }
+}
+
+// Expor globalmente
+window.doLogin=doLogin;
+window.doRegister=doRegister;
+window.authTab=authTab;
+window.authGo=authGo;
+window.pwToggle=pwToggle;
+window.pwStrength=pwStrength;
+window.valField=valField;
+window.recStep1=recStep1;
+window.recStep2=recStep2;
+window.recStep3=recStep3;
+window.recShowStep=recShowStep;
+window.fazerLogin=doLogin;
+window.fazerLogout=function(){localStorage.removeItem('__aq_sessao__');location.reload();};
+
+// ==================== ÁREA DO USUÁRIO (Minha Conta) ====================
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function _getSessao(){
+    try{ return JSON.parse(localStorage.getItem('__aq_sessao__'))||null; }catch(e){return null;}
+}
+function _getInitial(nome){
+    if(!nome) return '?';
+    let parts = nome.trim().split(' ');
+    return parts.length>=2
+        ? (parts[0][0]+parts[parts.length-1][0]).toUpperCase()
+        : parts[0].slice(0,2).toUpperCase();
+}
+
+// ── Inicializar UI do usuário (chamado após login) ────────────────────────────
+function uaInit(){
+    let s = _getSessao();
+    if(!s) return;
+    let initial = _getInitial(s.nome);
+    // Header button
+    let av = document.getElementById('hdrUserAv');
+    let nm = document.getElementById('hdrUserName');
+    if(av) av.textContent = initial;
+    if(nm) nm.textContent = s.nome.split(' ')[0]; // primeiro nome
+}
+
+// ── Abrir / fechar drawer ─────────────────────────────────────────────────────
+function uaOpen(){
+    let s = _getSessao();
+    if(!s){ return; }
+    // Preencher dados no drawer
+    let initial = _getInitial(s.nome);
+    let els = {
+        uaAvatarBig: initial, uaDhName: s.nome,
+        uaDhEmail: s.email||'—',
+        uaStatMembro: (function(){
+            let u=_getUsers().find(x=>x.id===s.id);
+            return u?.criadoEm||'—';
+        })(),
+        uaStatPerfil: s.perfil==='admin'?'Admin':'Usuário',
+    };
+    Object.entries(els).forEach(([id,val])=>{
+        let el=document.getElementById(id); if(el) el.textContent=val;
+    });
+    let badge=document.getElementById('uaDhBadge');
+    if(badge){ badge.textContent=s.perfil==='admin'?'🛡️ Administrador':'👤 Usuário'; }
+
+    // Mostrar tela principal (esconder sub-telas)
+    document.getElementById('uaMain').style.display='flex';
+    ['uaSubPerfil','uaSubSenha','uaSubNotif','uaSubSobre'].forEach(id=>{
+        let el=document.getElementById(id); if(el) el.classList.remove('open');
+    });
+
+    document.getElementById('uaOverlay').classList.add('open');
+    document.getElementById('uaDrawer').classList.add('open');
+    document.body.style.overflow='hidden';
+}
+
+function uaClose(){
+    document.getElementById('uaOverlay').classList.remove('open');
+    document.getElementById('uaDrawer').classList.remove('open');
+    document.body.style.overflow='';
+}
+
+// ── Navegar entre sub-telas ───────────────────────────────────────────────────
+function uaGo(tela){
+    let s = _getSessao();
+    let users = _getUsers();
+    let u = s ? users.find(x=>x.id===s.id) : null;
+
+    // Esconder tela principal
+    document.getElementById('uaMain').style.display='none';
+    // Esconder todas as sub-telas
+    ['uaSubPerfil','uaSubSenha','uaSubNotif','uaSubSobre'].forEach(id=>{
+        let el=document.getElementById(id); if(el) el.classList.remove('open');
+    });
+
+    if(tela==='perfil' && u){
+        let initial=_getInitial(u.nome);
+        let av=document.getElementById('uaPAvatar');
+        if(av) av.textContent=initial;
+        let el=id=>document.getElementById(id);
+        el('uaPNome')&&(el('uaPNome').textContent=u.nome);
+        el('uaPEmail')&&(el('uaPEmail').textContent=u.email||'—');
+        el('uaPBadge')&&(el('uaPBadge').innerHTML=`<span class="perfil-badge ${u.perfil}">${u.perfil==='admin'?'🛡️ Administrador':'👤 Usuário'}</span>`);
+        el('uaFNome')&&(el('uaFNome').value=u.nome||'');
+        el('uaFEmail')&&(el('uaFEmail').value=u.email||'');
+        el('uaFUsuario')&&(el('uaFUsuario').value=u.usuario||'');
+        el('uaFPerfil')&&(el('uaFPerfil').value=u.perfil==='admin'?'Administrador':'Usuário');
+        el('uaFCriado')&&(el('uaFCriado').value=u.criadoEm||'—');
+        let m=el('uaMsgPerfil'); if(m){m.style.display='none';}
+        document.getElementById('uaSubPerfil').classList.add('open');
+    }
+    else if(tela==='senha'){
+        ['uaFSenhaAtual','uaFSenhaNova','uaFSenhaConf'].forEach(id=>{
+            let el=document.getElementById(id); if(el) el.value='';
+        });
+        let m=document.getElementById('uaMsgSenha'); if(m) m.style.display='none';
+        // Reset strength
+        let f=document.getElementById('uaPwFill'); if(f){f.style.width='0';f.style.background='#e2e8f0';}
+        let l=document.getElementById('uaPwLbl'); if(l) l.textContent='Digite uma senha';
+        document.getElementById('uaSubSenha').classList.add('open');
+    }
+    else if(tela==='notif'){
+        // Carregar preferências salvas
+        let prefs=JSON.parse(localStorage.getItem('__aq_prefs__')||'{}');
+        let tog=document.getElementById('uaToggleDark');
+        if(tog) tog.checked=!!prefs.darkMode;
+        uaHighlightFont(prefs.fontSize||'normal');
+        document.getElementById('uaSubNotif').classList.add('open');
+    }
+    else if(tela==='sobre'){
+        let el=id=>document.getElementById(id);
+        el('uaSobreUsers')&&(el('uaSobreUsers').textContent=_getUsers().length+' cadastrados');
+        el('uaSobreSessao')&&(el('uaSobreSessao').textContent=s?.nome||'—');
+        document.getElementById('uaSubSobre').classList.add('open');
+    }
+}
+
+function uaBack(){
+    ['uaSubPerfil','uaSubSenha','uaSubNotif','uaSubSobre'].forEach(id=>{
+        let el=document.getElementById(id); if(el) el.classList.remove('open');
+    });
+    document.getElementById('uaMain').style.display='flex';
+}
+
+// ── Salvar Perfil ─────────────────────────────────────────────────────────────
+function uaSalvarPerfil(){
+    let s=_getSessao(); if(!s) return;
+    let nome  = (document.getElementById('uaFNome')?.value||'').trim();
+    let email = (document.getElementById('uaFEmail')?.value||'').trim().toLowerCase();
+    let msgEl = document.getElementById('uaMsgPerfil');
+
+    function showUaMsg(el,txt,tipo){ el.textContent=txt; el.className='ua-msg '+tipo; el.style.display='block'; }
+
+    if(nome.length<2){ showUaMsg(msgEl,'Nome deve ter pelo menos 2 caracteres.','err'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showUaMsg(msgEl,'Informe um e-mail válido.','err'); return; }
+
+    let users=_getUsers();
+    // Checar duplicidade de e-mail
+    if(users.some(x=>x.email?.toLowerCase()===email && x.id!==s.id)){
+        showUaMsg(msgEl,'Este e-mail já está em uso por outra conta.','err'); return;
+    }
+    let idx=users.findIndex(x=>x.id===s.id);
+    if(idx===-1){ showUaMsg(msgEl,'Sessão expirada. Faça login novamente.','err'); return; }
+    users[idx].nome=nome; users[idx].email=email;
+    _setUsers(users);
+
+    // Atualizar sessão
+    let nova={...s,nome,email,ts:Date.now()};
+    localStorage.setItem('__aq_sessao__',JSON.stringify(nova));
+
+    // Atualizar UI
+    let av=document.getElementById('uaPAvatar'); if(av) av.textContent=_getInitial(nome);
+    let pn=document.getElementById('uaPNome'); if(pn) pn.textContent=nome;
+    let pe=document.getElementById('uaPEmail'); if(pe) pe.textContent=email;
+    uaInit();
+
+    showUaMsg(msgEl,'✅ Perfil atualizado com sucesso!','ok');
+}
+
+// ── Alterar Senha ─────────────────────────────────────────────────────────────
+function uaAlterarSenha(){
+    let s=_getSessao(); if(!s) return;
+    let atual = document.getElementById('uaFSenhaAtual')?.value||'';
+    let nova  = document.getElementById('uaFSenhaNova')?.value||'';
+    let conf  = document.getElementById('uaFSenhaConf')?.value||'';
+    let msgEl = document.getElementById('uaMsgSenha');
+
+    function showM(txt,tipo){ msgEl.textContent=txt; msgEl.className='ua-msg '+tipo; msgEl.style.display='block'; }
+
+    if(!atual){ showM('Informe a senha atual.','err'); return; }
+    if(nova.length<6){ showM('Nova senha deve ter pelo menos 6 caracteres.','err'); return; }
+    if(nova!==conf){ showM('As senhas não coincidem.','err'); return; }
+
+    let users=_getUsers();
+    let u=users.find(x=>x.id===s.id);
+    if(!u){ showM('Sessão expirada.','err'); return; }
+    if(u.senhaHash!==_hash(atual)){ showM('Senha atual incorreta.','err'); return; }
+
+    u.senhaHash=_hash(nova);
+    _setUsers(users);
+    showM('✅ Senha alterada com sucesso!','ok');
+    ['uaFSenhaAtual','uaFSenhaNova','uaFSenhaConf'].forEach(id=>{
+        let el=document.getElementById(id); if(el) el.value='';
+    });
+    let f=document.getElementById('uaPwFill'); if(f){f.style.width='0';}
+    let l=document.getElementById('uaPwLbl'); if(l) l.textContent='Digite uma senha';
+}
+
+// ── Preferências ──────────────────────────────────────────────────────────────
+function uaToggleDarkMode(on){
+    document.body.classList.toggle('dark-mode',on);
+    let prefs=JSON.parse(localStorage.getItem('__aq_prefs__')||'{}');
+    prefs.darkMode=on; localStorage.setItem('__aq_prefs__',JSON.stringify(prefs));
+    let m=document.getElementById('uaMsgPref'); if(m){m.style.display='block'; setTimeout(()=>m.style.display='none',2000);}
+}
+function uaSetFontSize(sz){
+    let sizes={small:'13px',normal:'14px',large:'16px'};
+    document.documentElement.style.fontSize=sizes[sz]||'14px';
+    let prefs=JSON.parse(localStorage.getItem('__aq_prefs__')||'{}');
+    prefs.fontSize=sz; localStorage.setItem('__aq_prefs__',JSON.stringify(prefs));
+    uaHighlightFont(sz);
+    let m=document.getElementById('uaMsgPref'); if(m){m.style.display='block'; setTimeout(()=>m.style.display='none',2000);}
+}
+function uaHighlightFont(sz){
+    ['fsSmall','fsNormal','fsLarge'].forEach(id=>{
+        let el=document.getElementById(id); if(!el) return;
+        let active=(id==='fsSmall'&&sz==='small')||(id==='fsNormal'&&sz==='normal')||(id==='fsLarge'&&sz==='large');
+        el.style.borderColor=active?'#0a7ea4':'#e2e8f0';
+        el.style.background=active?'#e0f7ff':'#fff';
+        el.style.color=active?'#0a7ea4':'inherit';
+    });
+}
+function uaCarregarPrefs(){
+    let prefs=JSON.parse(localStorage.getItem('__aq_prefs__')||'{}');
+    if(prefs.darkMode) document.body.classList.add('dark-mode');
+    if(prefs.fontSize){ let s={small:'13px',normal:'14px',large:'16px'}; document.documentElement.style.fontSize=s[prefs.fontSize]||'14px'; }
+}
+
+// ── Exportar Dados ────────────────────────────────────────────────────────────
+function uaExportarDados(){
+    let s=_getSessao();
+    let backup={
+        exportadoEm: new Date().toLocaleString('pt-BR'),
+        usuario: s?.nome||'—',
+        dados: {}
+    };
+    for(let i=0;i<localStorage.length;i++){
+        let k=localStorage.key(i);
+        try{ backup.dados[k]=JSON.parse(localStorage.getItem(k)); }
+        catch(e){ backup.dados[k]=localStorage.getItem(k); }
+    }
+    let blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+    let a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`aquagestor_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+// ── Logout ─────────────────────────────────────────────────────────────────────
+function uaLogout(){
+    if(!confirm('Deseja realmente sair da sua conta?')) return;
+    localStorage.removeItem('__aq_sessao__');
+    location.reload();
+}
+
+// ── Expor ─────────────────────────────────────────────────────────────────────
+window.uaOpen=uaOpen;
+window.uaClose=uaClose;
+window.uaGo=uaGo;
+window.uaBack=uaBack;
+window.uaSalvarPerfil=uaSalvarPerfil;
+window.uaAlterarSenha=uaAlterarSenha;
+window.uaToggleDarkMode=uaToggleDarkMode;
+window.uaSetFontSize=uaSetFontSize;
+window.uaExportarDados=uaExportarDados;
+window.uaLogout=uaLogout;
+
 // ==================== SISTEMA MULTI-PISCICULTURA ====================
 // Cada piscicultura tem seu próprio prefixo de chave no localStorage
 
@@ -2996,14 +4223,80 @@ function renderBiometrias() {
         }
     });
     if (!items.length) { div.innerHTML = "<div class='card'>Nenhuma biometria registrada</div>"; return; }
-    div.innerHTML = items.slice(-5).reverse().map(b => {
-        let amostrasInfo = "";
-        if (b.amostras && b.amostras.length) {
-            amostrasInfo = `<br>📊 ${b.amostras.length} amostra(s) | ${b.totalPeixesAmostrados || 0} peixes amostrados`;
-        }
+
+    div.innerHTML = items.slice(-10).reverse().map(b => {
         let pm = (b.pesoMedio || 0).toFixed(0);
         let bio = (b.biomassa || 0).toFixed(1);
-        return `<div class='card'>🐟 Lote ${b.loteId} | ${b.data}<br>📏 Peso médio: ${pm}g | ⚖️ Biomassa: ${bio}kg${amostrasInfo}</div>`;
+
+        // Bloco de desempenho real
+        let desempenhoHTML = '';
+        if (b.gpdReal !== null && b.gpdReal !== undefined) {
+            let gpdDelta = b.gpdTeorico ? (b.gpdReal - b.gpdTeorico) : null;
+            let gpdColor = gpdDelta !== null ? (gpdDelta >= 0 ? '#15803d' : '#c2410c') : '#475569';
+            let gpdSinal = gpdDelta !== null ? (gpdDelta >= 0 ? '▲' : '▼') : '';
+            let gpdTxt   = `<span style="color:${gpdColor};font-weight:800;">GPD Real: ${b.gpdReal.toFixed(2)} g/dia ${gpdSinal}${gpdDelta !== null ? Math.abs(gpdDelta).toFixed(2) : ''}</span>`;
+            if (b.gpdTeorico) gpdTxt += ` <span style="color:#94a3b8;font-size:.68rem;">(teórico: ${b.gpdTeorico.toFixed(2)})</span>`;
+
+            let caTxt = '';
+            if (b.caReal !== null && b.caReal !== undefined) {
+                let caDelta = b.caTeorico ? (b.caReal - b.caTeorico) : null;
+                let caColor = caDelta !== null ? (caDelta <= 0 ? '#15803d' : '#c2410c') : '#475569';
+                let caSinal = caDelta !== null ? (caDelta <= 0 ? '▼' : '▲') : '';
+                caTxt = `<span style="color:${caColor};font-weight:800;">CA Real: ${b.caReal.toFixed(2)} ${caSinal}${caDelta !== null ? Math.abs(caDelta).toFixed(2) : ''}</span>`;
+                if (b.caTeorico) caTxt += ` <span style="color:#94a3b8;font-size:.68rem;">(teórico: ${b.caTeorico.toFixed(2)})</span>`;
+            } else {
+                caTxt = `<span style="color:#94a3b8;font-size:.73rem;">CA Real: sem ração registrada no período</span>`;
+            }
+
+            let diasTxt = b.diasEntreBio ? `<span style="color:#475569;font-size:.7rem;">📅 ${b.diasEntreBio} dias desde biometria anterior</span>` : '';
+            desempenhoHTML = `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:.75rem;display:flex;flex-direction:column;gap:3px;">
+                <div style="font-size:.63rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#15803d;margin-bottom:2px;">📊 DESEMPENHO REAL</div>
+                <div>${gpdTxt}</div><div>${caTxt}</div>${diasTxt ? '<div>'+diasTxt+'</div>' : ''}
+            </div>`;
+        }
+
+        // Bloco de densidade
+        let densidadeHTML = '';
+        if (b.densidadeKgM3 !== null && b.densidadeKgM3 !== undefined) {
+            let alerta = b.alertaDensidade || {};
+            let densBg   = alerta.nivel === 'critico' ? '#fef2f2' : alerta.nivel === 'alerta' ? '#fffbeb' : '#f0fdf4';
+            let densBord = alerta.nivel === 'critico' ? '#fca5a5' : alerta.nivel === 'alerta' ? '#fcd34d' : '#86efac';
+            let densIcon = alerta.nivel === 'critico' ? '🔴' : alerta.nivel === 'alerta' ? '🟡' : '🟢';
+            densidadeHTML = `<div style="background:${densBg};border:1px solid ${densBord};border-radius:10px;padding:7px 10px;margin-top:5px;font-size:.73rem;">
+                ${densIcon} <strong>Densidade:</strong> ${b.densidadeKgM3.toFixed(1)} kg/m³ — ${alerta.msg || ''}
+            </div>`;
+        }
+
+        // Bloco ambiental (opcional)
+        let ambientalHTML = '';
+        if (b.temperatura !== null && b.temperatura !== undefined) {
+            ambientalHTML += `🌡️ ${b.temperatura}°C  `;
+        }
+        if (b.oxigenio !== null && b.oxigenio !== undefined) {
+            let oxStatus = b.oxigenio < 4 ? '🔴' : b.oxigenio < 5 ? '🟡' : '🟢';
+            ambientalHTML += `${oxStatus} O₂: ${b.oxigenio} mg/L`;
+        }
+        if (ambientalHTML) {
+            ambientalHTML = `<div style="font-size:.72rem;color:#475569;margin-top:4px;">${ambientalHTML}</div>`;
+        }
+
+        let amostrasInfo = b.amostras?.length
+            ? `<br><span style="font-size:.68rem;color:#94a3b8;">📊 ${b.amostras.length} amostra(s) · ${b.totalPeixesAmostrados || 0} peixes amostrados</span>`
+            : '';
+
+        return `<div class='card' style="padding:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <div>
+                    <span style="font-size:.65rem;font-weight:800;color:#0a7ea4;letter-spacing:.5px;">🐟 LOTE ${b.loteId} · TANQUE ${b.tanque || '?'}</span>
+                    <div style="font-size:.7rem;color:#94a3b8;">${b.data}</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                    <div style="font-size:1rem;font-weight:800;color:#1a2c3e;">${pm}g</div>
+                    <div style="font-size:.7rem;color:#475569;">⚖️ ${bio} kg</div>
+                </div>
+            </div>
+            ${amostrasInfo}${desempenhoHTML}${densidadeHTML}${ambientalHTML}
+        </div>`;
     }).join('');
 }
 
@@ -3013,66 +4306,165 @@ function calcularMediaAmostras() {
     let info = getInfoTanqueOcupado(tanqueNum);
     if (!info) { showMessage("❌ Tanque não ocupado", true); return; }
     if (amostrasTemp.length === 0) { showMessage("❌ Adicione pelo menos uma amostra", true); return; }
+
     let totalPeixesAmostrados = amostrasTemp.reduce((sum, a) => sum + a.qtde, 0);
     let totalPesoAmostras = amostrasTemp.reduce((sum, a) => sum + a.peso, 0);
     let pesoMedioGramas = (totalPesoAmostras / totalPeixesAmostrados) * 1000;
     let biomassa = (pesoMedioGramas / 1000) * info.qtdPeixes;
+
+    // Parâmetros ambientais opcionais
+    let tempEl = document.getElementById("bioTemperatura");
+    let oxiEl  = document.getElementById("bioOxigenio");
+    let temperatura = tempEl && tempEl.value !== "" ? parseFloat(tempEl.value) : null;
+    let oxigenio    = oxiEl  && oxiEl.value  !== "" ? parseFloat(oxiEl.value)  : null;
+
     let lotes = loadData("lotes");
     let lote = lotes.find(l => l.id === info.loteId);
     if (!lote) return;
     if (!lote.biometrias) lote.biometrias = [];
-    lote.biometrias.push({
+
+    // ── Buscar biometria anterior deste tanque ────────────────────────────
+    let bioAnterior = null;
+    for (let i = lote.biometrias.length - 1; i >= 0; i--) {
+        if (lote.biometrias[i].tanque === tanqueNum) { bioAnterior = lote.biometrias[i]; break; }
+    }
+
+    // ── Calcular GPD Real e CA Real ───────────────────────────────────────
+    let gpdReal = null, caReal = null;
+    let densidadeKgM3 = null;
+    let alertaDensidade = null;
+
+    if (bioAnterior) {
+        // Dias entre biometrias
+        let dataBioAnterior = new Date(bioAnterior.dataISO || bioAnterior.data);
+        let dataBioAtual    = new Date();
+        let diasEntreBioCalc = Math.max(1, Math.round((dataBioAtual - dataBioAnterior) / 86400000));
+
+        // GPD Real (g/dia)
+        gpdReal = (pesoMedioGramas - (bioAnterior.pesoMedio || 0)) / diasEntreBioCalc;
+
+        // Consumo de ração no período (tanque específico)
+        let tanqueLoteObj = lote.tanques.find(t => t.num === tanqueNum);
+        let consumoAcumAnterior = bioAnterior.consumoRacaoAcum || 0;
+        let consumoAcumAtual   = tanqueLoteObj ? (tanqueLoteObj.consumoRacao || 0) : 0;
+        let racaoPeriodo = Math.max(0, consumoAcumAtual - consumoAcumAnterior);
+
+        // CA Real
+        let biomassaAnterior = bioAnterior.biomassa || 0;
+        let ganhoBiomassaPeriodo = biomassa - biomassaAnterior;
+        if (ganhoBiomassaPeriodo > 0.1 && racaoPeriodo > 0) {
+            caReal = racaoPeriodo / ganhoBiomassaPeriodo;
+        }
+    }
+
+    // ── Densidade de estocagem (kg/m³) ───────────────────────────────────
+    let tanques = loadData("tanques");
+    let tanqueCadastro = tanques.find(t => t.num === tanqueNum);
+    if (tanqueCadastro && tanqueCadastro.vol > 0) {
+        densidadeKgM3 = biomassa / tanqueCadastro.vol;
+        // Limite de suporte ajustado para 150 kg/m³ (tanques intensivos)
+        if (densidadeKgM3 > 150) {
+            alertaDensidade = { nivel: "critico", msg: `Densidade crítica (${densidadeKgM3.toFixed(1)} kg/m³ > 150 kg/m³)` };
+        } else if (densidadeKgM3 > 100) {
+            alertaDensidade = { nivel: "alerta", msg: `Densidade elevada (${densidadeKgM3.toFixed(1)} kg/m³ > 100 kg/m³)` };
+        } else {
+            alertaDensidade = { nivel: "ok", msg: `Densidade adequada (${densidadeKgM3.toFixed(1)} kg/m³)` };
+        }
+    }
+
+    // ── Guardar consumo acumulado no snapshot da biometria ───────────────
+    let tanqueLoteRef = lote.tanques.find(t => t.num === tanqueNum);
+    let consumoRacaoSnap = tanqueLoteRef ? (tanqueLoteRef.consumoRacao || 0) : 0;
+
+    // ── Projeções teóricas ────────────────────────────────────────────────
+    let caElBio = document.getElementById("caSelectRacao");
+    let caSelecionado = caElBio ? (parseFloat(caElBio.value) || 1.4) : 1.4;
+    let gpdTeorico = obterGPD(pesoMedioGramas);
+    let caTeorico  = getCAEfetiva(pesoMedioGramas, caSelecionado);
+
+    // ── Dias entre biometrias (referência externa ao bloco if) ────────────
+    let diasEntreBioFinal = null;
+    if (bioAnterior) {
+        let _da = new Date(bioAnterior.dataISO || bioAnterior.data);
+        diasEntreBioFinal = Math.max(1, Math.round((new Date() - _da) / 86400000));
+    }
+
+    // ── Montar objeto da biometria ────────────────────────────────────────
+    let novaBio = {
         data: new Date().toLocaleString(),
+        dataISO: new Date().toISOString(),
         tanque: tanqueNum,
         pesoMedio: pesoMedioGramas,
         biomassa: biomassa,
         amostras: [...amostrasTemp],
         totalPeixesAmostrados: totalPeixesAmostrados,
-        totalPesoAmostras: totalPesoAmostras
-    });
-    let tanqueLote = lote.tanques.find(t => t.num === tanqueNum);
-    if (tanqueLote) {
-        tanqueLote.ultimoPesoMedio = pesoMedioGramas;
-        tanqueLote.ultimaBiomassa = biomassa;
-        tanqueLote.ultimaBiometriaData = new Date().toLocaleString();
+        totalPesoAmostras: totalPesoAmostras,
+        consumoRacaoAcum: consumoRacaoSnap,
+        // Reais calculados
+        gpdReal: gpdReal,
+        caReal: caReal,
+        diasEntreBio: diasEntreBioFinal,
+        // Teóricos
+        gpdTeorico: gpdTeorico,
+        caTeorico: caTeorico,
+        // Densidade
+        densidadeKgM3: densidadeKgM3,
+        alertaDensidade: alertaDensidade,
+        // Ambientais (opcionais)
+        temperatura: temperatura,
+        oxigenio: oxigenio
+    };
+    lote.biometrias.push(novaBio);
+
+    // ── Atualizar tanque no lote ──────────────────────────────────────────
+    if (tanqueLoteRef) {
+        tanqueLoteRef.ultimoPesoMedio = pesoMedioGramas;
+        tanqueLoteRef.ultimaBiomassa = biomassa;
+        tanqueLoteRef.ultimaBiometriaData = new Date().toLocaleString();
     }
     let biomassaTotalLote = 0;
     for (let t of lote.tanques) {
-        if (t.ultimaBiomassa) { biomassaTotalLote += t.ultimaBiomassa; }
-        else { biomassaTotalLote += (lote.pesoMedioAlevino / 1000) * t.qtdPeixes; }
+        if (t.ultimaBiomassa) biomassaTotalLote += t.ultimaBiomassa;
+        else biomassaTotalLote += (lote.pesoMedioAlevino / 1000) * t.qtdPeixes;
     }
     lote.biomassaAtual = biomassaTotalLote;
     saveData("lotes", lotes);
-    let caElBio = document.getElementById("caSelectRacao");
-    let caSelecionado = caElBio ? (parseFloat(caElBio.value) || 1.4) : 1.4;
-    let gpd = obterGPD(pesoMedioGramas);
-    let ca = getCAEfetiva(pesoMedioGramas, caSelecionado);
-    let ganhoBiomassaKg = (info.qtdPeixes * gpd) / 1000;
-    let novaRacaoDiaria = ganhoBiomassaKg * ca;
+
+    // ── Atualizar tratos ──────────────────────────────────────────────────
+    let ganhoBiomassaKg = (info.qtdPeixes * gpdTeorico) / 1000;
+    let novaRacaoDiaria = ganhoBiomassaKg * caTeorico;
     let tratos = tLoad(tanqueNum);
     if (tratos.length > 0 && horariosTratos.length > 0) {
         let novoKgPorTrato = novaRacaoDiaria / horariosTratos.length;
         for (let i = 0; i < tratos.length; i++) {
-            if (!tratos[i].tratado) {
-                tratos[i].kgRecomendado = novoKgPorTrato;
-            }
+            if (!tratos[i].tratado) tratos[i].kgRecomendado = novoKgPorTrato;
         }
         tSave(tanqueNum, tratos);
     }
+
+    // ── Toast de confirmação ──────────────────────────────────────────────
+    let extras = [];
+    if (gpdReal !== null)  extras.push(`GPD Real: ${gpdReal.toFixed(2)}g/dia`);
+    if (caReal  !== null)  extras.push(`CA Real: ${caReal.toFixed(2)}`);
+    if (densidadeKgM3 !== null) extras.push(`Dens: ${densidadeKgM3.toFixed(1)}kg/m³`);
     let msgBio = horariosTratos.length > 0
-        ? `✅ Biometria registrada! Tanque ${tanqueNum} · ${pesoMedioGramas.toFixed(0)}g · ${biomassa.toFixed(1)}kg · Ração/dia: ${novaRacaoDiaria.toFixed(2)}kg (${horariosTratos.length} tratos de ${(novaRacaoDiaria / horariosTratos.length).toFixed(2)}kg)`
-        : `✅ Biometria registrada! Tanque ${tanqueNum} · ${pesoMedioGramas.toFixed(0)}g · ${biomassa.toFixed(1)}kg · Ração diária estimada: ${novaRacaoDiaria.toFixed(2)}kg`;
+        ? `✅ Biometria registrada! ${tanqueNum} · ${pesoMedioGramas.toFixed(0)}g · ${biomassa.toFixed(1)}kg · Ração/dia: ${novaRacaoDiaria.toFixed(2)}kg` + (extras.length ? ` · ${extras.join(' · ')}` : '')
+        : `✅ Biometria registrada! ${tanqueNum} · ${pesoMedioGramas.toFixed(0)}g · ${biomassa.toFixed(1)}kg` + (extras.length ? ` · ${extras.join(' · ')}` : '');
     showMessage(msgBio);
+
     renderBiometrias();
     renderLotes();
     renderTratosTanques();
-    // Limpar amostras diretamente (sem confirm, pois acabamos de registrar)
     amostrasTemp = [];
     renderAmostras();
     limparAmostras(true);
+    // Limpar campos ambientais
+    if (tempEl) tempEl.value = "";
+    if (oxiEl)  oxiEl.value  = "";
     atualizarSelectTanques("bioTanque", "ocupados");
     carregarInfoTanqueBiometria();
 }
+
 
 // ==================== MODELOS DE RAÇÃO ====================
 let itensCarrada = [];
@@ -5733,7 +7125,364 @@ function toggleFormLote() {
     }
 }
 
+// ==================== RELATÓRIO: EFICIÊNCIA E CENÁRIOS DE DENSIDADE ====================
+function relEficienciaDesempenho() {
+    let lotes = loadData("lotes");
+    let tanques = loadData("tanques");
+    let div = document.getElementById("resultadoRel");
+    if (!div) return;
+
+    if (!lotes.length) {
+        div.innerHTML = "<div class='card'>Nenhum lote cadastrado.</div>";
+        return;
+    }
+
+    // Seletor de lote
+    let loteOptions = lotes.map(l => `<option value="${l.id}">Lote #${l.id} — ${l.cidadeOrigem || 'sem origem'} (${l.qtdTotal} peixes)</option>`).join('');
+
+    div.innerHTML = `
+    <div class="card" style="padding:16px;">
+        <div class="card-header" style="margin-bottom:12px;">🎯 Eficiência Produtiva e Cenários de Densidade</div>
+
+        <div class="field" style="margin-bottom:10px;">
+            <label>Selecione o Lote</label>
+            <select id="eficLoteSelect" onchange="renderEficienciaLote()">${loteOptions}</select>
+        </div>
+        <div id="eficConteudo"></div>
+    </div>`;
+
+    renderEficienciaLote();
+}
+
+function renderEficienciaLote() {
+    let loteId = parseInt(document.getElementById("eficLoteSelect")?.value);
+    let div = document.getElementById("eficConteudo");
+    if (!div || !loteId) return;
+
+    let lotes = loadData("lotes");
+    let tanques = loadData("tanques");
+    let lote = lotes.find(l => l.id === loteId);
+    if (!lote) return;
+
+    let bios = (lote.biometrias || []).filter(b => b.pesoMedio && b.biomassa);
+    let tanquesAtivos = lote.tanques.filter(t => t.qtdPeixes > 0);
+
+    // ── Volume total dos tanques ───────────────────────────────────────────
+    let volTotal = 0;
+    for (let t of lote.tanques) {
+        let tc = tanques.find(x => x.num === t.num);
+        if (tc) volTotal += tc.vol || 0;
+    }
+
+    // ── Histórico de biometrias com GPD Real e CA Real por tanque ─────────
+    // Agrupar por data e calcular médias
+    let historicoRows = '';
+    if (bios.length > 0) {
+        // Ordenar por data ISO
+        let biosSorted = [...bios].sort((a, b) => {
+            let da = new Date(a.dataISO || a.data);
+            let db = new Date(b.dataISO || b.data);
+            return da - db;
+        });
+        historicoRows = biosSorted.map((b, i) => {
+            let gpdR = b.gpdReal !== null && b.gpdReal !== undefined ? b.gpdReal.toFixed(2) : '—';
+            let caR  = b.caReal  !== null && b.caReal  !== undefined ? b.caReal.toFixed(2)  : '—';
+            let gpdT = b.gpdTeorico ? b.gpdTeorico.toFixed(2) : '—';
+            let caT  = b.caTeorico  ? b.caTeorico.toFixed(2)  : '—';
+            let dens = b.densidadeKgM3 ? b.densidadeKgM3.toFixed(1) : '—';
+            let alerta = b.alertaDensidade;
+            let densColor = alerta ? (alerta.nivel === 'critico' ? '#c2410c' : alerta.nivel === 'alerta' ? '#b45309' : '#15803d') : '#475569';
+            let gpdRColor = b.gpdReal !== null && b.gpdTeorico ? (b.gpdReal >= b.gpdTeorico ? '#15803d' : '#c2410c') : '#475569';
+            let caRColor  = b.caReal  !== null && b.caTeorico  ? (b.caReal  <= b.caTeorico  ? '#15803d' : '#c2410c') : '#475569';
+            let temp = b.temperatura !== null && b.temperatura !== undefined ? `${b.temperatura}°C` : '—';
+            let oxi  = b.oxigenio   !== null && b.oxigenio   !== undefined ? `${b.oxigenio} mg/L`  : '—';
+            let corrDensGpd = '';
+            if (i > 0 && b.gpdReal !== null && biosSorted[i-1].densidadeKgM3 !== null &&
+                b.densidadeKgM3 > (biosSorted[i-1].densidadeKgM3 || 0) && b.gpdReal < (biosSorted[i-1].gpdReal || 0)) {
+                corrDensGpd = '<span title="GPD caiu com aumento de densidade" style="font-size:.65rem;background:#fee2e2;color:#c2410c;padding:1px 5px;border-radius:8px;margin-left:3px;">⚠️ dens↑ gpd↓</span>';
+            }
+            return `<tr style="border-bottom:1px solid #f1f5f9;font-size:.72rem;">
+                <td style="padding:6px 4px;color:#475569;">${b.data ? b.data.split(',')[0] : '?'}</td>
+                <td style="padding:6px 4px;">${b.tanque || '?'}</td>
+                <td style="padding:6px 4px;font-weight:700;">${(b.pesoMedio||0).toFixed(0)}g</td>
+                <td style="padding:6px 4px;">${(b.biomassa||0).toFixed(1)} kg</td>
+                <td style="padding:6px 4px;color:${densColor};font-weight:700;">${dens} kg/m³</td>
+                <td style="padding:6px 4px;color:${gpdRColor};font-weight:800;">${gpdR}${corrDensGpd}</td>
+                <td style="padding:6px 4px;color:#94a3b8;">${gpdT}</td>
+                <td style="padding:6px 4px;color:${caRColor};font-weight:800;">${caR}</td>
+                <td style="padding:6px 4px;color:#94a3b8;">${caT}</td>
+                <td style="padding:6px 4px;color:#475569;">${temp}</td>
+                <td style="padding:6px 4px;color:#475569;">${oxi}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ── Dados para gráfico de cenários ─────────────────────────────────────
+    // Peso médio atual
+    let ultimaBio = bios.length ? [...bios].sort((a,b) => new Date(b.dataISO||b.data) - new Date(a.dataISO||a.data))[0] : null;
+    let pesoAtual = ultimaBio ? ultimaBio.pesoMedio : (lote.pesoMedioAlevino || 50);
+    let qtdAtual  = lote.qtdTotal || 0;
+    let caEl = document.getElementById("caSelectRacao");
+    let caSel = caEl ? (parseFloat(caEl.value) || 1.4) : 1.4;
+
+    // Simular crescimento 60 dias para 3 cenários de quantidade de peixes
+    let cenarios = [
+        { label: `${Math.round(qtdAtual*0.5)} peixes (50%)`, qtd: Math.round(qtdAtual*0.5), cor: '#15803d', dash: [] },
+        { label: `${qtdAtual} peixes (Atual)`,               qtd: qtdAtual,                  cor: '#0a7ea4', dash: [] },
+        { label: `${Math.round(qtdAtual*1.5)} peixes (150%)`,cor: '#c2410c',                 qtd: Math.round(qtdAtual*1.5), dash: [6,3] },
+    ];
+    let dias = Array.from({length: 61}, (_, i) => i);
+    let labelsDias = dias.map(d => `Dia ${d}`);
+
+    // Para cada cenário, simular GPD ajustado por densidade
+    let datasets = [];
+    let densidadePorDia = []; // para o cenário atual
+
+    for (let cen of cenarios) {
+        let pesos = [pesoAtual];
+        let densidades = [];
+        let pesoSim = pesoAtual;
+
+        for (let d = 1; d <= 60; d++) {
+            let gpdBase = obterGPD(pesoSim);
+            // Densidade atual
+            let biomassSim = (pesoSim / 1000) * cen.qtd;
+            let densSim = volTotal > 0 ? biomassSim / volTotal : 0;
+
+            // Fator de correção por superdensidade (penalidade progressiva acima de 20 kg/m³)
+            let fatorDens = 1.0;
+            if (densSim > 150) fatorDens = 0.55;
+            else if (densSim > 125) fatorDens = 0.70;
+            else if (densSim > 100) fatorDens = 0.85;
+            else if (densSim > 75) fatorDens = 0.95;
+
+            let gpdSim = gpdBase * fatorDens;
+            pesoSim += gpdSim;
+            pesos.push(parseFloat(pesoSim.toFixed(1)));
+            if (cen.qtd === qtdAtual) densidades.push(densSim);
+        }
+
+        if (cen.qtd === qtdAtual) densidadePorDia = densidades;
+
+        datasets.push({
+            label: cen.label,
+            data: pesos,
+            borderColor: cen.cor,
+            backgroundColor: cen.cor + '18',
+            borderWidth: cen.qtd === qtdAtual ? 3 : 2,
+            borderDash: cen.dash,
+            pointRadius: cen.qtd === qtdAtual ? 3 : 1,
+            tension: 0.3,
+            fill: cen.qtd === qtdAtual,
+            yAxisID: 'y'
+        });
+    }
+
+    // Dataset de densidade (eixo secundário — cenário atual)
+    datasets.push({
+        label: 'Densidade Atual (kg/m³)',
+        data: [null, ...densidadePorDia],
+        borderColor: '#7c3aed',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderDash: [4, 4],
+        pointRadius: 0,
+        tension: 0.3,
+        fill: false,
+        yAxisID: 'y1'
+    });
+
+    // ── Linha de capacidade de suporte ─────────────────────────────────────
+    let limiteCapacidade = Array(61).fill(150); // 150 kg/m³
+    datasets.push({
+        label: '⚠️ Limite Suporte (150 kg/m³)',
+        data: [null, ...limiteCapacidade],
+        borderColor: '#f59e0b',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderDash: [8, 4],
+        pointRadius: 0,
+        tension: 0,
+        fill: false,
+        yAxisID: 'y1'
+    });
+
+    // ── Indicador de capacidade de suporte atual ───────────────────────────
+    let densAtual = ultimaBio?.densidadeKgM3 || (volTotal > 0 ? (ultimaBio?.biomassa || 0) / volTotal : 0);
+    let supCapColor = densAtual > 150 ? '#c2410c' : densAtual > 100 ? '#b45309' : '#15803d';
+    let supCapIcon  = densAtual > 150 ? '🔴 CRÍTICA' : densAtual > 100 ? '🟡 ELEVADA' : '🟢 ADEQUADA';
+    let supCapMsg   = densAtual > 150
+        ? `A densidade atual (${densAtual.toFixed(1)} kg/m³) EXCEDE o limite de suporte (150 kg/m³). Reduzir estocagem ou aumentar aeração é urgente.`
+        : densAtual > 100
+        ? `A densidade (${densAtual.toFixed(1)} kg/m³) está elevada. Monitorar o GPD — queda indica pressão de densidade.`
+        : `A densidade (${densAtual.toFixed(1)} kg/m³) está dentro do suportável. Continue monitorando via biometrias.`;
+
+    // ── Análise de Densidade Mínima Inteligente (espaço ocioso) ─────────────
+    let densMinHTML = '';
+    if (bios.length >= 2 && volTotal > 0) {
+        let biosSortedMin = [...bios].sort((a,b) => new Date(a.dataISO||a.data)-new Date(b.dataISO||b.data));
+        // Buscar densidade no pico de melhor GPD real
+        let melhorGPD = null, melhorDens = null, melhorPeso = null;
+        for (let b of biosSortedMin) {
+            if (b.gpdReal !== null && b.gpdReal !== undefined && b.densidadeKgM3 > 0) {
+                if (melhorGPD === null || b.gpdReal > melhorGPD) {
+                    melhorGPD = b.gpdReal;
+                    melhorDens = b.densidadeKgM3;
+                    melhorPeso = b.pesoMedio;
+                }
+            }
+        }
+        // Calcular densidade média real observada
+        let densObs = biosSortedMin.filter(b=>b.densidadeKgM3>0).map(b=>b.densidadeKgM3);
+        let densMed = densObs.length ? densObs.reduce((s,v)=>s+v,0)/densObs.length : 0;
+        // Capacidade ociosa: quanto do volume está sendo subutilizado
+        let biomassaAtual = lote.biomassaAtual || 0;
+        let capacidadeTotal = volTotal * 150; // capacidade máxima 150 kg/m³
+        let ociosidade = Math.max(0, capacidadeTotal - biomassaAtual);
+        let pctOcioso = capacidadeTotal > 0 ? (ociosidade/capacidadeTotal*100) : 0;
+        // Densidade mínima recomendada com base no melhor desempenho observado
+        // Se a densidade mínima com bom GPD foi X, manter pelo menos 0.6*X para não deixar ocioso
+        let densMinRecom = melhorDens ? Math.max(5, melhorDens * 0.6) : densMed * 0.6;
+        let densMinColor = densAtual < densMinRecom ? '#b45309' : '#15803d';
+        let peixesIdeal = volTotal > 0 && melhorPeso ? Math.round((densMinRecom * volTotal) / (melhorPeso/1000)) : 0;
+        let alertaOcioso = densAtual < densMinRecom && densMinRecom > 0;
+
+        densMinHTML = `
+        <div style="background:${alertaOcioso?'#fffbeb':'#f0fdf4'};border:1.5px solid ${alertaOcioso?'#fcd34d':'#86efac'};border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px;">
+            <div style="font-weight:800;color:${alertaOcioso?'#b45309':'#15803d'};font-size:.85rem;">📦 Análise de Capacidade Ociosa dos Tanques</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;font-size:.75rem;">
+                <div><span style="color:#94a3b8;">Capacidade máx. (150 kg/m³)</span><br><strong>${capacidadeTotal.toFixed(0)} kg</strong></div>
+                <div><span style="color:#94a3b8;">Biomassa atual</span><br><strong>${biomassaAtual.toFixed(1)} kg</strong></div>
+                <div><span style="color:#94a3b8;">Espaço ocioso</span><br><strong style="color:${pctOcioso>40?'#b45309':'#15803d'}">${ociosidade.toFixed(0)} kg (${pctOcioso.toFixed(0)}%)</strong></div>
+                <div><span style="color:#94a3b8;">Dens. mín. recomendada*</span><br><strong style="color:${densMinColor}">${densMinRecom.toFixed(1)} kg/m³</strong></div>
+                ${melhorGPD !== null ? `<div><span style="color:#94a3b8;">Melhor GPD real observado</span><br><strong style="color:#0a7ea4">${melhorGPD.toFixed(2)} g/dia @ ${melhorDens?.toFixed(1)} kg/m³</strong></div>` : ''}
+                ${peixesIdeal > 0 ? `<div><span style="color:#94a3b8;">Peixes p/ dens. mín. ideal</span><br><strong>≥ ${peixesIdeal.toLocaleString('pt-BR')} peixes</strong></div>` : ''}
+            </div>
+            ${alertaOcioso ? `<div style="margin-top:8px;font-size:.75rem;color:#b45309;font-weight:700;">⚠️ Densidade atual (${densAtual.toFixed(1)} kg/m³) abaixo da mínima recomendada pelo desempenho real. Tanque subutilizado — considere aumentar o estoque para ${densMinRecom.toFixed(0)}–${(densMinRecom*1.5).toFixed(0)} kg/m³.</div>` : `<div style="margin-top:6px;font-size:.72rem;color:#15803d;">✅ Densidade dentro do intervalo ideal pelo histórico de desempenho.</div>`}
+            <div style="font-size:.62rem;color:#94a3b8;margin-top:4px;">*Estimativa baseada em 60% da densidade com melhor GPD real coletado nas biometrias</div>
+        </div>`;
+    }
+
+    div.innerHTML = `
+    <!-- Indicador de capacidade -->
+    <div style="background:${supCapColor}18;border:1.5px solid ${supCapColor};border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px;">
+        <div style="font-weight:800;color:${supCapColor};font-size:.88rem;">🏋️ Capacidade de Suporte: ${supCapIcon}</div>
+        <div style="font-size:.78rem;color:#475569;margin-top:4px;">${supCapMsg}</div>
+        ${volTotal > 0 ? `<div style="font-size:.7rem;color:#94a3b8;margin-top:3px;">Volume total dos tanques: ${volTotal} m³ · Biomassa atual: ${(lote.biomassaAtual||0).toFixed(1)} kg</div>` : '<div style="font-size:.7rem;color:#f59e0b;margin-top:3px;">⚠️ Volume dos tanques não cadastrado — cadastre os tanques com volume para cálculo de densidade.</div>'}
+    </div>
+    ${densMinHTML}
+
+    <!-- Gráfico de cenários -->
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:12px;margin-bottom:12px;">
+        <div style="font-size:.72rem;font-weight:800;color:#0a7ea4;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">📈 CENÁRIOS DE CRESCIMENTO (60 dias) — projeção com impacto de densidade</div>
+        <canvas id="eficChart" style="max-height:280px;width:100%;"></canvas>
+        <div style="font-size:.65rem;color:#94a3b8;margin-top:6px;">
+            🟢 Verde: 50% dos peixes atuais · 🔵 Azul: cenário atual · 🔴 Vermelho: 150% dos peixes · 🟣 Roxo tracejado: densidade (kg/m³) · 🟡 Linha limite: 150 kg/m³
+        </div>
+    </div>
+
+    <!-- Histórico de biometrias com KPIs reais -->
+    ${bios.length > 0 ? `
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:12px;margin-bottom:12px;">
+        <div style="font-size:.72rem;font-weight:800;color:#0a7ea4;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">📋 HISTÓRICO DE BIOMETRIAS COM DESEMPENHO REAL</div>
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.7rem;min-width:640px;">
+            <thead>
+            <tr style="background:#f1f5f9;font-size:.63rem;letter-spacing:.5px;text-transform:uppercase;color:#64748b;">
+                <th style="padding:7px 4px;text-align:left;">Data</th>
+                <th style="padding:7px 4px;">Tanque</th>
+                <th style="padding:7px 4px;">Peso</th>
+                <th style="padding:7px 4px;">Biomassa</th>
+                <th style="padding:7px 4px;">Dens.</th>
+                <th style="padding:7px 4px;color:#0a7ea4;">GPD Real</th>
+                <th style="padding:7px 4px;color:#94a3b8;">GPD Teór.</th>
+                <th style="padding:7px 4px;color:#0a7ea4;">CA Real</th>
+                <th style="padding:7px 4px;color:#94a3b8;">CA Teór.</th>
+                <th style="padding:7px 4px;">🌡️ Temp</th>
+                <th style="padding:7px 4px;">💧 O₂</th>
+            </tr>
+            </thead>
+            <tbody>${historicoRows}</tbody>
+        </table>
+        </div>
+        <div style="font-size:.65rem;color:#94a3b8;margin-top:6px;">⚠️ dens↑ gpd↓ = correlação entre aumento de densidade e queda no GPD real detectada nesse intervalo</div>
+    </div>` : '<div style="color:#94a3b8;font-size:.78rem;padding:8px;">Nenhuma biometria registrada para este lote ainda.</div>'}
+
+    <!-- Resumo de eficiência -->
+    <div id="eficResumo" style="margin-top:4px;"></div>`;
+
+    // Renderizar gráfico
+    setTimeout(() => {
+        let canvas = document.getElementById("eficChart");
+        if (!canvas) return;
+        if (window._eficChartInst) { try { window._eficChartInst.destroy(); } catch(e){} }
+        window._eficChartInst = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: labelsDias, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                let v = ctx.raw;
+                                if (v === null) return null;
+                                if (ctx.dataset.yAxisID === 'y1') return `${ctx.dataset.label}: ${v.toFixed(1)} kg/m³`;
+                                return `${ctx.dataset.label}: ${v.toFixed(0)}g`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y:  { title: { display: true, text: 'Peso Médio (g)' }, beginAtZero: false, position: 'left' },
+                    y1: { title: { display: true, text: 'Densidade (kg/m³)' }, beginAtZero: true, position: 'right', grid: { drawOnChartArea: false },
+                          ticks: { color: '#7c3aed' } }
+                }
+            }
+        });
+
+        // Resumo de eficiência
+        let resumoDiv = document.getElementById("eficResumo");
+        if (resumoDiv && bios.length >= 2) {
+            let biosSortedRes = [...bios].sort((a,b) => new Date(a.dataISO||a.data) - new Date(b.dataISO||b.data));
+            let gpdReais = biosSortedRes.filter(b => b.gpdReal !== null && b.gpdReal !== undefined).map(b => b.gpdReal);
+            let caReais  = biosSortedRes.filter(b => b.caReal  !== null && b.caReal  !== undefined).map(b => b.caReal);
+            if (gpdReais.length > 0) {
+                let gpdMedio = gpdReais.reduce((s,v) => s+v, 0) / gpdReais.length;
+                let gpdMin   = Math.min(...gpdReais);
+                let gpdMax   = Math.max(...gpdReais);
+                let caMedio  = caReais.length ? caReais.reduce((s,v) => s+v, 0) / caReais.length : null;
+                // Tendência: comparar últimas 2 biometrias com GPD real
+                let tendencia = '';
+                if (gpdReais.length >= 2) {
+                    let last = gpdReais[gpdReais.length-1];
+                    let prev = gpdReais[gpdReais.length-2];
+                    tendencia = last > prev ? '📈 GPD em crescimento' : last < prev ? '📉 GPD em queda — verificar densidade e alimentação' : '➡️ GPD estável';
+                }
+                resumoDiv.innerHTML = `
+                <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--r-md);padding:12px 14px;">
+                    <div style="font-size:.72rem;font-weight:800;color:#0a7ea4;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">📊 RESUMO DE EFICIÊNCIA REAL DO LOTE</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.78rem;">
+                        <div><span style="color:#94a3b8;">GPD Médio Real</span><br><strong style="font-size:1rem;">${gpdMedio.toFixed(2)} g/dia</strong></div>
+                        <div><span style="color:#94a3b8;">GPD Mín / Máx</span><br><strong>${gpdMin.toFixed(2)} / ${gpdMax.toFixed(2)} g/dia</strong></div>
+                        ${caMedio !== null ? `<div><span style="color:#94a3b8;">CA Médio Real</span><br><strong style="font-size:1rem;">${caMedio.toFixed(2)}</strong></div>` : ''}
+                        ${volTotal > 0 ? `<div><span style="color:#94a3b8;">Volume Total Tanques</span><br><strong>${volTotal} m³</strong></div>` : ''}
+                    </div>
+                    ${tendencia ? `<div style="margin-top:8px;font-size:.78rem;font-weight:700;color:#0a7ea4;">${tendencia}</div>` : ''}
+                </div>`;
+            }
+        }
+    }, 80);
+}
+
+window.relEficienciaDesempenho = relEficienciaDesempenho;
+window.renderEficienciaLote = renderEficienciaLote;
+
 function init() {
+    verificarSessao();
     initPisciculturas();
     seedExemplo();
     // Restaurar horários dos tratos do localStorage
