@@ -3,71 +3,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, viewport-fit=cover">
-<title>🐟 AquaGestor PRO | ERP Piscicultura</title>
+<title>🐟 AquaGestor PRO | Supabase</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<!-- Firebase SDKs -->
-<script type="importmap">
-{
-  "imports": {
-    "firebase/app":       "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js",
-    "firebase/auth":      "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js",
-    "firebase/firestore": "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js"
-  }
-}
-</script>
-<script type="module">
-import { initializeApp } from "firebase/app";
-import {
-  getAuth, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, signOut,
-  onAuthStateChanged, sendPasswordResetEmail,
-  updateProfile, updateEmail, updatePassword,
-  EmailAuthProvider, reauthenticateWithCredential
-} from "firebase/auth";
-import {
-  getFirestore, doc, setDoc, getDoc,
-  serverTimestamp, updateDoc
-} from "firebase/firestore";
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase Auth -->
+<script>
+// ═══════════════════════════════════════════════════════
+//  SUPABASE CONFIG — AquaGestor PRO
+// ═══════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://bxqvlhciqkmtxcqcbcck.supabase.co';
+const SUPABASE_KEY = 'sb_publishable__xywRL5tzGcTVWYC2tiHOw_XxvRns6g';
+const _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const firebaseConfig = {
-  apiKey:            "AIzaSyBqNctI-q-KlVnwdF93zUhgSnRV9clSUTE",
-  authDomain:        "aquagerstorpro-9c74f.firebaseapp.com",
-  projectId:         "aquagerstorpro-9c74f",
-  storageBucket:     "aquagerstorpro-9c74f.firebasestorage.app",
-  messagingSenderId: "650003094888",
-  appId:             "1:650003094888:web:588bd68b0d820412b14add"
+// ── Login ────────────────────────────────────────────────────────────────────
+window._sbLogin = async function(email, senha) {
+  const { data, error } = await _sbClient.auth.signInWithPassword({ email, password: senha });
+  if (error) {
+    const msgs = {
+      'Invalid login credentials': 'auth/invalid-credential',
+      'Email not confirmed': 'auth/email-not-confirmed',
+      'Too many requests': 'auth/too-many-requests',
+    };
+    const e = new Error(error.message);
+    e.code = msgs[error.message] || error.message;
+    throw e;
+  }
+  return data;
 };
 
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+// ── Cadastro ─────────────────────────────────────────────────────────────────
+window._sbRegister = async function(nome, email, senha) {
+  const { data, error } = await _sbClient.auth.signUp({
+    email, password: senha,
+    options: { data: { nome, perfil: 'user' } }
+  });
+  if (error) {
+    const msgs = {
+      'User already registered': 'auth/email-already-in-use',
+      'Password should be at least 6 characters': 'auth/weak-password',
+    };
+    const e = new Error(error.message);
+    e.code = msgs[error.message] || error.message;
+    throw e;
+  }
+  const uid = data.user?.id;
+  if (uid) {
+    await _sbClient.from('users').upsert({
+      id: uid, nome, email, perfil: 'user', ativo: true,
+      criado_em: new Date().toLocaleDateString('pt-BR'),
+      criado_ts: new Date().toISOString()
+    });
+  }
+  return data;
+};
 
-// Expor para escopo global
-window._fbAuth = auth;
-window._fbDb   = db;
-window._fbSDK  = { doc, setDoc, getDoc, serverTimestamp, updateDoc,
-  EmailAuthProvider, reauthenticateWithCredential,
-  updateProfile, updateEmail, updatePassword };
+// ── Reset senha ───────────────────────────────────────────────────────────────
+window._sbResetSenha = async function(email) {
+  const { error } = await _sbClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  if (error) {
+    const msgs = { 'User not found': 'auth/user-not-found' };
+    const e = new Error(error.message);
+    e.code = msgs[error.message] || error.message;
+    throw e;
+  }
+};
 
-// ── Estado de autenticacao ───────────────────────────────────────────────────
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
+// ── Alterar senha (com reautenticação) ─────────────────────────────────────────
+window._sbAlterarSenha = async function(senhaAtual, senhaNova) {
+  const user = window._sbUser;
+  if (!user) throw new Error('Usuário não autenticado.');
+  // Reautenticar via signIn
+  const { error: reErr } = await _sbClient.auth.signInWithPassword({ email: user.email, password: senhaAtual });
+  if (reErr) {
+    const e = new Error('Senha atual incorreta.');
+    e.code = 'auth/wrong-password';
+    throw e;
+  }
+  const { error } = await _sbClient.auth.updateUser({ password: senhaNova });
+  if (error) throw new Error(error.message);
+};
+
+// ── Salvar perfil ─────────────────────────────────────────────────────────────
+window._sbSalvarPerfil = async function(nome, email) {
+  const { data: { user } } = await _sbClient.auth.getUser();
+  if (!user) throw new Error('Não autenticado');
+  const updates = { data: { nome } };
+  if (email !== user.email) updates.email = email;
+  const { error: authErr } = await _sbClient.auth.updateUser(updates);
+  if (authErr) throw new Error(authErr.message);
+  const { error: dbErr } = await _sbClient.from('users').update({ nome, email }).eq('id', user.id);
+  if (dbErr) throw new Error(dbErr.message);
+};
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+window._sbLogout = async function() {
+  await _sbClient.auth.signOut();
+  localStorage.removeItem('__aq_sessao_sb__');
+  window._sbUser = null;
+};
+
+// ── Auth State ────────────────────────────────────────────────────────────────
+_sbClient.auth.onAuthStateChange(async (event, session) => {
+  if (session && session.user) {
     try {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      const extra = snap.exists() ? snap.data() : {};
-      window._fbUser = {
-        uid:      user.uid,
-        nome:     user.displayName || extra.nome || user.email.split("@")[0],
-        email:    user.email,
-        perfil:   extra.perfil || "user",
-        criadoEm: extra.criadoEm || "—"
+      const { data: perfil } = await _sbClient
+        .from('users').select('*').eq('id', session.user.id).single();
+      const extra = perfil || {};
+
+      // Verificar se conta está ativa
+      if (extra.ativo === false) {
+        window._sbUser = null;
+        await _sbClient.auth.signOut();
+        const ov = document.getElementById('authOverlay');
+        if (ov) { ov.style.display = 'flex'; if(window.authTab) window.authTab('login'); }
+        setTimeout(() => {
+          const msgEl = document.getElementById('lgMsg');
+          if (msgEl) {
+            msgEl.textContent = 'Conta desativada. Contate o administrador.';
+            msgEl.className = 'auth-msg err';
+            msgEl.style.display = 'block';
+          }
+        }, 100);
+        return;
+      }
+
+      window._sbUser = {
+        uid:      session.user.id,
+        nome:     extra.nome || session.user.email.split('@')[0],
+        email:    session.user.email,
+        perfil:   extra.perfil || 'user',
+        criadoEm: extra.criado_em || '—'
       };
-      localStorage.setItem("__aq_sessao_fb__", JSON.stringify(window._fbUser));
-    } catch(e) { console.warn("Firestore:", e); }
-    const ov = document.getElementById("authOverlay");
-    if (ov) ov.style.display = "none";
+      localStorage.setItem('__aq_sessao_sb__', JSON.stringify(window._sbUser));
+    } catch(e) { console.warn('Supabase users:', e); }
+
+    const ov = document.getElementById('authOverlay');
+    if (ov) ov.style.display = 'none';
     if (window.uaInit)          window.uaInit();
     if (window.uaCarregarPrefs) window.uaCarregarPrefs();
     if (!window._appInitialized) {
@@ -75,59 +150,14 @@ onAuthStateChanged(auth, async (user) => {
       setTimeout(() => { if (window.init) window.init(); }, 50);
     }
   } else {
-    window._fbUser = null;
-    localStorage.removeItem("__aq_sessao_fb__");
-    const ov = document.getElementById("authOverlay");
-    if (ov) { ov.style.display = "flex"; if(window.authTab) window.authTab("login"); }
+    window._sbUser = null;
+    localStorage.removeItem('__aq_sessao_sb__');
+    const ov = document.getElementById('authOverlay');
+    if (ov) { ov.style.display = 'flex'; if(window.authTab) window.authTab('login'); }
   }
 });
 
-// ── Login ────────────────────────────────────────────────────────────────────
-window._fbLogin = async function(email, senha) {
-  return signInWithEmailAndPassword(auth, email, senha);
-};
-
-// ── Cadastro ─────────────────────────────────────────────────────────────────
-window._fbRegister = async function(nome, email, senha) {
-  const cred = await createUserWithEmailAndPassword(auth, email, senha);
-  await updateProfile(cred.user, { displayName: nome });
-  await setDoc(doc(db, "users", cred.user.uid), {
-    nome, email, perfil: "user", ativo: true,
-    criadoEm: new Date().toLocaleDateString("pt-BR"),
-    criadoTs: serverTimestamp()
-  });
-  return cred;
-};
-
-// ── Reset senha ───────────────────────────────────────────────────────────────
-window._fbResetSenha = async function(email) {
-  return sendPasswordResetEmail(auth, email);
-};
-
-// ── Alterar senha (requer reauth) ─────────────────────────────────────────────
-window._fbAlterarSenha = async function(senhaAtual, senhaNova) {
-  const user = auth.currentUser;
-  const cred = EmailAuthProvider.credential(user.email, senhaAtual);
-  await reauthenticateWithCredential(user, cred);
-  await updatePassword(user, senhaNova);
-};
-
-// ── Salvar perfil ─────────────────────────────────────────────────────────────
-window._fbSalvarPerfil = async function(nome, email) {
-  const user = auth.currentUser;
-  await updateProfile(user, { displayName: nome });
-  if (email !== user.email) await updateEmail(user, email);
-  await updateDoc(doc(db, "users", user.uid), { nome, email });
-};
-
-// ── Logout ────────────────────────────────────────────────────────────────────
-window._fbLogout = async function() {
-  await signOut(auth);
-  localStorage.removeItem("__aq_sessao_fb__");
-  window._fbUser = null;
-};
-
-console.log("Firebase AquaGestor OK");
+console.log('✅ AquaGestor PRO Supabase OK');
 </script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -1741,19 +1771,19 @@ body.dark-mode .ua-sub-title{color:#f1f5f9;}
 <div id="toastMessage" class="message"></div>
 
 <script>
-// ==================== AUTENTICAÇÃO — FIREBASE v12 ====================
+// ==================== AUTENTICAÇÃO — SUPABASE ====================
 // Os métodos reais ficam no bloco <script type="module"> no <head>.
 // Aqui ficam apenas helpers de UI e wrappers síncronos para compatibilidade.
 
 function _hoje(){ return new Date().toLocaleDateString('pt-BR'); }
 
-// _fbUser é preenchido pelo onAuthStateChanged no módulo Firebase
-function _getSessao(){ return window._fbUser || null; }
+// _sbUser é preenchido pelo onAuthStateChange do Supabase
+function _getSessao(){ return window._sbUser || null; }
 
 // Compatibilidade com código legado do app (pisciculturas, etc.)
-function initLoginDB(){ /* Firebase cuida disso */ }
-function _getUsers(){ return []; }   // não usado com Firebase
-function _setUsers(){ }              // não usado com Firebase
+function initLoginDB(){ /* Supabase cuida disso */ }
+function _getUsers(){ return []; }   // não usado com Supabase
+function _setUsers(){ }              // não usado com Supabase
 function _hash(s){ let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;} return 'aq_'+Math.abs(h).toString(36); }
 
 // ── Utilitários UI ──────────────────────────────────────────────────────────
@@ -1828,24 +1858,24 @@ function valField(inp, tipo){
     else{ inp.classList.remove('val-ok','val-err'); }
 }
 
-// ── Login — Firebase Auth ────────────────────────────────────────────────────
+// ── Login — Supabase Auth ────────────────────────────────────────────────────
 function doLogin(){
     let email = (document.getElementById('lgUser')?.value||'').trim().toLowerCase();
     let senha = document.getElementById('lgPwd')?.value||'';
     if(!email||!senha){ showMsg('lgMsg','Preencha e-mail e senha.'); return; }
-    if(!window._fbLogin){ showMsg('lgMsg','Firebase ainda carregando. Aguarde e tente novamente.','inf'); return; }
+    if(!window._sbLogin){ showMsg('lgMsg','Supabase ainda carregando. Aguarde e tente novamente.','inf'); return; }
 
     // UI de loading
     let btn = document.querySelector('#pnlLogin .auth-btn');
     if(btn){ btn.disabled=true; btn.textContent='⏳ Entrando…'; }
 
-    window._fbLogin(email, senha).then(()=>{
+    window._sbLogin(email, senha).then(()=>{
         hideMsg('lgMsg');
-        // onAuthStateChanged cuida do resto
+        // onAuthStateChange cuida do resto
     }).catch(e=>{
         const msgs = {
-            'auth/user-not-found':    'E-mail não cadastrado.',
-            'auth/wrong-password':    'Senha incorreta.',
+            'auth/user-not-found':    'E-mail não cadastrado.','User not found':'E-mail não cadastrado.',
+            'auth/wrong-password':    'Senha incorreta.','Invalid login credentials':'E-mail ou senha incorretos.',
             'auth/invalid-credential':'E-mail ou senha incorretos.',
             'auth/too-many-requests': 'Muitas tentativas. Aguarde.',
             'auth/user-disabled':     'Conta desativada. Contate o administrador.',
@@ -1858,7 +1888,7 @@ function doLogin(){
     });
 }
 
-// ── Cadastro — Firebase Auth + Firestore ─────────────────────────────────────
+// ── Cadastro — Supabase Auth ─────────────────────────────────────────────────
 function doRegister(){
     let nome  = (document.getElementById('rgNome')?.value||'').trim();
     let email = (document.getElementById('rgEmail')?.value||'').trim().toLowerCase();
@@ -1869,17 +1899,17 @@ function doRegister(){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg('rgMsg','Informe um e-mail válido.'); return; }
     if(senha.length<6)                             { showMsg('rgMsg','Senha deve ter pelo menos 6 caracteres.'); return; }
     if(senha!==conf)                               { showMsg('rgMsg','As senhas não coincidem.'); return; }
-    if(!window._fbRegister){ showMsg('rgMsg','Firebase ainda carregando. Aguarde.','inf'); return; }
+    if(!window._sbRegister){ showMsg('rgMsg','Supabase ainda carregando. Aguarde.','inf'); return; }
 
     let btn = document.querySelector('#pnlCadastro .auth-btn');
     if(btn){ btn.disabled=true; btn.textContent='⏳ Criando conta…'; }
 
-    window._fbRegister(nome, email, senha).then(()=>{
+    window._sbRegister(nome, email, senha).then(()=>{
         showMsg('rgMsg','✅ Conta criada! Bem-vindo(a), '+nome+'!','ok');
-        // onAuthStateChanged cuida do resto
+        // onAuthStateChange cuida do resto
     }).catch(e=>{
         const msgs = {
-            'auth/email-already-in-use':'Este e-mail já está cadastrado. Faça login.',
+            'auth/email-already-in-use':'Este e-mail já está cadastrado. Faça login.','User already registered':'Este e-mail já está cadastrado. Faça login.',
             'auth/invalid-email':       'E-mail inválido.',
             'auth/weak-password':       'Senha muito fraca. Use pelo menos 6 caracteres.',
         };
@@ -1888,7 +1918,7 @@ function doRegister(){
     });
 }
 
-// ── Recuperação de Senha — Firebase sendPasswordResetEmail ──────────────────
+// ── Recuperação de Senha — Supabase resetPasswordForEmail ───────────────────
 function recShowStep(n){
     [1,2,3].forEach(i=>{
         let el=document.getElementById('recP'+i);
@@ -1899,12 +1929,12 @@ function recShowStep(n){
 function recStep1(){
     let email=(document.getElementById('recEmail')?.value||'').trim().toLowerCase();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg('recMsg1','Informe um e-mail válido.'); return; }
-    if(!window._fbResetSenha){ showMsg('recMsg1','Firebase ainda carregando. Aguarde.','inf'); return; }
+    if(!window._sbResetSenha){ showMsg('recMsg1','Supabase ainda carregando. Aguarde.','inf'); return; }
 
     let btn=document.querySelector('#recP1 .auth-btn');
     if(btn){ btn.disabled=true; btn.textContent='⏳ Enviando…'; }
 
-    window._fbResetSenha(email).then(()=>{
+    window._sbResetSenha(email).then(()=>{
         // Sucesso — avançar para confirmação
         recShowStep(2);
         hideMsg('recMsg1');
@@ -1925,22 +1955,22 @@ function recStep1(){
     });
 }
 
-// Etapa 2: com Firebase não há código — o link é enviado por e-mail
+// Etapa 2: com Supabase não há código — o link é enviado por e-mail
 function recStep2(){
     showMsg('recMsg2','✅ Acesse o link no seu e-mail para criar uma nova senha. Depois volte aqui para entrar.','ok');
     setTimeout(()=>authTab('login'), 3000);
 }
 
-// Etapa 3: não usada com Firebase (reset é feito via link no e-mail)
+// Etapa 3: não usada com Supabase (reset é feito via link no e-mail)
 function recStep3(){ authTab('login'); }
 
-// ── verificarSessao: Firebase onAuthStateChanged cuida disso ─────────────────
-// Esta função é chamada pelo init() legado; com Firebase ela é um no-op
-// pois o módulo Firebase já detecta a sessão e esconde o overlay.
+// ── verificarSessao: Supabase onAuthStateChange cuida disso ─────────────────
+// Esta função é chamada pelo init() legado; com Supabase ela é um no-op
+// pois o Supabase já detecta a sessão e esconde o overlay.
 function verificarSessao(){
-    // Firebase onAuthStateChanged (no módulo) já controla o overlay.
-    // Garantir que o overlay esteja visível enquanto o Firebase carrega.
-    if(!window._fbUser){
+    // Supabase onAuthStateChange já controla o overlay.
+    // Garantir que o overlay esteja visível enquanto o Supabase carrega.
+    if(!window._sbUser){
         document.getElementById('authOverlay').style.display='flex';
         authTab('login');
     }
@@ -1959,7 +1989,7 @@ window.recStep2=recStep2;
 window.recStep3=recStep3;
 window.recShowStep=recShowStep;
 window.fazerLogin=doLogin;
-window.fazerLogout=function(){ if(window._fbLogout){ window._fbLogout().then(()=>location.reload()); } else { location.reload(); } };
+window.fazerLogout=function(){ if(window._sbLogout){ window._sbLogout().then(()=>location.reload()); } else { location.reload(); } };
 
 // window.init registrado abaixo junto com as demais funções globais
 
@@ -1967,8 +1997,8 @@ window.fazerLogout=function(){ if(window._fbLogout){ window._fbLogout().then(()=
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function _getSessao(){
-    // Priorizar usuário Firebase; fallback para sessão local antiga
-    return window._fbUser || null;
+    // Priorizar usuário Supabase; fallback para sessão local antiga
+    return window._sbUser || null;
 }
 function _getInitial(nome){
     if(!nome) return '?';
@@ -2090,7 +2120,7 @@ function uaBack(){
     document.getElementById('uaMain').style.display='flex';
 }
 
-// ── Salvar Perfil — Firebase ──────────────────────────────────────────────────
+// ── Salvar Perfil — Supabase ──────────────────────────────────────────────────
 function uaSalvarPerfil(){
     let s=_getSessao();
     let msgEl=document.getElementById('uaMsgPerfil');
@@ -2100,14 +2130,14 @@ function uaSalvarPerfil(){
 
     if(nome.length<2)                              { showM('Nome deve ter pelo menos 2 caracteres.','err'); return; }
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showM('E-mail inválido.','err'); return; }
-    if(!window._fbSalvarPerfil)                    { showM('Firebase ainda carregando.','inf'); return; }
+    if(!window._sbSalvarPerfil)                    { showM('Supabase ainda carregando.','inf'); return; }
 
     let btn=document.querySelector('#uaSubPerfil .ua-save-btn');
     if(btn){ btn.disabled=true; btn.textContent='⏳ Salvando…'; }
 
-    window._fbSalvarPerfil(nome, email).then(()=>{
-        if(window._fbUser){ window._fbUser.nome=nome; window._fbUser.email=email; }
-        localStorage.setItem('__aq_sessao_fb__', JSON.stringify({...window._fbUser}));
+    window._sbSalvarPerfil(nome, email).then(()=>{
+        if(window._sbUser){ window._sbUser.nome=nome; window._sbUser.email=email; }
+        localStorage.setItem('__aq_sessao_sb__', JSON.stringify({...window._sbUser}));
         let av=document.getElementById('uaPAvatar'); if(av) av.textContent=_getInitial(nome);
         let pn=document.getElementById('uaPNome');   if(pn) pn.textContent=nome;
         let pe=document.getElementById('uaPEmail');  if(pe) pe.textContent=email;
@@ -2125,7 +2155,7 @@ function uaSalvarPerfil(){
     });
 }
 
-// ── Alterar Senha — Firebase (com reautenticação) ─────────────────────────────
+// ── Alterar Senha — Supabase (com reautenticação) ─────────────────────────────
 function uaAlterarSenha(){
     let atual = document.getElementById('uaFSenhaAtual')?.value||'';
     let nova  = document.getElementById('uaFSenhaNova')?.value||'';
@@ -2136,12 +2166,12 @@ function uaAlterarSenha(){
     if(!atual)       { showM('Informe a senha atual.','err'); return; }
     if(nova.length<6){ showM('Nova senha deve ter pelo menos 6 caracteres.','err'); return; }
     if(nova!==conf)  { showM('As senhas não coincidem.','err'); return; }
-    if(!window._fbAlterarSenha){ showM('Firebase ainda carregando.','inf'); return; }
+    if(!window._sbAlterarSenha){ showM('Supabase ainda carregando.','inf'); return; }
 
     let btn=document.querySelector('#uaSubSenha .ua-save-btn');
     if(btn){ btn.disabled=true; btn.textContent='⏳ Atualizando…'; }
 
-    window._fbAlterarSenha(atual, nova).then(()=>{
+    window._sbAlterarSenha(atual, nova).then(()=>{
         showM('✅ Senha alterada com sucesso!','ok');
         ['uaFSenhaAtual','uaFSenhaNova','uaFSenhaConf'].forEach(id=>{ let e=document.getElementById(id); if(e) e.value=''; });
         let f=document.getElementById('uaPwFill'); if(f) f.style.width='0';
@@ -2210,13 +2240,13 @@ function uaExportarDados(){
     URL.revokeObjectURL(a.href);
 }
 
-// ── Logout — Firebase ─────────────────────────────────────────────────────────
+// ── Logout — Supabase ─────────────────────────────────────────────────────────
 function uaLogout(){
     if(!confirm('Deseja realmente sair da sua conta?')) return;
-    if(window._fbLogout){
-        window._fbLogout().then(()=>location.reload());
+    if(window._sbLogout){
+        window._sbLogout().then(()=>location.reload());
     } else {
-        localStorage.removeItem('__aq_sessao_fb__');
+        localStorage.removeItem('__aq_sessao_sb__');
         location.reload();
     }
 }
@@ -7589,7 +7619,7 @@ window.relEficienciaDesempenho = relEficienciaDesempenho;
 window.renderEficienciaLote = renderEficienciaLote;
 
 function init() {
-    // Chamado pelo onAuthStateChanged do Firebase (módulo no <head>)
+    // Chamado pelo onAuthStateChange do Supabase
     // apenas após autenticação confirmada
     verificarSessao();
     initPisciculturas();
@@ -7702,22 +7732,22 @@ window.relMortalidade = relMortalidade;
 window.atualizarGraficoMortalidade = atualizarGraficoMortalidade;
 window.registrarMortalidadeComData = registrarMortalidadeComData;
 
-// ── Inicialização controlada pelo Firebase ──────────────────────────────────
-// Não chamar init() diretamente — o módulo Firebase chama via onAuthStateChanged
-// Apenas mostrar o overlay de autenticação enquanto o Firebase carrega
-(function aguardarFirebase() {
+// ── Inicialização controlada pelo Supabase ──────────────────────────────────
+// Não chamar init() diretamente — o Supabase chama via onAuthStateChange
+// Apenas mostrar o overlay de autenticação enquanto o Supabase carrega
+(function aguardarSupabase() {
     const overlay = document.getElementById('authOverlay');
     // Garantir overlay visível durante carregamento
-    if (overlay && !window._fbUser) {
+    if (overlay && !window._sbUser) {
         overlay.style.display = 'flex';
         if (window.authTab) window.authTab('login');
     }
-    // Se Firebase não carregou em 8s, mostrar mensagem de erro
+    // Se Supabase não carregou em 8s, mostrar mensagem de erro
     setTimeout(() => {
         if (!window._appInitialized && overlay && overlay.style.display !== 'none') {
             const errEl = document.getElementById('lgMsg');
             if (errEl) {
-                errEl.textContent = '⚠️ Firebase demorando para carregar. Verifique sua conexão.';
+                errEl.textContent = '⚠️ Supabase demorando para carregar. Verifique sua conexão.';
                 errEl.className = 'auth-msg err';
                 errEl.style.display = 'block';
             }
