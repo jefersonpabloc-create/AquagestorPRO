@@ -7,6 +7,128 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Firebase SDKs -->
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app":       "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js",
+    "firebase/auth":      "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js"
+  }
+}
+</script>
+<script type="module">
+import { initializeApp } from "firebase/app";
+import {
+  getAuth, createUserWithEmailAndPassword,
+  signInWithEmailAndPassword, signOut,
+  onAuthStateChanged, sendPasswordResetEmail,
+  updateProfile, updateEmail, updatePassword,
+  EmailAuthProvider, reauthenticateWithCredential
+} from "firebase/auth";
+import {
+  getFirestore, doc, setDoc, getDoc,
+  serverTimestamp, updateDoc
+} from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBqNctI-q-KlVnwdF93zUhgSnRV9clSUTE",
+  authDomain:        "aquagerstorpro-9c74f.firebaseapp.com",
+  projectId:         "aquagerstorpro-9c74f",
+  storageBucket:     "aquagerstorpro-9c74f.firebasestorage.app",
+  messagingSenderId: "650003094888",
+  appId:             "1:650003094888:web:588bd68b0d820412b14add"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// Expor para escopo global
+window._fbAuth = auth;
+window._fbDb   = db;
+window._fbSDK  = { doc, setDoc, getDoc, serverTimestamp, updateDoc,
+  EmailAuthProvider, reauthenticateWithCredential,
+  updateProfile, updateEmail, updatePassword };
+
+// ── Estado de autenticacao ───────────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const extra = snap.exists() ? snap.data() : {};
+      window._fbUser = {
+        uid:      user.uid,
+        nome:     user.displayName || extra.nome || user.email.split("@")[0],
+        email:    user.email,
+        perfil:   extra.perfil || "user",
+        criadoEm: extra.criadoEm || "—"
+      };
+      localStorage.setItem("__aq_sessao_fb__", JSON.stringify(window._fbUser));
+    } catch(e) { console.warn("Firestore:", e); }
+    const ov = document.getElementById("authOverlay");
+    if (ov) ov.style.display = "none";
+    if (window.uaInit)          window.uaInit();
+    if (window.uaCarregarPrefs) window.uaCarregarPrefs();
+    if (window.init && !window._appInitialized) {
+      window._appInitialized = true;
+      window.init();
+    }
+  } else {
+    window._fbUser = null;
+    localStorage.removeItem("__aq_sessao_fb__");
+    const ov = document.getElementById("authOverlay");
+    if (ov) { ov.style.display = "flex"; if(window.authTab) window.authTab("login"); }
+  }
+});
+
+// ── Login ────────────────────────────────────────────────────────────────────
+window._fbLogin = async function(email, senha) {
+  return signInWithEmailAndPassword(auth, email, senha);
+};
+
+// ── Cadastro ─────────────────────────────────────────────────────────────────
+window._fbRegister = async function(nome, email, senha) {
+  const cred = await createUserWithEmailAndPassword(auth, email, senha);
+  await updateProfile(cred.user, { displayName: nome });
+  await setDoc(doc(db, "users", cred.user.uid), {
+    nome, email, perfil: "user", ativo: true,
+    criadoEm: new Date().toLocaleDateString("pt-BR"),
+    criadoTs: serverTimestamp()
+  });
+  return cred;
+};
+
+// ── Reset senha ───────────────────────────────────────────────────────────────
+window._fbResetSenha = async function(email) {
+  return sendPasswordResetEmail(auth, email);
+};
+
+// ── Alterar senha (requer reauth) ─────────────────────────────────────────────
+window._fbAlterarSenha = async function(senhaAtual, senhaNova) {
+  const user = auth.currentUser;
+  const cred = EmailAuthProvider.credential(user.email, senhaAtual);
+  await reauthenticateWithCredential(user, cred);
+  await updatePassword(user, senhaNova);
+};
+
+// ── Salvar perfil ─────────────────────────────────────────────────────────────
+window._fbSalvarPerfil = async function(nome, email) {
+  const user = auth.currentUser;
+  await updateProfile(user, { displayName: nome });
+  if (email !== user.email) await updateEmail(user, email);
+  await updateDoc(doc(db, "users", user.uid), { nome, email });
+};
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+window._fbLogout = async function() {
+  await signOut(auth);
+  localStorage.removeItem("__aq_sessao_fb__");
+  window._fbUser = null;
+};
+
+console.log("Firebase AquaGestor OK");
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
@@ -1619,27 +1741,20 @@ body.dark-mode .ua-sub-title{color:#f1f5f9;}
 <div id="toastMessage" class="message"></div>
 
 <script>
-// ==================== SISTEMA DE AUTENTICAÇÃO v2 ====================
-const LOGIN_DB_KEY = '__aquagestor_users__';
-
-function _getUsers(){ try{ return JSON.parse(localStorage.getItem(LOGIN_DB_KEY))||[]; }catch(e){return[];} }
-function _setUsers(u){ localStorage.setItem(LOGIN_DB_KEY, JSON.stringify(u)); }
-
-function _hash(s){
-    let h=0;
-    for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}
-    return 'aq_'+Math.abs(h).toString(36);
-}
+// ==================== AUTENTICAÇÃO — FIREBASE v12 ====================
+// Os métodos reais ficam no bloco <script type="module"> no <head>.
+// Aqui ficam apenas helpers de UI e wrappers síncronos para compatibilidade.
 
 function _hoje(){ return new Date().toLocaleDateString('pt-BR'); }
 
-function initLoginDB(){
-    if(!_getUsers().length){
-        _setUsers([{id:1,usuario:'admin',email:'admin@aquagestor.com',
-            senhaHash:_hash('admin123'),nome:'Administrador',
-            perfil:'admin',ativo:true,criadoEm:_hoje()}]);
-    }
-}
+// _fbUser é preenchido pelo onAuthStateChanged no módulo Firebase
+function _getSessao(){ return window._fbUser || null; }
+
+// Compatibilidade com código legado do app (pisciculturas, etc.)
+function initLoginDB(){ /* Firebase cuida disso */ }
+function _getUsers(){ return []; }   // não usado com Firebase
+function _setUsers(){ }              // não usado com Firebase
+function _hash(s){ let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;} return 'aq_'+Math.abs(h).toString(36); }
 
 // ── Utilitários UI ──────────────────────────────────────────────────────────
 function authTab(aba){
@@ -1713,73 +1828,67 @@ function valField(inp, tipo){
     else{ inp.classList.remove('val-ok','val-err'); }
 }
 
-// ── Login ───────────────────────────────────────────────────────────────────
+// ── Login — Firebase Auth ────────────────────────────────────────────────────
 function doLogin(){
-    let raw   = (document.getElementById('lgUser')?.value||'').trim().toLowerCase();
+    let email = (document.getElementById('lgUser')?.value||'').trim().toLowerCase();
     let senha = document.getElementById('lgPwd')?.value||'';
-    if(!raw||!senha){ showMsg('lgMsg','Preencha e-mail e senha.'); return; }
-    let users = _getUsers();
-    let u = users.find(x=>
-        (x.email?.toLowerCase()===raw || x.usuario?.toLowerCase()===raw) &&
-        x.senhaHash===_hash(senha) && x.ativo!==false
-    );
-    if(u){
-        localStorage.setItem('__aq_sessao__',
-            JSON.stringify({id:u.id,nome:u.nome,email:u.email,perfil:u.perfil,ts:Date.now()}));
-        document.getElementById('authOverlay').style.display='none';
+    if(!email||!senha){ showMsg('lgMsg','Preencha e-mail e senha.'); return; }
+    if(!window._fbLogin){ showMsg('lgMsg','Firebase ainda carregando. Aguarde e tente novamente.','inf'); return; }
+
+    // UI de loading
+    let btn = document.querySelector('#pnlLogin .auth-btn');
+    if(btn){ btn.disabled=true; btn.textContent='⏳ Entrando…'; }
+
+    window._fbLogin(email, senha).then(()=>{
         hideMsg('lgMsg');
-        let b=document.getElementById('headerBadge');
-        if(b) b.title=`Logado: ${u.nome}`;
-        uaInit(); uaCarregarPrefs();
-    } else {
-        let inat=users.find(x=>(x.email?.toLowerCase()===raw||x.usuario?.toLowerCase()===raw)&&x.ativo===false);
-        showMsg('lgMsg', inat ? 'Conta inativa. Contate o administrador.' : 'E-mail/usuário ou senha incorretos.');
+        // onAuthStateChanged cuida do resto
+    }).catch(e=>{
+        const msgs = {
+            'auth/user-not-found':    'E-mail não cadastrado.',
+            'auth/wrong-password':    'Senha incorreta.',
+            'auth/invalid-credential':'E-mail ou senha incorretos.',
+            'auth/too-many-requests': 'Muitas tentativas. Aguarde.',
+            'auth/user-disabled':     'Conta desativada. Contate o administrador.',
+            'auth/invalid-email':     'E-mail inválido.',
+        };
+        showMsg('lgMsg', msgs[e.code] || 'Erro ao entrar. Verifique os dados.');
         document.getElementById('lgPwd').value='';
         document.getElementById('lgPwd').focus();
-    }
+        if(btn){ btn.disabled=false; btn.textContent='🔓 Entrar'; }
+    });
 }
 
-// ── Cadastro ────────────────────────────────────────────────────────────────
+// ── Cadastro — Firebase Auth + Firestore ─────────────────────────────────────
 function doRegister(){
-    let nome  = document.getElementById('rgNome')?.value.trim()||'';
-    let email = document.getElementById('rgEmail')?.value.trim().toLowerCase()||'';
+    let nome  = (document.getElementById('rgNome')?.value||'').trim();
+    let email = (document.getElementById('rgEmail')?.value||'').trim().toLowerCase();
     let senha = document.getElementById('rgPwd')?.value||'';
     let conf  = document.getElementById('rgPwdConf')?.value||'';
 
-    if(nome.length<2)                          { showMsg('rgMsg','Nome deve ter pelo menos 2 caracteres.'); return; }
+    if(nome.length<2)                              { showMsg('rgMsg','Nome deve ter pelo menos 2 caracteres.'); return; }
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg('rgMsg','Informe um e-mail válido.'); return; }
-    if(senha.length<6)                         { showMsg('rgMsg','Senha deve ter pelo menos 6 caracteres.'); return; }
-    if(senha!==conf)                           { showMsg('rgMsg','As senhas não coincidem.'); return; }
+    if(senha.length<6)                             { showMsg('rgMsg','Senha deve ter pelo menos 6 caracteres.'); return; }
+    if(senha!==conf)                               { showMsg('rgMsg','As senhas não coincidem.'); return; }
+    if(!window._fbRegister){ showMsg('rgMsg','Firebase ainda carregando. Aguarde.','inf'); return; }
 
-    let users=_getUsers();
-    if(users.some(x=>x.email?.toLowerCase()===email)){
-        showMsg('rgMsg','Este e-mail já está cadastrado. Faça login ou recupere a senha.');
-        return;
-    }
+    let btn = document.querySelector('#pnlCadastro .auth-btn');
+    if(btn){ btn.disabled=true; btn.textContent='⏳ Criando conta…'; }
 
-    let maxId=users.reduce((m,x)=>Math.max(m,x.id||0),0);
-    let uBase=email.split('@')[0].replace(/[^a-z0-9._-]/gi,'').toLowerCase().slice(0,20)||'user';
-    let usuario=uBase, suf=2;
-    while(users.some(x=>x.usuario?.toLowerCase()===usuario)){ usuario=uBase+suf; suf++; }
-
-    let novo={id:maxId+1,usuario,email,senhaHash:_hash(senha),nome,perfil:'user',ativo:true,criadoEm:_hoje()};
-    users.push(novo);
-    _setUsers(users);
-
-    localStorage.setItem('__aq_sessao__',
-        JSON.stringify({id:novo.id,nome:novo.nome,email:novo.email,perfil:novo.perfil,ts:Date.now()}));
-
-    showMsg('rgMsg',`✅ Conta criada! Bem-vindo(a), ${nome}!`,'ok');
-    setTimeout(()=>{
-        document.getElementById('authOverlay').style.display='none';
-        uaInit(); uaCarregarPrefs();
-        showMessage && showMessage(`🎉 Bem-vindo(a) ao AquaGestor, ${nome}!`);
-    },1400);
+    window._fbRegister(nome, email, senha).then(()=>{
+        showMsg('rgMsg','✅ Conta criada! Bem-vindo(a), '+nome+'!','ok');
+        // onAuthStateChanged cuida do resto
+    }).catch(e=>{
+        const msgs = {
+            'auth/email-already-in-use':'Este e-mail já está cadastrado. Faça login.',
+            'auth/invalid-email':       'E-mail inválido.',
+            'auth/weak-password':       'Senha muito fraca. Use pelo menos 6 caracteres.',
+        };
+        showMsg('rgMsg', msgs[e.code] || 'Erro ao criar conta: '+e.message);
+        if(btn){ btn.disabled=false; btn.textContent='✨ Criar Minha Conta'; }
+    });
 }
 
-// ── Recuperação de Senha ─────────────────────────────────────────────────────
-let _recCode=null, _recEmail=null, _recTs=null;
-
+// ── Recuperação de Senha — Firebase sendPasswordResetEmail ──────────────────
 function recShowStep(n){
     [1,2,3].forEach(i=>{
         let el=document.getElementById('recP'+i);
@@ -1790,68 +1899,54 @@ function recShowStep(n){
 function recStep1(){
     let email=(document.getElementById('recEmail')?.value||'').trim().toLowerCase();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showMsg('recMsg1','Informe um e-mail válido.'); return; }
-    let users=_getUsers();
-    let u=users.find(x=>x.email?.toLowerCase()===email && x.ativo!==false);
-    // Gerar código independente (não revelar se e-mail existe — UX segura)
-    _recCode = String(Math.floor(100000+Math.random()*900000));
-    _recEmail = email;
-    _recTs    = Date.now();
-    recShowStep(2);
-    hideMsg('recMsg1');
-    // Mostrar código (sistema offline — sem servidor de e-mail)
-    let disp=document.getElementById('recCodeVal');
-    let hint=document.getElementById('recP2hint');
-    if(disp) disp.textContent = u ? _recCode : '——';
-    if(hint) hint.textContent = u
-        ? `Código para ${email} (modo local — em produção seria enviado por e-mail).`
-        : `Se este e-mail estiver cadastrado, o código apareceria aqui.`;
-    document.getElementById('recCode').value='';
-    document.getElementById('recCode').focus();
+    if(!window._fbResetSenha){ showMsg('recMsg1','Firebase ainda carregando. Aguarde.','inf'); return; }
+
+    let btn=document.querySelector('#recP1 .auth-btn');
+    if(btn){ btn.disabled=true; btn.textContent='⏳ Enviando…'; }
+
+    window._fbResetSenha(email).then(()=>{
+        // Sucesso — avançar para confirmação
+        recShowStep(2);
+        hideMsg('recMsg1');
+        let hint=document.getElementById('recP2hint');
+        let box =document.getElementById('recCodeBox');
+        let val =document.getElementById('recCodeVal');
+        if(hint) hint.textContent='E-mail de redefinição enviado! Verifique sua caixa de entrada (e o spam).';
+        if(val){ val.textContent='📬'; val.style.letterSpacing='0'; val.style.fontSize='2.2rem'; }
+        if(box){ box.style.background='#dcfce7'; box.style.borderColor='#86efac'; }
+    }).catch(e=>{
+        const msgs={
+            'auth/user-not-found':   'Nenhuma conta cadastrada com este e-mail.',
+            'auth/invalid-email':    'E-mail inválido.',
+            'auth/too-many-requests':'Muitas tentativas. Aguarde antes de tentar novamente.',
+        };
+        showMsg('recMsg1', msgs[e.code] || 'Erro: '+e.message);
+        if(btn){ btn.disabled=false; btn.textContent='📨 Enviar Link de Redefinição'; }
+    });
 }
 
+// Etapa 2: com Firebase não há código — o link é enviado por e-mail
 function recStep2(){
-    let digitado=(document.getElementById('recCode')?.value||'').trim();
-    if(!_recCode){ showMsg('recMsg2','Solicite um código primeiro.'); return; }
-    if(Date.now()-_recTs > 10*60*1000){ showMsg('recMsg2','Código expirado. Solicite um novo.'); _recCode=null; return; }
-    if(digitado!==_recCode){ showMsg('recMsg2','Código incorreto. Verifique e tente novamente.'); return; }
-    hideMsg('recMsg2');
-    recShowStep(3);
-    document.getElementById('recPwd').focus();
+    showMsg('recMsg2','✅ Acesse o link no seu e-mail para criar uma nova senha. Depois volte aqui para entrar.','ok');
+    setTimeout(()=>authTab('login'), 3000);
 }
 
-function recStep3(){
-    let p1=document.getElementById('recPwd')?.value||'';
-    let p2=document.getElementById('recPwdConf')?.value||'';
-    if(p1.length<6){ showMsg('recMsg3','Senha deve ter pelo menos 6 caracteres.'); return; }
-    if(p1!==p2)    { showMsg('recMsg3','As senhas não coincidem.'); return; }
-    if(!_recEmail) { showMsg('recMsg3','Sessão expirada. Recomece o processo.'); return; }
-    let users=_getUsers();
-    let idx=users.findIndex(x=>x.email?.toLowerCase()===_recEmail.toLowerCase());
-    if(idx===-1){ showMsg('recMsg3','Conta não encontrada.'); return; }
-    users[idx].senhaHash=_hash(p1);
-    _setUsers(users);
-    _recCode=null; _recEmail=null; _recTs=null;
-    showMsg('recMsg3','✅ Senha redefinida com sucesso! Faça login com a nova senha.','ok');
-    setTimeout(()=>authTab('login'),2000);
-}
+// Etapa 3: não usada com Firebase (reset é feito via link no e-mail)
+function recStep3(){ authTab('login'); }
 
-// ── Verificar sessão ao iniciar ──────────────────────────────────────────────
+// ── verificarSessao: Firebase onAuthStateChanged cuida disso ─────────────────
+// Esta função é chamada pelo init() legado; com Firebase ela é um no-op
+// pois o módulo Firebase já detecta a sessão e esconde o overlay.
 function verificarSessao(){
-    initLoginDB();
-    let s=null;
-    try{ s=JSON.parse(localStorage.getItem('__aq_sessao__')); }catch(e){}
-    if(s && s.ts && (Date.now()-s.ts)<12*3600*1000){
-        document.getElementById('authOverlay').style.display='none';
-        let b=document.getElementById('headerBadge');
-        if(b) b.title=`Logado: ${s.nome}`;
-        setTimeout(()=>{ uaInit(); uaCarregarPrefs(); },0);
-    } else {
+    // Firebase onAuthStateChanged (no módulo) já controla o overlay.
+    // Garantir que o overlay esteja visível enquanto o Firebase carrega.
+    if(!window._fbUser){
         document.getElementById('authOverlay').style.display='flex';
         authTab('login');
     }
 }
 
-// Expor globalmente
+// ── Expor globalmente ─────────────────────────────────────────────────────────
 window.doLogin=doLogin;
 window.doRegister=doRegister;
 window.authTab=authTab;
@@ -1864,13 +1959,17 @@ window.recStep2=recStep2;
 window.recStep3=recStep3;
 window.recShowStep=recShowStep;
 window.fazerLogin=doLogin;
-window.fazerLogout=function(){localStorage.removeItem('__aq_sessao__');location.reload();};
+window.fazerLogout=function(){ if(window._fbLogout){ window._fbLogout().then(()=>location.reload()); } else { location.reload(); } };
+
+// Registrar função init para o módulo Firebase chamar após autenticação
+window.init = (typeof init === 'function') ? init : window.init;
 
 // ==================== ÁREA DO USUÁRIO (Minha Conta) ====================
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function _getSessao(){
-    try{ return JSON.parse(localStorage.getItem('__aq_sessao__'))||null; }catch(e){return null;}
+    // Priorizar usuário Firebase; fallback para sessão local antiga
+    return window._fbUser || null;
 }
 function _getInitial(nome){
     if(!nome) return '?';
@@ -1992,68 +2091,73 @@ function uaBack(){
     document.getElementById('uaMain').style.display='flex';
 }
 
-// ── Salvar Perfil ─────────────────────────────────────────────────────────────
+// ── Salvar Perfil — Firebase ──────────────────────────────────────────────────
 function uaSalvarPerfil(){
-    let s=_getSessao(); if(!s) return;
-    let nome  = (document.getElementById('uaFNome')?.value||'').trim();
-    let email = (document.getElementById('uaFEmail')?.value||'').trim().toLowerCase();
-    let msgEl = document.getElementById('uaMsgPerfil');
+    let s=_getSessao();
+    let msgEl=document.getElementById('uaMsgPerfil');
+    let nome  =(document.getElementById('uaFNome')?.value||'').trim();
+    let email =(document.getElementById('uaFEmail')?.value||'').trim().toLowerCase();
+    function showM(txt,tipo){ msgEl.textContent=txt; msgEl.className='ua-msg '+tipo; msgEl.style.display='block'; }
 
-    function showUaMsg(el,txt,tipo){ el.textContent=txt; el.className='ua-msg '+tipo; el.style.display='block'; }
+    if(nome.length<2)                              { showM('Nome deve ter pelo menos 2 caracteres.','err'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showM('E-mail inválido.','err'); return; }
+    if(!window._fbSalvarPerfil)                    { showM('Firebase ainda carregando.','inf'); return; }
 
-    if(nome.length<2){ showUaMsg(msgEl,'Nome deve ter pelo menos 2 caracteres.','err'); return; }
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showUaMsg(msgEl,'Informe um e-mail válido.','err'); return; }
+    let btn=document.querySelector('#uaSubPerfil .ua-save-btn');
+    if(btn){ btn.disabled=true; btn.textContent='⏳ Salvando…'; }
 
-    let users=_getUsers();
-    // Checar duplicidade de e-mail
-    if(users.some(x=>x.email?.toLowerCase()===email && x.id!==s.id)){
-        showUaMsg(msgEl,'Este e-mail já está em uso por outra conta.','err'); return;
-    }
-    let idx=users.findIndex(x=>x.id===s.id);
-    if(idx===-1){ showUaMsg(msgEl,'Sessão expirada. Faça login novamente.','err'); return; }
-    users[idx].nome=nome; users[idx].email=email;
-    _setUsers(users);
-
-    // Atualizar sessão
-    let nova={...s,nome,email,ts:Date.now()};
-    localStorage.setItem('__aq_sessao__',JSON.stringify(nova));
-
-    // Atualizar UI
-    let av=document.getElementById('uaPAvatar'); if(av) av.textContent=_getInitial(nome);
-    let pn=document.getElementById('uaPNome'); if(pn) pn.textContent=nome;
-    let pe=document.getElementById('uaPEmail'); if(pe) pe.textContent=email;
-    uaInit();
-
-    showUaMsg(msgEl,'✅ Perfil atualizado com sucesso!','ok');
+    window._fbSalvarPerfil(nome, email).then(()=>{
+        if(window._fbUser){ window._fbUser.nome=nome; window._fbUser.email=email; }
+        localStorage.setItem('__aq_sessao_fb__', JSON.stringify({...window._fbUser}));
+        let av=document.getElementById('uaPAvatar'); if(av) av.textContent=_getInitial(nome);
+        let pn=document.getElementById('uaPNome');   if(pn) pn.textContent=nome;
+        let pe=document.getElementById('uaPEmail');  if(pe) pe.textContent=email;
+        uaInit();
+        showM('✅ Perfil atualizado com sucesso!','ok');
+        if(btn){ btn.disabled=false; btn.textContent='💾 Salvar Alterações'; }
+    }).catch(e=>{
+        const msgs={
+            'auth/requires-recent-login':'Sessão expirada. Faça logout e login novamente.',
+            'auth/email-already-in-use': 'Este e-mail já está em uso.',
+            'auth/invalid-email':        'E-mail inválido.',
+        };
+        showM(msgs[e.code]||'Erro: '+e.message,'err');
+        if(btn){ btn.disabled=false; btn.textContent='💾 Salvar Alterações'; }
+    });
 }
 
-// ── Alterar Senha ─────────────────────────────────────────────────────────────
+// ── Alterar Senha — Firebase (com reautenticação) ─────────────────────────────
 function uaAlterarSenha(){
-    let s=_getSessao(); if(!s) return;
     let atual = document.getElementById('uaFSenhaAtual')?.value||'';
     let nova  = document.getElementById('uaFSenhaNova')?.value||'';
     let conf  = document.getElementById('uaFSenhaConf')?.value||'';
     let msgEl = document.getElementById('uaMsgSenha');
-
     function showM(txt,tipo){ msgEl.textContent=txt; msgEl.className='ua-msg '+tipo; msgEl.style.display='block'; }
 
-    if(!atual){ showM('Informe a senha atual.','err'); return; }
+    if(!atual)       { showM('Informe a senha atual.','err'); return; }
     if(nova.length<6){ showM('Nova senha deve ter pelo menos 6 caracteres.','err'); return; }
-    if(nova!==conf){ showM('As senhas não coincidem.','err'); return; }
+    if(nova!==conf)  { showM('As senhas não coincidem.','err'); return; }
+    if(!window._fbAlterarSenha){ showM('Firebase ainda carregando.','inf'); return; }
 
-    let users=_getUsers();
-    let u=users.find(x=>x.id===s.id);
-    if(!u){ showM('Sessão expirada.','err'); return; }
-    if(u.senhaHash!==_hash(atual)){ showM('Senha atual incorreta.','err'); return; }
+    let btn=document.querySelector('#uaSubSenha .ua-save-btn');
+    if(btn){ btn.disabled=true; btn.textContent='⏳ Atualizando…'; }
 
-    u.senhaHash=_hash(nova);
-    _setUsers(users);
-    showM('✅ Senha alterada com sucesso!','ok');
-    ['uaFSenhaAtual','uaFSenhaNova','uaFSenhaConf'].forEach(id=>{
-        let el=document.getElementById(id); if(el) el.value='';
+    window._fbAlterarSenha(atual, nova).then(()=>{
+        showM('✅ Senha alterada com sucesso!','ok');
+        ['uaFSenhaAtual','uaFSenhaNova','uaFSenhaConf'].forEach(id=>{ let e=document.getElementById(id); if(e) e.value=''; });
+        let f=document.getElementById('uaPwFill'); if(f) f.style.width='0';
+        let l=document.getElementById('uaPwLbl');  if(l) l.textContent='Digite uma senha';
+        if(btn){ btn.disabled=false; btn.textContent='🔑 Atualizar Senha'; }
+    }).catch(e=>{
+        const msgs={
+            'auth/wrong-password':    'Senha atual incorreta.',
+            'auth/too-many-requests': 'Muitas tentativas. Aguarde.',
+            'auth/weak-password':     'Nova senha muito fraca.',
+            'auth/requires-recent-login':'Sessão expirada. Faça logout e login novamente.',
+        };
+        showM(msgs[e.code]||'Erro: '+e.message,'err');
+        if(btn){ btn.disabled=false; btn.textContent='🔑 Atualizar Senha'; }
     });
-    let f=document.getElementById('uaPwFill'); if(f){f.style.width='0';}
-    let l=document.getElementById('uaPwLbl'); if(l) l.textContent='Digite uma senha';
 }
 
 // ── Preferências ──────────────────────────────────────────────────────────────
@@ -2107,11 +2211,15 @@ function uaExportarDados(){
     URL.revokeObjectURL(a.href);
 }
 
-// ── Logout ─────────────────────────────────────────────────────────────────────
+// ── Logout — Firebase ─────────────────────────────────────────────────────────
 function uaLogout(){
     if(!confirm('Deseja realmente sair da sua conta?')) return;
-    localStorage.removeItem('__aq_sessao__');
-    location.reload();
+    if(window._fbLogout){
+        window._fbLogout().then(()=>location.reload());
+    } else {
+        localStorage.removeItem('__aq_sessao_fb__');
+        location.reload();
+    }
 }
 
 // ── Expor ─────────────────────────────────────────────────────────────────────
@@ -7482,8 +7590,11 @@ window.relEficienciaDesempenho = relEficienciaDesempenho;
 window.renderEficienciaLote = renderEficienciaLote;
 
 function init() {
+    // Firebase onAuthStateChanged controla quando o app é inicializado.
+    // verificarSessao() apenas garante que o overlay apareça enquanto o Firebase carrega.
     verificarSessao();
-    initPisciculturas();
+    // Só inicializa pisciculturas se já autenticado (Firebase resolve via onAuthStateChanged)
+    if(window._fbUser){ initPisciculturas(); }
     seedExemplo();
     // Restaurar horários dos tratos do localStorage
     if (loadHorariosTratos()) {
