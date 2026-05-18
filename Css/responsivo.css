@@ -1,0 +1,42 @@
+/* =============================================
+   AQUAGESTOR PRO — RESPONSIVO
+   Mobile-first media queries
+   ============================================= */
+
+/* ─── TABLET / SMALL DESKTOP ──────────────── */
+@media (max-width: 640px) {
+  .container { padding: 12px 10px; }
+}
+
+/* ─── MOBILE ──────────────────────────────── */
+@media (max-width: 480px) {
+  .menu-btn .m-ico  { font-size: 1.3rem; }
+  .menu-btn         { font-size: .62rem; padding: 12px 3px; }
+  .rel-btn-grid     { grid-template-columns: 1fr; }
+  .dash-stats       { grid-template-columns: 1fr 1fr; }
+  .tank-chevron     { width: 20px; height: 20px; font-size: .6rem; }
+  .kpi-grid         { grid-template-columns: 1fr 1fr; }
+  .stat-row         { grid-template-columns: 1fr 1fr; }
+  .fin-kpi-grid     { grid-template-columns: 1fr 1fr; }
+  .summary-bar      { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ─── VERY SMALL ──────────────────────────── */
+@media (max-width: 360px) {
+  .menu-btn    { font-size: .6rem; padding: 10px 2px; }
+  .kpi-grid    { grid-template-columns: 1fr; }
+  .fin-kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── LANDSCAPE ───────────────────────────── */
+@media (orientation: landscape) and (max-height: 500px) {
+  header { padding: 8px 18px 10px; }
+  .container { padding: 8px 12px; }
+}
+
+/* ─── PRINT ───────────────────────────────── */
+@media print {
+  header, .menu-grid, button, .fin-tab-bar { display: none !important; }
+  .container { padding: 0; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
