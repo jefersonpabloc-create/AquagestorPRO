@@ -1,0 +1,95 @@
+/* =============================================
+   AQUAGESTOR PRO — THEME
+   Design tokens, CSS variables, typography
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Surfaces */
+  --bg:      #eef2f7;
+  --surf:    #ffffff;
+  --surf2:   #f8fafc;
+  --surf3:   #f1f5f9;
+
+  /* Borders */
+  --border:  #e2e8f0;
+  --bh:      #cbd5e1;
+
+  /* Brand — Blue */
+  --blue:    #0a7ea4;
+  --blue-d:  #065f7c;
+  --blue-l:  #e0f7ff;
+  --blue-xl: #f0fbff;
+
+  /* Semantic — Green */
+  --green:   #15803d;
+  --green-l: #dcfce7;
+
+  /* Semantic — Red */
+  --red:     #c2410c;
+  --red-l:   #fee2e2;
+
+  /* Semantic — Amber */
+  --amber:   #b45309;
+  --amber-l: #fef3c7;
+
+  /* Semantic — Purple */
+  --purple:  #7c3aed;
+  --purple-l:#f3f0ff;
+
+  /* Semantic — Teal */
+  --teal:    #0f766e;
+  --teal-l:  #ccfbf1;
+
+  /* Text */
+  --text:    #1a2c3e;
+  --text2:   #475569;
+  --text3:   #94a3b8;
+  --text4:   #cbd5e1;
+
+  /* Radii */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+
+  /* Shadows */
+  --sh-sm: 0 1px 3px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.03);
+  --sh-md: 0 4px 14px rgba(0,0,0,.07), 0 2px 5px rgba(0,0,0,.04);
+  --sh-lg: 0 12px 32px rgba(0,0,0,.10), 0 4px 10px rgba(0,0,0,.05);
+
+  /* Motion */
+  --ease: cubic-bezier(.4,0,.2,1);
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 300ms;
+
+  /* Layout */
+  --max-w: 640px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 14px;
+  --spacing-lg: 20px;
+}
+
+/* Base reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+  padding-bottom: 40px;
+  -webkit-font-smoothing: antialiased;
+}
