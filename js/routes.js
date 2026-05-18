@@ -40,5 +40,10 @@ const Routes = (() => {
   return { go, onNav, current, SECTIONS };
 })();
 
+// Expose Routes on window for legacy code that checks window.Routes
+// Some legacy shims check window.Routes (not just the Routes binding),
+// so ensure it's available as a property on the global object.
+window.Routes = window.Routes || Routes;
+
 // ── Global shim ───────────────────────────────────────────────────────
 // nav() provided by legacy bundle - do not override
