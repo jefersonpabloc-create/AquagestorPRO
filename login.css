@@ -1,0 +1,78 @@
+/* =============================================
+   AQUAGESTOR PRO — LOGIN
+   ============================================= */
+
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0e8fc0, #044a62);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.login-box {
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.35);
+}
+.login-logo  { text-align: center; font-size: 2.5rem; margin-bottom: 6px; }
+.login-title { text-align: center; font-size: 1.2rem; font-weight: 800; color: #1a2c3e; margin-bottom: 2px; }
+.login-sub   { text-align: center; font-size: .75rem; color: #94a3b8; margin-bottom: 22px; }
+.login-field { margin-bottom: 14px; }
+.login-field label {
+  display: block;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 5px;
+}
+.login-field input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: .9rem;
+  background: #f8fafc;
+  color: #1a2c3e;
+  box-sizing: border-box;
+  transition: border-color .15s;
+}
+.login-field input:focus {
+  outline: none;
+  border-color: #0a7ea4;
+  box-shadow: 0 0 0 3px rgba(10,126,164,.12);
+  background: #fff;
+}
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #0e8fc0, #065f7c);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: .9rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: all .18s;
+}
+.login-btn:hover { filter: brightness(1.1); }
+.login-err {
+  background: #fee2e2;
+  color: #c2410c;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: .78rem;
+  font-weight: 600;
+  margin-top: 10px;
+  text-align: center;
+  display: none;
+}

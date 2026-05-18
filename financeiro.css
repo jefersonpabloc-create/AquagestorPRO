@@ -1,0 +1,308 @@
+/* =============================================
+   AQUAGESTOR PRO — FINANCEIRO
+   Financial module, KPIs, charts, debts, strategy
+   ============================================= */
+
+/* ─── FINANCIAL KPI GRID ──────────────────── */
+.fin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+.fin-kpi {
+  background: var(--surf);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  box-shadow: var(--sh-sm);
+  transition: all .18s;
+}
+.fin-kpi:hover { box-shadow: var(--sh-md); }
+.fin-kpi-val { font-size: 1.2rem; font-weight: 800; line-height: 1.1; margin-bottom: 3px; }
+.fin-kpi-lbl { font-size: .65rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text3); }
+.fin-kpi-sub { font-size: .68rem; color: var(--text3); margin-top: 2px; }
+.fin-kpi.verde    .fin-kpi-val { color: var(--green); }
+.fin-kpi.vermelho .fin-kpi-val { color: var(--red); }
+.fin-kpi.azul     .fin-kpi-val { color: var(--blue); }
+.fin-kpi.amber    .fin-kpi-val { color: var(--amber); }
+.fin-kpi.roxo     .fin-kpi-val { color: var(--purple); }
+.fin-kpi.teal     .fin-kpi-val { color: var(--teal); }
+.fin-kpi.full { grid-column: 1/-1; }
+
+/* ─── FINANCIAL ALERTS ────────────────────── */
+.alerta-fin {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  margin: 5px 0;
+  font-size: .8rem;
+}
+.alerta-fin.danger { background: #fff1f2; border-left: 3px solid var(--red); color: var(--red); }
+.alerta-fin.warn   { background: var(--amber-l); border-left: 3px solid var(--amber); color: var(--amber); }
+.alerta-fin.ok     { background: var(--green-l); border-left: 3px solid var(--green); color: var(--green); }
+
+/* ─── AUTOMATED ALERTS (v20) ──────────────── */
+.alerta-auto {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  margin: 5px 0;
+  font-size: .8rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  animation: alertaIn var(--dur-slow) var(--ease);
+}
+.alerta-auto.critico { background: #fff1f2; border-color: #fca5a5; color: var(--red); }
+.alerta-auto.aviso   { background: var(--amber-l); border-color: #fcd34d; color: var(--amber); }
+.alerta-auto.info    { background: var(--blue-xl); border-color: #bae6fd; color: var(--blue); }
+.alerta-auto.ok      { background: var(--green-l); border-color: #86efac; color: var(--green); }
+
+/* ─── TABS ────────────────────────────────── */
+.fin-tab-bar {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.fin-tab {
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--surf);
+  color: var(--text2);
+  transition: all .16s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.fin-tab.ativo { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* ─── SUMMARY BAR ─────────────────────────── */
+.summary-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: var(--surf3);
+  border-radius: var(--r-md);
+  padding: 12px;
+  margin: 8px 0;
+}
+.summary-item { text-align: center; }
+.summary-item-val { font-size: .95rem; font-weight: 800; color: var(--text); }
+.summary-item-lbl { font-size: .62rem; color: var(--text3); text-transform: uppercase; letter-spacing: .4px; }
+
+/* ─── VENDA CARD ──────────────────────────── */
+.venda-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin: 6px 0;
+  box-shadow: var(--sh-sm);
+  overflow: hidden;
+  transition: box-shadow .15s;
+}
+.venda-card:hover { box-shadow: var(--sh-md); }
+.venda-header { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; }
+.venda-header:hover { background: var(--surf2); }
+.venda-body { display: none; border-top: 1px solid var(--border); padding: 12px 14px; background: var(--surf2); }
+.venda-body.open { display: block; }
+
+/* ─── CATEGORY PILLS ──────────────────────── */
+.cat-peixe {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: .72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cat-grade   { background: #dcfce7; color: #15803d; }
+.cat-media   { background: #dbeafe; color: #1d4ed8; }
+.cat-pequena { background: #fef3c7; color: #92400e; }
+.cat-minima  { background: #fee2e2; color: #b91c1c; }
+
+/* ─── CHART WRAPPER ───────────────────────── */
+.grafico-wrap {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px;
+  margin: 10px 0;
+  box-shadow: var(--sh-sm);
+}
+.grafico-title {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ─── FLUXO DE CAIXA ──────────────────────── */
+.fluxo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--surf3);
+  font-size: .8rem;
+}
+.fluxo-row:last-child { border-bottom: none; }
+.fluxo-row.entrada    { color: var(--green); }
+.fluxo-row.saida      { color: var(--red); }
+.fluxo-row.saldo      { background: var(--surf3); font-weight: 800; border-radius: var(--r-xs); }
+
+/* ─── PRÓ-LABORE ──────────────────────────── */
+.prolabore-box {
+  background: linear-gradient(130deg, #0f766e, #065f7c);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  color: #fff;
+  margin: 10px 0;
+}
+.prolabore-val { font-size: 2rem; font-weight: 800; margin: 8px 0; }
+.prolabore-sub { font-size: .78rem; opacity: .85; }
+
+/* ─── RENTABILIDADE TANQUE ────────────────── */
+.tanque-rentab { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 14px; margin: 5px 0; }
+.tanque-rentab-header { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; font-weight: 700; }
+
+/* ─── DÍVIDAS ─────────────────────────────── */
+.divida-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin: 6px 0;
+  box-shadow: var(--sh-sm);
+  overflow: hidden;
+  transition: box-shadow .15s;
+}
+.divida-card:hover      { box-shadow: var(--sh-md); }
+.divida-card.atrasada   { border-left: 3px solid var(--red); background: #fff8f8; }
+.divida-card.quitada    { border-left: 3px solid var(--green); opacity: .75; }
+.divida-header          { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; }
+.divida-header:hover    { background: var(--surf2); }
+.divida-body            { display: none; border-top: 1px solid var(--border); padding: 12px 14px; background: var(--surf2); }
+.divida-body.open       { display: block; }
+
+.parcela-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--surf3);
+  font-size: .78rem;
+  gap: 8px;
+}
+.parcela-row:last-child { border-bottom: none; }
+.parcela-row.paga       { opacity: .55; text-decoration: line-through; }
+.parcela-row.atrasada   { background: #fff1f2; color: var(--red); }
+.parcela-row.vencendo   { background: #fffbeb; color: var(--amber); }
+
+/* ─── ESTRATÉGIA / CAPITAL ────────────────── */
+.capital-card {
+  background: linear-gradient(130deg, #0f766e, #0e8fc0);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  color: #fff;
+  margin: 10px 0;
+}
+.capital-val { font-size: 1.6rem; font-weight: 800; margin: 6px 0; }
+.capital-sub { font-size: .75rem; opacity: .85; }
+.capital-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.capital-item {
+  background: rgba(255,255,255,.14);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,.18);
+}
+.capital-item-val { font-size: 1rem; font-weight: 800; }
+.capital-item-lbl { font-size: .63rem; opacity: .8; margin-top: 1px; }
+
+/* ─── SIMULADOR ───────────────────────────── */
+.simul-resultado {
+  background: linear-gradient(130deg, #1e293b, #0f172a);
+  color: #fff;
+  border-radius: var(--r-lg);
+  padding: 18px;
+  margin: 10px 0;
+}
+.simul-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  font-size: .8rem;
+}
+.simul-row:last-child { border-bottom: none; }
+
+/* ─── IA INSIGHTS ─────────────────────────── */
+.insight-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin: 5px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  box-shadow: var(--sh-sm);
+}
+.insight-icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 2px; }
+.insight-text { font-size: .8rem; font-weight: 600; color: var(--text); }
+.insight-sub  { font-size: .7rem; color: var(--text3); margin-top: 2px; }
+
+/* ─── PROJEÇÃO ────────────────────────────── */
+.proj-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--surf3);
+  font-size: .8rem;
+  background: #fff;
+}
+.proj-row:nth-child(even) { background: var(--surf2); }
+.proj-row:last-child { border-bottom: none; background: var(--blue-xl); font-weight: 800; }
+
+/* ─── PRÓ-LABORE ANÁLISE GRID ─────────────── */
+.prolabore-analise-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+.prolabore-analise-item {
+  background: var(--surf2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-size: .78rem;
+}
+.prolabore-analise-item strong { display: block; font-size: .95rem; color: var(--text); font-weight: 800; margin-bottom: 2px; }
+.prolabore-analise-item span   { color: var(--text3); }
+
+/* ─── RELATÓRIO ESTRATÉGICO ───────────────── */
+.rel-estrategico {
+  background: linear-gradient(130deg, #1e293b, #0f172a);
+  color: #fff;
+  border-radius: var(--r-lg);
+  padding: 20px;
+  margin: 10px 0;
+}
