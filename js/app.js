@@ -58,7 +58,20 @@ const App = (() => {
   function init() {
     // 1. Check/restore session
     Auth.init();
-    Auth.checkSession();
+    // If no session, auto-enable demo session so all functions are accessible
+    // (useful for local development / demos). This creates a minimal session
+    // equivalent to logging in as the seeded admin user.
+    if (!Auth.checkSession()) {
+      try {
+        localStorage.setItem('__aqua_session__', JSON.stringify({
+          username: 'admin',
+          nome: 'Administrador',
+          loginAt: new Date().toISOString(),
+        }));
+        const overlay = document.getElementById('loginOverlay');
+        if (overlay) overlay.style.display = 'none';
+      } catch (e) { /* ignore */ }
+    }
 
     // 2. Init multi-farm
     Pisciculturas.init();
