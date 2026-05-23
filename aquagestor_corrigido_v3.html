@@ -13261,5 +13261,7 @@ CREATE POLICY "login_logs_own_insert" ON public.login_logs
   FOR INSERT WITH CHECK (true);
 CREATE INDEX IF NOT EXISTS idx_login_logs_user ON public.login_logs(user_id, created_at DESC);
 ══ end SQL ══ -->
+<script src="supabase.js"></script>
+<script src="patch.js"></script>
 </body>
 </html>
