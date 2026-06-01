@@ -6,19 +6,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>🐟 AquaGestor | Colaborador v2.2</title>
+<title>🐟 AquaGestor | Colaborador v2.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>
-/**
- * ═══════════════════════════════════════════════════════
- *  AQUAGESTOR — Módulo Supabase Compartilhado v1.1
- *  Inclua este arquivo em TODOS os htmls do sistema
- * ═══════════════════════════════════════════════════════
- */
+// ═══════════════════════════════════════════════════════
+// AQUAGESTOR — Módulo Supabase Compartilhado v1.1
+// ═══════════════════════════════════════════════════════
 
 (function () {
-  /* ── Credenciais fixas do projeto AquaGestor PRO ── */
   var FIXED_URL = 'https://hzywzynmhaeuaczcgmdr.supabase.co';
   var FIXED_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6eXd6eW5taGFldWFjemNnbWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NzAwMTksImV4cCI6MjA5NTE0NjAxOX0.Ru9PNf_RkISb3pdGw2tuerDj0sElk0R1GiAHdI10SwQ';
 
@@ -37,7 +33,7 @@
     try { localStorage.setItem('aq_config', JSON.stringify(cfg)); } catch(e) {}
   }
 
-  var SB = {
+  window.SB = {
     url: URL_BASE,
     key: ANON_KEY,
 
@@ -52,7 +48,7 @@
       opts = opts || {};
       var headers = {
         'apikey': ANON_KEY,
-        'Authorization': 'Bearer ' + SB._token(),
+        'Authorization': 'Bearer ' + this._token(),
         'Content-Type': 'application/json',
         'Prefer': opts.prefer || 'return=representation'
       };
@@ -79,9 +75,9 @@
         var raw = await res.text();
         var data;
         try { data = JSON.parse(raw); } catch(e) {
-          throw new Error('Resposta inválida do servidor. Verifique sua conexão.');
+          throw new Error('Resposta inválida do servidor.');
         }
-        if (!res.ok) throw new Error(data.error_description || data.message || data.msg || 'Credenciais inválidas');
+        if (!res.ok) throw new Error(data.error_description || data.message || 'Credenciais inválidas');
         localStorage.setItem('aq_session', JSON.stringify(data));
         try {
           var cfg = JSON.parse(localStorage.getItem('aq_config') || '{}');
@@ -115,27 +111,27 @@
       },
 
       user: function () {
-        var s = SB.auth.session();
+        var s = this.session();
         return s ? s.user : null;
       }
     },
 
     perfil: async function () {
-      var u = SB.auth.user();
+      var u = this.auth.user();
       if (!u) return null;
-      var rows = await SB.req('/rest/v1/user_profiles?id=eq.' + u.id + '&select=*&limit=1');
+      var rows = await this.req('/rest/v1/user_profiles?id=eq.' + u.id + '&select=*&limit=1');
       return Array.isArray(rows) ? rows[0] : null;
     },
 
     userData: {
       get: async function (adminId, chave) {
-        var rows = await SB.req('/rest/v1/user_data?user_id=eq.' + adminId + '&full_key=eq.' + encodeURIComponent(chave) + '&select=data_value&limit=1');
+        var rows = await window.SB.req('/rest/v1/user_data?user_id=eq.' + adminId + '&full_key=eq.' + encodeURIComponent(chave) + '&select=data_value&limit=1');
         return (Array.isArray(rows) && rows[0]) ? rows[0].data_value : null;
       },
       set: async function (chave, valor) {
-        var u = SB.auth.user();
+        var u = window.SB.auth.user();
         if (!u) throw new Error('Não autenticado');
-        return SB.req('/rest/v1/user_data', {
+        return window.SB.req('/rest/v1/user_data', {
           method: 'POST',
           prefer: 'resolution=merge-duplicates,return=representation',
           body: { user_id: u.id, full_key: chave, data_value: valor }
@@ -145,25 +141,7 @@
 
     wifi: {
       list: async function (adminId) {
-        return SB.req('/rest/v1/wifi_configs?admin_id=eq.' + adminId + '&ativo=eq.true&select=*');
-      },
-      add: async function (adminId, nome, ssid, prefix) {
-        return SB.req('/rest/v1/wifi_configs', {
-          method: 'POST',
-          body: { admin_id: adminId, nome: nome, ssid: ssid || '', ip_prefix: prefix, ativo: true }
-        });
-      },
-      remove: async function (id) {
-        return SB.req('/rest/v1/wifi_configs?id=eq.' + id, { method: 'DELETE', prefer: 'return=minimal' });
-      }
-    },
-
-    colaboradores: {
-      list: async function (adminId) {
-        return SB.req('/rest/v1/user_profiles?admin_id=eq.' + adminId + '&role=eq.colaborador&select=*&order=created_at.desc');
-      },
-      toggle: async function (id, ativo) {
-        return SB.req('/rest/v1/user_profiles?id=eq.' + id, { method: 'PATCH', body: { ativo: ativo } });
+        return window.SB.req('/rest/v1/wifi_configs?admin_id=eq.' + adminId + '&ativo=eq.true&select=*');
       }
     },
 
@@ -172,13 +150,10 @@
         var q = '/rest/v1/colab_tratos?admin_id=eq.' + adminId + '&order=created_at.desc&select=*';
         if (filtros && filtros.data) q += '&data=eq.' + filtros.data;
         if (filtros && filtros.colabId) q += '&colaborador_id=eq.' + filtros.colabId;
-        return SB.req(q);
+        return window.SB.req(q);
       },
       add: async function (reg) {
-        return SB.req('/rest/v1/colab_tratos', { method: 'POST', body: reg });
-      },
-      status: async function (id, status) {
-        return SB.req('/rest/v1/colab_tratos?id=eq.' + id, { method: 'PATCH', body: { status: status } });
+        return window.SB.req('/rest/v1/colab_tratos', { method: 'POST', body: reg });
       }
     },
 
@@ -186,13 +161,10 @@
       list: async function (adminId, filtros) {
         var q = '/rest/v1/colab_mortalidade?admin_id=eq.' + adminId + '&order=created_at.desc&select=*';
         if (filtros && filtros.data) q += '&data=eq.' + filtros.data;
-        return SB.req(q);
+        return window.SB.req(q);
       },
       add: async function (reg) {
-        return SB.req('/rest/v1/colab_mortalidade', { method: 'POST', body: reg });
-      },
-      status: async function (id, status) {
-        return SB.req('/rest/v1/colab_mortalidade?id=eq.' + id, { method: 'PATCH', body: { status: status } });
+        return window.SB.req('/rest/v1/colab_mortalidade', { method: 'POST', body: reg });
       }
     },
 
@@ -200,18 +172,15 @@
       list: async function (adminId, filtros) {
         var q = '/rest/v1/colab_vendas?admin_id=eq.' + adminId + '&order=created_at.desc&select=*';
         if (filtros && filtros.data) q += '&data=eq.' + filtros.data;
-        return SB.req(q);
+        return window.SB.req(q);
       },
       add: async function (reg) {
-        return SB.req('/rest/v1/colab_vendas', { method: 'POST', body: reg });
-      },
-      status: async function (id, status) {
-        return SB.req('/rest/v1/colab_vendas?id=eq.' + id, { method: 'PATCH', body: { status: status } });
+        return window.SB.req('/rest/v1/colab_vendas', { method: 'POST', body: reg });
       }
     }
   };
 
-  SB.getLocalIP = async function () {
+  window.SB.getLocalIP = async function () {
     return new Promise(function (resolve) {
       try {
         var pc = new RTCPeerConnection({ iceServers: [] });
@@ -226,1002 +195,449 @@
       } catch (e) { resolve(null); }
     });
   };
-
-  window.SB = SB;
-  window.AQ_URL  = URL_BASE;
-  window.AQ_KEY  = ANON_KEY;
-
 })();
-
 </script>
 <style>
 :root{
   --bg:#080f1c;--bg2:#0d1627;
   --surf:rgba(22,34,58,.8);--card:rgba(17,27,46,.75);
-  --border:rgba(99,155,255,.12);--bh:rgba(56,140,255,.3);
+  --border:rgba(99,155,255,.12);
   --blue:#4A9DFF;--blue2:#1A6DFF;--blue-l:rgba(74,157,255,.13);
   --cyan:#00D4FF;--green:#00E5A0;--green-l:rgba(0,229,160,.12);
   --red:#FF4D6A;--red-l:rgba(255,77,106,.12);
   --amber:#FFB830;--amber-l:rgba(255,184,48,.12);
-  --purple:#9B6DFF;--teal:#00C9A7;
-  --text:#E8F0FF;--text2:#8BA8CC;--text3:#4A6080;--text4:#2A3A55;
+  --text:#E8F0FF;--text2:#8BA8CC;--text3:#4A6080;
   --r:14px;--r-lg:20px;--r-full:999px;
   --sh:0 6px 24px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{background:var(--bg);height:100%}
 body{
   font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--text);
   font-size:14px;line-height:1.55;padding-bottom:84px;min-height:100vh;
-  background-image:
-    radial-gradient(ellipse 90% 45% at 50% -5%,rgba(56,140,255,.14) 0%,transparent 70%),
-    radial-gradient(ellipse 40% 40% at 92% 15%,rgba(0,212,255,.07) 0%,transparent 60%);
 }
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-thumb{background:rgba(99,155,255,.2);border-radius:3px}
-
-/* ── OVERLAYS ─────────────────────────── */
 .ov{position:fixed;inset:0;background:rgba(3,7,18,.96);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;flex-direction:column;gap:16px;backdrop-filter:blur(8px)}
 .ov.off{display:none}
-
-/* ── LOGIN BOX ────────────────────────── */
-.login-box{background:rgba(17,27,46,.95);border:1px solid rgba(74,157,255,.2);border-radius:28px;padding:36px 28px;width:100%;max-width:390px;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 60px rgba(56,140,255,.1);backdrop-filter:blur(24px)}
-.login-fish{text-align:center;font-size:3.2rem;animation:swim 4s ease-in-out infinite;display:inline-block;filter:drop-shadow(0 0 16px rgba(56,140,255,.5))}
-@keyframes swim{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
-.login-ttl{text-align:center;font-size:1.3rem;font-weight:900;color:#fff;margin:8px 0 2px;letter-spacing:-.5px}
+.login-box{background:rgba(17,27,46,.95);border:1px solid rgba(74,157,255,.2);border-radius:28px;padding:36px 28px;width:100%;max-width:390px}
+.login-fish{text-align:center;font-size:3.2rem}
+.login-ttl{text-align:center;font-size:1.3rem;font-weight:900;margin:8px 0 2px}
 .login-ttl span{background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.login-sub{text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--green);border-radius:var(--r-full);padding:5px 16px;font-size:.7rem;font-weight:800;margin:10px auto 24px;width:fit-content}
+.login-sub{text-align:center;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--green);border-radius:var(--r-full);padding:5px 16px;font-size:.7rem;font-weight:800;margin:10px auto 24px;width:fit-content}
 .f{margin-bottom:12px}
-.f label{display:block;font-size:.7rem;font-weight:700;color:var(--text2);margin-bottom:5px;letter-spacing:.2px}
-.f input{width:100%;padding:12px 16px;border:1.5px solid rgba(74,157,255,.15);border-radius:var(--r);font-family:inherit;font-size:.92rem;background:rgba(8,15,28,.6);color:var(--text);transition:all .15s;-webkit-appearance:none}
-.f input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,157,255,.15);background:rgba(8,15,28,.8)}
-.f input::placeholder{color:var(--text3)}
-.pw-wrap{position:relative}
-.pw-wrap input{padding-right:44px}
-.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:.9rem;cursor:pointer;padding:4px;margin:0;box-shadow:none;border-radius:4px}
-.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-family:inherit;font-weight:800;font-size:.95rem;border:none;border-radius:var(--r);cursor:pointer;margin-top:4px;transition:all .18s;letter-spacing:.2px}
-.login-btn:hover{filter:brightness(1.1);box-shadow:0 0 24px rgba(74,157,255,.4)}
-.login-btn:disabled{opacity:.4;cursor:not-allowed;filter:none}
-.err-box{background:rgba(255,77,106,.1);color:#ff8fa3;border:1px solid rgba(255,77,106,.3);border-radius:var(--r);padding:10px 14px;font-size:.78rem;font-weight:600;margin-top:10px;text-align:center;display:none}
+.f label{display:block;font-size:.7rem;font-weight:700;color:var(--text2);margin-bottom:5px}
+.f input{width:100%;padding:12px 16px;border:1.5px solid rgba(74,157,255,.15);border-radius:var(--r);background:rgba(8,15,28,.6);color:var(--text)}
+.f input:focus{outline:none;border-color:var(--blue)}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:800;border:none;border-radius:var(--r);cursor:pointer}
+.err-box{background:rgba(255,77,106,.1);color:#ff8fa3;border:1px solid rgba(255,77,106,.3);border-radius:var(--r);padding:10px 14px;font-size:.78rem;display:none}
 .err-box.on{display:block}
-
-/* ── WIFI BLOCKER ─────────────────────── */
-.wifi-box{background:rgba(17,27,46,.97);border:1.5px solid rgba(255,77,106,.3);border-radius:24px;padding:32px 24px;width:100%;max-width:380px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.7)}
-.wifi-ico{font-size:3.5rem;margin-bottom:10px;animation:wifiPulse 2s ease infinite}
-@keyframes wifiPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(255,77,106,.3))}50%{filter:drop-shadow(0 0 20px rgba(255,77,106,.7))}}
-.wifi-ttl{font-size:1.1rem;font-weight:800;color:var(--red);margin-bottom:8px}
-.wifi-msg{font-size:.82rem;color:var(--text2);line-height:1.7;margin-bottom:14px}
-.wifi-nets{background:rgba(8,15,28,.5);border-radius:12px;padding:12px;margin:10px 0;text-align:left}
-.wifi-net{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(74,157,255,.08);font-size:.8rem;color:var(--text2)}
-.wifi-net:last-child{border-bottom:none}
-.wifi-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0;animation:wifiPulse 1.5s ease infinite}
-.wifi-ip{font-size:.7rem;color:var(--text3);margin:8px 0}
-.wifi-ip span{color:var(--amber);font-weight:700}
-.wifi-retry{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;border-radius:var(--r-full);padding:12px 28px;font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;margin-top:8px;transition:all .18s;display:inline-flex;align-items:center;gap:8px}
-.wifi-retry:hover{filter:brightness(1.1)}
-.wifi-out{background:transparent;border:1px solid rgba(74,157,255,.2);color:var(--text2);border-radius:var(--r-full);padding:10px 20px;font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer;margin-top:8px;display:inline-flex;align-items:center;gap:8px}
-
-/* ── LOADING ──────────────────────────── */
-.load-fish{font-size:3rem;animation:spin 1.5s linear infinite;display:inline-block}
+.wifi-box{background:rgba(17,27,46,.97);border:1.5px solid rgba(255,77,106,.3);border-radius:24px;padding:32px 24px;width:100%;max-width:380px;text-align:center}
+.load-fish{font-size:3rem;animation:spin 1.5s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-msg{font-size:.88rem;color:var(--text2);margin-top:14px;font-weight:600}
-
-/* ── HEADER ───────────────────────────── */
-header{background:rgba(5,10,20,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(74,157,255,.1);position:sticky;top:0;z-index:200;height:56px;display:flex;align-items:center;padding:0 14px}
-.hdr{max-width:640px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px}
+header{background:rgba(5,10,20,.92);backdrop-filter:blur(24px);border-bottom:1px solid rgba(74,157,255,.1);position:sticky;top:0;z-index:200;height:56px;display:flex;align-items:center;padding:0 14px}
+.hdr{max-width:640px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between}
 .hdr-brand{display:flex;align-items:center;gap:8px}
-.hdr-brand-ico{font-size:1.3rem}
-.hdr-name{font-size:.88rem;font-weight:900;color:#fff}
+.hdr-name{font-size:.88rem;font-weight:900}
 .hdr-name span{background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hdr-farm{font-size:.6rem;color:var(--text3);margin-top:1px}
-.hdr-right{display:flex;align-items:center;gap:6px}
-.wifi-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--r-full);font-size:.65rem;font-weight:800;cursor:default;transition:all .2s}
+.wifi-badge{padding:4px 10px;border-radius:var(--r-full);font-size:.65rem;font-weight:800}
 .wifi-badge.ok{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--green)}
 .wifi-badge.fail{background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.25);color:var(--red)}
-.hdr-user{background:rgba(74,157,255,.12);border:1px solid rgba(74,157,255,.22);border-radius:var(--r-full);padding:5px 12px;color:var(--blue);font-family:inherit;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .15s}
-.hdr-user:hover{background:rgba(74,157,255,.2)}
-
-/* ── DROPDOWN ─────────────────────────── */
-.dropdown{position:fixed;top:60px;right:14px;z-index:500;background:rgba(10,18,35,.98);border:1px solid rgba(74,157,255,.15);border-radius:18px;padding:12px;width:220px;box-shadow:0 20px 56px rgba(0,0,0,.7);backdrop-filter:blur(24px);display:none}
-.dropdown.on{display:block;animation:dropIn .18s ease both}
-@keyframes dropIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-.dd-name{font-size:.82rem;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px}
+.hdr-user{background:rgba(74,157,255,.12);border:1px solid rgba(74,157,255,.22);border-radius:var(--r-full);padding:5px 12px;font-size:.7rem;font-weight:700;cursor:pointer}
+.dropdown{position:fixed;top:60px;right:14px;z-index:500;background:rgba(10,18,35,.98);border:1px solid rgba(74,157,255,.15);border-radius:18px;padding:12px;width:220px;display:none}
+.dropdown.on{display:block}
+.dd-name{font-size:.82rem;font-weight:700;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--border)}
 .dd-email{font-size:.7rem;color:var(--text3);margin-bottom:10px}
-.dd-btn{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text2);padding:7px 4px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;border-radius:8px;transition:all .12s;box-shadow:none;margin:0}
+.dd-btn{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text2);padding:7px 4px;font-size:.8rem;font-weight:600;cursor:pointer;border-radius:8px}
 .dd-btn:hover{background:rgba(74,157,255,.1);color:var(--blue)}
-.dd-logout{width:100%;margin-top:8px;background:linear-gradient(135deg,var(--red),#cc2244);color:#fff;border:none;border-radius:var(--r-full);padding:8px;font-family:inherit;font-weight:700;font-size:.78rem;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:none}
-
-/* ── CONTAINER ────────────────────────── */
+.dd-logout{width:100%;margin-top:8px;background:linear-gradient(135deg,var(--red),#cc2244);color:#fff;border:none;border-radius:var(--r-full);padding:8px;font-weight:700;cursor:pointer}
 .container{max-width:640px;margin:0 auto;padding:14px}
-
-/* ── HERO ─────────────────────────────── */
-.hero{background:linear-gradient(135deg,rgba(26,109,255,.8) 0%,rgba(0,180,160,.5) 60%,rgba(0,229,160,.2) 100%);border:1px solid rgba(74,157,255,.3);border-radius:22px;padding:18px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 48px rgba(56,140,255,.1)}
-.hero::before{content:'';position:absolute;top:-30%;right:-10%;width:200px;height:200px;background:radial-gradient(circle,rgba(0,212,255,.15) 0%,transparent 70%);pointer-events:none}
-.hero-date{font-size:.65rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;opacity:.7;margin-bottom:4px}
-.hero-time{font-size:1.9rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px}
-.hero-day{font-size:.78rem;opacity:.75;margin-top:3px}
+.hero{background:linear-gradient(135deg,rgba(26,109,255,.8) 0%,rgba(0,180,160,.5) 60%,rgba(0,229,160,.2) 100%);border-radius:22px;padding:18px;margin-bottom:12px}
+.hero-date{font-size:.65rem;font-weight:700;opacity:.7}
+.hero-time{font-size:1.9rem;font-weight:900;line-height:1}
 .hero-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
-.kpi{background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px;text-align:center}
-.kpi-v{font-size:1.1rem;font-weight:900;color:#fff}
-.kpi-l{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;opacity:.68;margin-top:2px}
-
-/* ── CARDS ────────────────────────────── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px;margin:10px 0;box-shadow:var(--sh);transition:border-color .2s}
-.card:hover{border-color:rgba(74,157,255,.25)}
-.sec-ttl{font-size:.62rem;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.kpi{background:rgba(255,255,255,.11);border-radius:14px;padding:10px;text-align:center}
+.kpi-v{font-size:1.1rem;font-weight:900}
+.kpi-l{font-size:.58rem;font-weight:700;opacity:.68;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px;margin:10px 0}
+.sec-ttl{font-size:.62rem;font-weight:700;letter-spacing:1.3px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:7px}
 .sec-ttl::after{content:'';flex:1;height:1px;background:var(--border)}
-.pg-ttl{font-weight:800;font-size:.95rem;padding-left:10px;margin:14px 0 10px;display:flex;align-items:center;gap:8px}
-.pg-ttl.green{color:var(--green);border-left:3px solid var(--green)}
-.pg-ttl.red{color:var(--red);border-left:3px solid var(--red)}
-.pg-ttl.amber{color:var(--amber);border-left:3px solid var(--amber)}
-
-/* ── FORM ─────────────────────────────── */
+.pg-ttl{font-weight:800;font-size:.95rem;margin:14px 0 10px;display:flex;align-items:center;gap:8px}
+.pg-ttl.green{color:var(--green);border-left:3px solid var(--green);padding-left:10px}
+.pg-ttl.red{color:var(--red);border-left:3px solid var(--red);padding-left:10px}
+.pg-ttl.amber{color:var(--amber);border-left:3px solid var(--amber);padding-left:10px}
 .ff{margin-bottom:10px}
 .ff label{display:block;font-size:.7rem;font-weight:700;color:var(--text2);margin-bottom:5px}
-input:not(.login-btn),select,textarea{width:100%;padding:11px 14px;border:1.5px solid rgba(74,157,255,.14);border-radius:var(--r);font-family:inherit;font-size:.88rem;background:rgba(8,15,28,.65);color:var(--text);transition:all .15s;-webkit-appearance:none}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,157,255,.14);background:rgba(8,15,28,.85)}
-select option{background:#111b30;color:var(--text)}
-input::placeholder{color:var(--text3)}
+input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid rgba(74,157,255,.14);border-radius:var(--r);background:rgba(8,15,28,.65);color:var(--text)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-
-/* ── BUTTONS ──────────────────────────── */
-button{font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer;border:none;border-radius:var(--r-full);padding:10px 20px;transition:all .17s;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.3);white-space:nowrap;letter-spacing:.2px}
-button:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:var(--sh)}
-button:active{transform:scale(.94);filter:none}
-button:disabled{opacity:.35;cursor:not-allowed;transform:none!important;filter:none!important}
-.btn-g{background:linear-gradient(135deg,var(--green),var(--teal));color:#000;font-weight:800}
+button{font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer;border:none;border-radius:var(--r-full);padding:10px 20px;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff}
+.btn-g{background:linear-gradient(135deg,var(--green),var(--teal));color:#000}
 .btn-r{background:linear-gradient(135deg,var(--red),#cc2244)}
 .btn-a{background:linear-gradient(135deg,var(--amber),#e09000)}
-.btn-out{background:transparent;border:1.5px solid rgba(74,157,255,.3);color:var(--blue);box-shadow:none}
-.btn-out:hover{background:var(--blue-l)}
-.btn-full{width:100%;margin-top:6px}
+.btn-out{background:transparent;border:1.5px solid rgba(74,157,255,.3);color:var(--blue)}
+.btn-full{width:100%}
 .btn-sm{padding:7px 14px;font-size:.74rem}
-
-/* ── LIST ITEMS ───────────────────────── */
-.li{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 14px;background:rgba(17,27,46,.65);border:1px solid var(--border);border-radius:14px;margin:6px 0;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:all .18s;flex-wrap:wrap}
-.li:hover{border-color:rgba(74,157,255,.3)}
-.li-m{flex:1;min-width:0}
-.li-t{font-weight:700;font-size:.88rem;color:var(--text)}
+.li{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 14px;background:rgba(17,27,46,.65);border:1px solid var(--border);border-radius:14px;margin:6px 0}
+.li-m{flex:1}
+.li-t{font-weight:700;font-size:.88rem}
 .li-s{font-size:.7rem;color:var(--text3);margin-top:3px}
-.li-act{display:flex;gap:4px;flex-shrink:0;margin-top:2px}
-
-/* ── STATUS BADGES ────────────────────── */
-.st{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:var(--r-full);font-size:.62rem;font-weight:800}
+.st{display:inline-flex;padding:2px 9px;border-radius:var(--r-full);font-size:.62rem;font-weight:800}
 .st-p{background:var(--amber-l);color:var(--amber);border:1px solid rgba(255,184,48,.25)}
-.st-a{background:var(--green-l);color:var(--green);border:1px solid rgba(0,229,160,.25)}
-.st-r{background:var(--red-l);color:var(--red);border:1px solid rgba(255,77,106,.25)}
-
-/* ── TASK ITEMS ───────────────────────── */
-.task{padding:11px 14px;border-radius:14px;margin:5px 0;display:flex;align-items:flex-start;gap:10px;border:1px solid transparent;transition:all .15s}
-.task.pend{background:rgba(255,184,48,.08);border-color:rgba(255,184,48,.25);border-left:3px solid var(--amber)}
-.task.done{background:rgba(0,229,160,.07);border-color:rgba(0,229,160,.2);border-left:3px solid var(--green)}
-.task-ico{font-size:1.1rem;flex-shrink:0;margin-top:1px}
-.task-t{font-weight:700;font-size:.84rem;color:var(--text)}
-.task-s{font-size:.7rem;color:var(--text3);margin-top:2px}
-
-/* ── VENDA TOTAL PREVIEW ──────────────── */
-.venda-preview{background:rgba(0,229,160,.07);border:1px solid rgba(0,229,160,.2);border-radius:var(--r);padding:11px 14px;margin:6px 0;display:flex;justify-content:space-between;align-items:center}
-.venda-preview span:first-child{font-size:.78rem;color:var(--text2)}
-.venda-preview span:last-child{font-size:1.2rem;font-weight:900;color:var(--green)}
-
-/* ── SYNC BAR ─────────────────────────── */
-.sync{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.22);border-radius:var(--r-full);padding:6px 14px;font-size:.68rem;font-weight:700;color:var(--green);display:none;align-items:center;gap:6px;justify-content:center;margin:8px 0;animation:fadeIn .3s ease}
+.task{padding:11px 14px;border-radius:14px;margin:5px 0;display:flex;align-items:flex-start;gap:10px}
+.task.pend{background:rgba(255,184,48,.08);border-left:3px solid var(--amber)}
+.task.done{background:rgba(0,229,160,.07);border-left:3px solid var(--green)}
+.task-ico{font-size:1.1rem}
+.task-t{font-weight:700;font-size:.84rem}
+.venda-preview{background:rgba(0,229,160,.07);border-radius:var(--r);padding:11px 14px;margin:6px 0;display:flex;justify-content:space-between}
+.sync{background:rgba(0,229,160,.1);border-radius:var(--r-full);padding:6px 14px;font-size:.68rem;font-weight:700;color:var(--green);display:none;align-items:center;justify-content:center;margin:8px 0}
 .sync.on{display:flex}
-.sync.err{background:rgba(255,77,106,.1);border-color:rgba(255,77,106,.22);color:var(--red)}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-
-/* ── OFFLINE BADGE ────────────────────── */
-.offline-badge{background:rgba(255,184,48,.1);border:1px solid rgba(255,184,48,.25);border-radius:var(--r);padding:10px 14px;font-size:.78rem;font-weight:600;color:var(--amber);display:none;align-items:center;gap:8px;margin:8px 0}
-.offline-badge.on{display:flex}
-
-/* ── BOTTOM NAV ───────────────────────── */
-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(4,8,18,.95);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-top:1px solid rgba(74,157,255,.1);display:flex;align-items:center;justify-content:space-around;padding:8px 6px max(12px,env(safe-area-inset-bottom));z-index:300}
-.nb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:var(--r);font-size:.6rem;font-weight:700;color:var(--text3);cursor:pointer;background:transparent;border:none;box-shadow:none;margin:0;letter-spacing:.2px;min-width:52px;transition:all .18s}
-.nb-ico{font-size:1.2rem;line-height:1;transition:transform .2s}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(4,8,18,.95);backdrop-filter:blur(28px);border-top:1px solid rgba(74,157,255,.1);display:flex;align-items:center;justify-content:space-around;padding:8px 6px max(12px,env(safe-area-inset-bottom));z-index:300}
+.nb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:var(--r);font-size:.6rem;font-weight:700;color:var(--text3);cursor:pointer;background:transparent}
+.nb-ico{font-size:1.2rem}
 .nb.active{color:var(--blue)}
-.nb.active .nb-ico{transform:scale(1.15)}
-.nb-fab{background:linear-gradient(135deg,var(--green),var(--teal));border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 0 0 5px rgba(0,229,160,.15),0 6px 20px rgba(0,229,160,.35);cursor:pointer;transition:all .2s;border:none;margin:0;flex-shrink:0}
-.nb-fab:hover{transform:scale(1.08)}
-
-/* ── PAGES ────────────────────────────── */
+.nb-fab{background:linear-gradient(135deg,var(--green),var(--teal));border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer}
 .page{display:none}
-.page.active{display:block;animation:pgIn .22s ease both}
-@keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-/* ── EMPTY STATE ──────────────────────── */
-.empty{text-align:center;padding:28px 16px;color:var(--text3);font-size:.82rem}
-.empty-ico{font-size:2.5rem;margin-bottom:8px;display:block;opacity:.5}
-
-/* ── TOAST ────────────────────────────── */
-#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);z-index:9999;background:rgba(17,27,46,.97);border:1px solid rgba(74,157,255,.2);backdrop-filter:blur(20px);padding:11px 22px;border-radius:var(--r-full);font-size:.82rem;font-weight:700;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.6);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
-#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-
-@media(max-width:390px){.g2{grid-template-columns:1fr}.nb{min-width:44px;font-size:.57rem;padding:5px 8px}.hero-kpis{gap:6px}.kpi-v{font-size:1rem}}
-
-/* ── Tank Cards ── */
-.tank-card{background:var(--surf);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color .2s}
+.page.active{display:block}
+.empty{text-align:center;padding:28px 16px;color:var(--text3)}
+.empty-ico{font-size:2.5rem;display:block;opacity:.5}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(17,27,46,.97);border:1px solid rgba(74,157,255,.2);backdrop-filter:blur(20px);padding:11px 22px;border-radius:var(--r-full);font-size:.82rem;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.on{opacity:1}
+.tank-card{background:var(--surf);border:1px solid var(--border);border-radius:16px;margin:8px 0;overflow:hidden}
 .tank-card.done{border-color:rgba(0,229,160,.25)}
-.tank-card.suspended{opacity:.7}
 .tank-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px;cursor:pointer}
-.tank-info{flex:1;min-width:0}
-.tank-name{font-size:.88rem;font-weight:800;color:var(--text);margin-bottom:3px}
+.tank-info{flex:1}
+.tank-name{font-size:.88rem;font-weight:800;margin-bottom:3px}
 .tank-meta{font-size:.72rem;color:var(--text3);margin-bottom:4px}
-.tank-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.tank-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .tank-chevron{color:var(--text3);font-size:.8rem;transition:transform .25s}
 .tank-chevron.open{transform:rotate(180deg)}
 .tank-details{padding:0 14px 14px;border-top:1px solid var(--border)}
-.status-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:100px;font-size:.7rem;font-weight:800;white-space:nowrap}
-.status-pill.pendente{background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.3)}
-.status-pill.concluido{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.3)}
-.status-pill.jejum{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
-.done-trato{opacity:.6}
-.cyan-l{background:rgba(6,214,240,.12)}
-
+.status-pill{display:inline-flex;padding:4px 12px;border-radius:100px;font-size:.7rem;font-weight:800}
+.status-pill.pendente{background:rgba(244,63,94,.12);color:var(--red)}
+.status-pill.concluido{background:rgba(34,197,94,.12);color:var(--green)}
 .tank-progress-wrap{margin:6px 0 2px}
 .tank-progress-bar{background:rgba(255,255,255,.08);border-radius:100px;height:6px;overflow:hidden}
 .tank-progress-fill{height:100%;border-radius:100px;background:var(--blue);transition:width .4s}
 .tank-progress-fill.done{background:var(--green)}
-.tank-progress-fill.jejum{background:var(--purple,#a78bfa)}
 .tank-progress-text{font-size:.7rem;color:var(--text3);margin-top:3px}
-.trato-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
-.trato-item:last-child{border-bottom:none}
-.trato-label{font-size:.8rem;font-weight:600;color:var(--text)}
-.trato-info{font-size:.72rem;color:var(--text3)}
-.done-trato .trato-label{color:var(--green)}
-
+.done-trato{opacity:.6}
 </style>
 </head>
 <body>
 
-<!-- ══ OVERLAY: LOGIN ══════════════════════════════════════════ -->
+<!-- OVERLAY: LOGIN -->
 <div class="ov" id="ovLogin">
   <div class="login-box">
     <div style="text-align:center"><div class="login-fish">🐟</div></div>
     <div class="login-ttl">Aqua<span>Gestor</span></div>
     <div class="login-sub">👷 Área do Colaborador</div>
-    <div class="f">
-      <label>E-mail</label>
-      <input type="email" id="lgEmail" placeholder="seu@email.com" autocomplete="email">
-    </div>
-    <div class="f">
-      <label>Senha</label>
-      <div class="pw-wrap">
-        <input type="password" id="lgSenha" placeholder="••••••••" autocomplete="current-password">
-        <button type="button" class="pw-eye" onclick="togglePw()">👁️</button>
-      </div>
-    </div>
+    <div class="f"><label>E-mail</label><input type="email" id="lgEmail" placeholder="seu@email.com"></div>
+    <div class="f"><label>Senha</label><input type="password" id="lgSenha" placeholder="••••••••"></div>
     <button class="login-btn" id="lgBtn" onclick="login()">🔐 Entrar</button>
     <div class="err-box" id="lgErr"></div>
-    <p style="text-align:center;font-size:.68rem;color:var(--text3);margin-top:14px">Acesso restrito a colaboradores autorizados<br>Configurado por: <strong id="lgAdminLabel" style="color:var(--text2)">sistema</strong></p>
   </div>
 </div>
 
-<!-- ══ OVERLAY: WIFI BLOQUEADO ════════════════════════════════ -->
+<!-- OVERLAY: WIFI -->
 <div class="ov off" id="ovWifi">
   <div class="wifi-box">
     <div class="wifi-ico">📡</div>
     <div class="wifi-ttl">Rede não autorizada</div>
-    <div class="wifi-msg">Este app só funciona conectado à rede WiFi da piscicultura. Verifique sua conexão.</div>
-    <div class="wifi-nets" id="wifiNets">
-      <div style="font-size:.65rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">📶 Redes autorizadas:</div>
-    </div>
-    <div class="wifi-ip">IP detectado: <span id="ipDetectado">detectando...</span></div>
+    <div class="wifi-msg">Conecte-se à rede WiFi da piscicultura.</div>
+    <div class="wifi-ip">IP detectado: <span id="ipDetectado">...</span></div>
     <button class="wifi-retry" onclick="checkWifi()">🔄 Tentar novamente</button>
-    <br>
     <button class="wifi-out" onclick="logout()">↩ Sair</button>
   </div>
 </div>
 
-<!-- ══ OVERLAY: CARREGANDO ════════════════════════════════════ -->
+<!-- OVERLAY: LOADING -->
 <div class="ov off" id="ovLoad">
-  <div style="text-align:center">
-    <div class="load-fish">🐟</div>
-    <div class="load-msg" id="loadMsg">Carregando...</div>
-  </div>
+  <div><div class="load-fish">🐟</div><div class="load-msg" id="loadMsg">Carregando...</div></div>
 </div>
 
-<!-- ══ APP ════════════════════════════════════════════════════ -->
+<!-- APP -->
 <div id="appWrap" style="display:none">
 
-<!-- Header -->
 <header>
   <div class="hdr">
-    <div class="hdr-brand">
-      <span class="hdr-brand-ico">🐟</span>
-      <div>
-        <div class="hdr-name">Aqua<span>Gestor</span></div>
-        <div class="hdr-farm" id="hdrFarm">Piscicultura</div>
-      </div>
-    </div>
-    <div class="hdr-right">
-      <div class="wifi-badge ok" id="wifiBadge">📶 WiFi OK</div>
-      <div style="font-size:.6rem;color:var(--text3);margin-right:4px">v2.2</div>
-      <button class="hdr-user" onclick="toggleDD()">👷 <span id="hdrNome">—</span></button>
-    </div>
+    <div class="hdr-brand"><span>🐟</span><div class="hdr-name">Aqua<span>Gestor</span></div></div>
+    <div><div class="wifi-badge ok" id="wifiBadge">📶 OK</div></div>
+    <button class="hdr-user" onclick="toggleDD()">👷 <span id="hdrNome">—</span></button>
   </div>
 </header>
 
-<!-- Dropdown -->
 <div class="dropdown" id="ddMenu">
   <div class="dd-name">👷 <span id="ddNome">Colaborador</span></div>
   <div class="dd-email" id="ddEmail"></div>
-  <button class="dd-btn" onclick="checkWifi();toggleDD()">📶 Verificar WiFi</button>
-  <button class="dd-btn" onclick="sincronizar();toggleDD()">🔄 Sincronizar dados</button>
+  <button class="dd-btn" onclick="sincronizar();toggleDD()">🔄 Sincronizar</button>
   <button class="dd-logout" onclick="logout()">↩ Sair</button>
 </div>
 
-<!-- ═══ PÁGINA: INÍCIO ═══════════════════════════════════════ -->
+<!-- PÁGINA INÍCIO -->
 <div class="page active" id="pg-inicio">
   <div class="container">
     <div class="hero">
       <div class="hero-date" id="heroDate">Carregando...</div>
       <div class="hero-time" id="heroTime">--:--</div>
-      <div class="hero-day" id="heroDay"></div>
       <div class="hero-kpis">
         <div class="kpi"><div class="kpi-v" id="kTratos">0</div><div class="kpi-l">Tratos Hoje</div></div>
         <div class="kpi"><div class="kpi-v" id="kMort">0</div><div class="kpi-l">Mortalidade</div></div>
         <div class="kpi"><div class="kpi-v" id="kVendas">0</div><div class="kpi-l">Vendas</div></div>
       </div>
     </div>
-
-    <div class="sync" id="syncBar">✅ Dados sincronizados</div>
-    <div class="offline-badge" id="offlineBadge">⚠️ Sem conexão — dados podem estar desatualizados</div>
-
-    <!-- Tarefas do dia -->
-    <div class="card">
-      <div class="sec-ttl">📋 TAREFAS DO DIA</div>
-      <div id="listaTarefas"><div class="empty"><span class="empty-ico">📋</span>Carregando tarefas...</div></div>
-    </div>
-
-    <!-- Últimos registros -->
-    <div class="card">
-      <div class="sec-ttl">🕐 ÚLTIMOS REGISTROS</div>
-      <div id="ultimosRegs"><div class="empty"><span class="empty-ico">📄</span>Nenhum registro ainda</div></div>
-    </div>
+    <div class="sync" id="syncBar">✅ Sincronizado</div>
+    <div class="card"><div class="sec-ttl">📋 TAREFAS DO DIA</div><div id="listaTarefas"></div></div>
+    <div class="card"><div class="sec-ttl">🕐 ÚLTIMOS REGISTROS</div><div id="ultimosRegs"></div></div>
   </div>
 </div>
 
-<!-- ═══ PÁGINA: ALIMENTAÇÃO ══════════════════════════════════ -->
+<!-- PÁGINA ALIMENTAÇÃO -->
 <div class="page" id="pg-alimentacao">
   <div class="container">
     <div class="pg-ttl green">🌾 Alimentação</div>
-
-    <!-- Botões de ação -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-      <button onclick="umTratoTodos()" style="background:linear-gradient(135deg,#0d9488,#0891b2);border:none;border-radius:14px;color:#fff;padding:12px 4px;font-size:.7rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px">
-        <span style="font-size:1rem">🎯</span>1 Trato<br>Todos
-      </button>
-      <button onclick="concluirDia()" style="background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:14px;color:#fff;padding:12px 4px;font-size:.7rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px">
-        <span style="font-size:1rem">✅</span>Concluir<br>Dia
-      </button>
-      <button onclick="resetarDia()" style="background:linear-gradient(135deg,#dc2626,#b91c1c);border:none;border-radius:14px;color:#fff;padding:12px 4px;font-size:.7rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px">
-        <span style="font-size:1rem">🔄</span>Resetar<br>Dia
-      </button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <button onclick="umTratoTodos()" style="background:#0d9488">🎯 1 Trato Todos</button>
+      <button onclick="resetarDia()" style="background:#dc2626">🔄 Resetar Dia</button>
     </div>
-
-    <!-- Lançamento manual -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="font-size:.82rem;font-weight:700;color:var(--text2)">🌾 Lançamento Manual</div>
-      <button onclick="var f=document.getElementById('fManual');f.style.display=f.style.display==='none'?'block':'none'" style="background:var(--blue-l);border:1px solid rgba(74,157,255,.3);border-radius:10px;color:var(--blue);font-size:.75rem;font-weight:700;padding:6px 14px;cursor:pointer">+ Lançar</button>
-    </div>
-
-    <div id="fManual" style="display:none">
-      <div class="card" style="margin-bottom:12px">
-        <div class="sec-ttl">📝 NOVO REGISTRO</div>
-        <div class="ff"><label>📅 Data</label><input type="date" id="aData"></div>
-        <div class="g2">
-          <div class="ff"><label>🏞️ Tanque</label>
-            <select id="aTanque" onchange="onTanqueChange()"><option value="">Selecionar...</option></select>
-          </div>
-          <div class="ff"><label>⏰ Horário</label><input type="time" id="aHora"></div>
-        </div>
-        <div id="aLoteInfo" style="display:none;background:rgba(74,157,255,.08);border:1px solid rgba(74,157,255,.2);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:.78rem">
-          <div style="font-weight:700;color:var(--blue);margin-bottom:4px">📦 Lote vinculado</div>
-          <div id="aLoteDetalhe" style="color:var(--text2)"></div>
-        </div>
-        <div class="g2">
-          <div class="ff"><label>⚖️ Kg de Ração</label><input type="number" id="aKg" placeholder="ex: 12.5" step="0.1" min="0"></div>
-          <div class="ff"><label>📦 Tipo Ração</label>
-            <select id="aTipo">
-              <option value="">Selecionar...</option>
-              <option value="po">Pó</option>
-              <option value="0.8mm">0.8mm</option>
-              <option value="1.3mm">1.3mm</option>
-              <option value="1.8-2mm">1.8-2mm</option>
-              <option value="2-3mm">2-3mm</option>
-              <option value="4-6mm">4-6mm</option>
-              <option value="6-8mm">6-8mm</option>
-              <option value="extrusada">Extrusada</option>
-            </select>
-          </div>
-        </div>
-        <div class="ff"><label>📝 Observação</label><textarea id="aObs" rows="2" placeholder="Ex: peixes comendo bem..."></textarea></div>
-        <button class="btn-g btn-full" onclick="salvarTrato()">✅ Registrar Trato</button>
-      </div>
-    </div>
-
-    <!-- Cards de tanques -->
-    <div id="tankCardsContainer">
-      <div class="empty"><span class="empty-ico">🏞️</span>Carregando tanques...</div>
-    </div>
-
-    <!-- Histórico -->
-    <div class="card" style="margin-top:12px">
-      <div class="sec-ttl">🕐 TRATOS DE HOJE</div>
-      <div id="tratosHoje"><div class="empty"><span class="empty-ico">🌾</span>Nenhum trato hoje</div></div>
-    </div>
-    <div class="card" style="margin-top:8px">
-      <div class="sec-ttl">📋 HISTÓRICO (7 dias)</div>
-      <div id="tratosHist"><div class="empty"><span class="empty-ico">📋</span>Carregando...</div></div>
-    </div>
+    <div id="tankCardsContainer"></div>
+    <div class="card"><div class="sec-ttl">🕐 TRATOS DE HOJE</div><div id="tratosHoje"></div></div>
   </div>
 </div>
 
+<!-- PÁGINA MORTALIDADE -->
 <div class="page" id="pg-mortalidade">
   <div class="container">
-    <div class="pg-ttl red">💀 Registrar Mortalidade</div>
-
+    <div class="pg-ttl red">💀 Mortalidade</div>
     <div class="card">
-      <div class="sec-ttl">📝 NOVO REGISTRO</div>
       <div class="ff"><label>📅 Data</label><input type="date" id="mData"></div>
-      <div class="g2">
-        <div class="ff"><label>🏞️ Tanque</label>
-          <select id="mTanque"><option value="">Selecionar...</option></select>
-        </div>
-        <div class="ff"><label>💀 Quantidade</label><input type="number" id="mQtd" placeholder="ex: 5" min="1" step="1"></div>
-      </div>
-      <div class="ff"><label>🔍 Causa</label>
-        <select id="mCausa">
-          <option value="">Selecionar...</option>
-          <option value="doença">🦠 Doença</option>
-          <option value="baixo_oxigenio">💨 Baixo oxigênio</option>
-          <option value="temperatura">🌡️ Temperatura extrema</option>
-          <option value="estresse">😤 Estresse/manejo</option>
-          <option value="predador">🦅 Predador</option>
-          <option value="qualidade_agua">💧 Qualidade da água</option>
-          <option value="desconhecida">❓ Causa desconhecida</option>
-          <option value="outra">📝 Outra</option>
-        </select>
-      </div>
-      <div class="ff"><label>📝 Observação</label><textarea id="mObs" rows="2" placeholder="Descreva o que observou..."></textarea></div>
-      <button class="btn-r btn-full" onclick="salvarMort()">💀 Registrar Mortalidade</button>
+      <div class="g2"><div class="ff"><label>🏞️ Tanque</label><select id="mTanque"></select></div><div class="ff"><label>💀 Quantidade</label><input type="number" id="mQtd"></div></div>
+      <div class="ff"><label>🔍 Causa</label><select id="mCausa"><option value="">Selecionar</option><option value="doença">Doença</option><option value="baixo_oxigenio">Baixo oxigênio</option></select></div>
+      <button class="btn-r btn-full" onclick="salvarMort()">Registrar</button>
     </div>
-
-    <div class="g2" style="margin:10px 0">
-      <div class="card" style="padding:14px;text-align:center;margin:0">
-        <div style="font-size:1.8rem;font-weight:900;color:var(--red)" id="mKpiHoje">0</div>
-        <div style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Hoje</div>
-      </div>
-      <div class="card" style="padding:14px;text-align:center;margin:0">
-        <div style="font-size:1.8rem;font-weight:900;color:var(--amber)" id="mKpi7d">0</div>
-        <div style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">7 dias</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="sec-ttl">📋 REGISTROS DE MORTALIDADE</div>
-      <div id="listaMort"><div class="empty"><span class="empty-ico">💀</span>Nenhum registro</div></div>
-    </div>
+    <div class="card"><div class="sec-ttl">📋 REGISTROS</div><div id="listaMort"></div></div>
   </div>
 </div>
 
-<!-- ═══ PÁGINA: VENDAS ════════════════════════════════════════ -->
+<!-- PÁGINA VENDAS -->
 <div class="page" id="pg-vendas">
   <div class="container">
-    <div class="pg-ttl amber">🛒 Registrar Venda</div>
-
+    <div class="pg-ttl amber">🛒 Vendas</div>
     <div class="card">
-      <div class="sec-ttl">📝 NOVA VENDA</div>
       <div class="ff"><label>📅 Data</label><input type="date" id="vData"></div>
-      <div class="g2">
-        <div class="ff"><label>👤 Cliente</label><input type="text" id="vCliente" placeholder="Nome do cliente"></div>
-        <div class="ff"><label>📞 Telefone</label><input type="tel" id="vTel" placeholder="(00) 00000-0000"></div>
-      </div>
-      <div class="g2">
-        <div class="ff"><label>🏞️ Tanque Origem</label>
-          <select id="vTanque"><option value="">Selecionar...</option></select>
-        </div>
-        <div class="ff"><label>📦 Categoria</label>
-          <select id="vCat">
-            <option value="">Selecionar...</option>
-            <option value="grade">🟢 Grande (900g–1200g)</option>
-            <option value="media">🔵 Médio (600g–899g)</option>
-            <option value="pequena">🟡 Pequeno (400g–599g)</option>
-            <option value="minima">🔴 Abaixo de 400g</option>
-          </select>
-        </div>
-      </div>
-      <div class="g2">
-        <div class="ff"><label>⚖️ Kg Vendidos</label><input type="number" id="vKg" placeholder="ex: 80" step="0.1" min="0" oninput="calcTotal()"></div>
-        <div class="ff"><label>💰 Preço/kg (R$)</label><input type="number" id="vPreco" placeholder="ex: 12.50" step="0.01" min="0" oninput="calcTotal()"></div>
-      </div>
-      <div class="venda-preview">
-        <span>💵 Valor Total:</span>
-        <span id="vTotal">R$ 0,00</span>
-      </div>
-      <div class="ff"><label>💳 Forma de Pagamento</label>
-        <select id="vPag">
-          <option value="">Selecionar...</option>
-          <option value="dinheiro">💵 Dinheiro</option>
-          <option value="pix">📱 PIX</option>
-          <option value="cartao_credito">💳 Cartão Crédito</option>
-          <option value="cartao_debito">💳 Cartão Débito</option>
-          <option value="transferencia">🏦 Transferência</option>
-          <option value="fiado">📋 Fiado</option>
-        </select>
-      </div>
-      <div class="ff"><label>📝 Observação</label><textarea id="vObs" rows="2" placeholder="Observações adicionais..."></textarea></div>
-      <button class="btn-a btn-full" onclick="salvarVenda()">🛒 Registrar Venda</button>
+      <div class="g2"><div class="ff"><label>👤 Cliente</label><input type="text" id="vCliente"></div><div class="ff"><label>⚖️ Kg</label><input type="number" id="vKg" oninput="calcTotal()"></div></div>
+      <div class="g2"><div class="ff"><label>💰 R$/kg</label><input type="number" id="vPreco" oninput="calcTotal()"></div><div class="ff"><label>🏞️ Tanque</label><select id="vTanque"></select></div></div>
+      <div class="venda-preview"><span>Total:</span><span id="vTotal">R$ 0</span></div>
+      <button class="btn-a btn-full" onclick="salvarVenda()">Registrar Venda</button>
     </div>
-
-    <div class="g2" style="margin:10px 0">
-      <div class="card" style="padding:14px;text-align:center;margin:0">
-        <div style="font-size:1.1rem;font-weight:900;color:var(--amber)" id="vKpiValor">R$ 0</div>
-        <div style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Valor Hoje</div>
-      </div>
-      <div class="card" style="padding:14px;text-align:center;margin:0">
-        <div style="font-size:1.1rem;font-weight:900;color:var(--blue)" id="vKpiKg">0 kg</div>
-        <div style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Kg Hoje</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="sec-ttl">📋 VENDAS REGISTRADAS</div>
-      <div id="listaVendas"><div class="empty"><span class="empty-ico">🛒</span>Nenhuma venda registrada</div></div>
-    </div>
+    <div class="card"><div class="sec-ttl">📋 VENDAS</div><div id="listaVendas"></div></div>
   </div>
 </div>
 
-<!-- ═══ BOTTOM NAV ════════════════════════════════════════════ -->
 <nav>
-  <button class="nb active" id="nb-inicio" onclick="navTo('inicio')">
-    <span class="nb-ico">🏠</span><span>Início</span>
-  </button>
-  <button class="nb" id="nb-alimentacao" onclick="navTo('alimentacao')">
-    <span class="nb-ico">🌾</span><span>Alimentação</span>
-  </button>
+  <button class="nb active" onclick="navTo('inicio')"><span class="nb-ico">🏠</span><span>Início</span></button>
+  <button class="nb" onclick="navTo('alimentacao')"><span class="nb-ico">🌾</span><span>Alimentação</span></button>
   <button class="nb-fab" onclick="navTo('alimentacao')">➕</button>
-  <button class="nb" id="nb-mortalidade" onclick="navTo('mortalidade')">
-    <span class="nb-ico">💀</span><span>Mortalidade</span>
-  </button>
-  <button class="nb" id="nb-vendas" onclick="navTo('vendas')">
-    <span class="nb-ico">🛒</span><span>Vendas</span>
-  </button>
+  <button class="nb" onclick="navTo('mortalidade')"><span class="nb-ico">💀</span><span>Mortalidade</span></button>
+  <button class="nb" onclick="navTo('vendas')"><span class="nb-ico">🛒</span><span>Vendas</span></button>
 </nav>
 
-</div><!-- /appWrap -->
+</div>
 <div id="toast"></div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  AquaGestor Colaborador — lógica principal
+// VARIÁVEIS GLOBAIS
 // ═══════════════════════════════════════════════════════════════
+var _user = null, _perfil = null, _adminId = null;
+var _tanques = [], _lotes = [], _horariosTratos = [], _configAlim = {};
+var _tratos = [], _mort = [], _vendas = [], _wifis = [];
+var _tratosAdminMap = {};
+var _wifiOk = false, _localIp = null;
 
-var _user=null, _perfil=null, _adminId=null;
-var _horariosTratos=[], _configAlim={}, _tratosAdminMap={};
-var _tanques=[], _lotes=[], _tratos=[], _mort=[], _vendas=[], _wifis=[];
-var _wifiOk=false, _localIp=null, _wifiTimer=null;
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+function ov(id, show) { document.getElementById(id).classList[show ? 'remove' : 'add']('off'); }
+function setLoading(msg) { document.getElementById('loadMsg').textContent = msg || 'Carregando...'; ov('ovLoad', true); }
+function hideLoading() { ov('ovLoad', false); }
+function toast(msg) { var el = document.getElementById('toast'); el.textContent = msg; el.classList.add('on'); setTimeout(function() { el.classList.remove('on'); }, 3000); }
+function fmtR(v) { return 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
+function hoje() { return new Date().toISOString().split('T')[0]; }
+function fmtData(d) { if (!d) return '—'; var p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function stBadge(s) { return '<span class="st st-p">' + (s || 'pendente') + '</span>'; }
 
-/* ── helpers UI ─────────────────────────── */
-function ov(id,show){document.getElementById(id).classList[show?'remove':'add']('off');}
-function setLoading(msg){document.getElementById('loadMsg').textContent=msg||'Carregando...';ov('ovLoad',true);}
-function hideLoading(){ov('ovLoad',false);}
-
-var _tt;
-function toast(msg,ms){
-  var el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('on');
-  clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('on');},ms||3200);
-}
-
-function fmtR(v){return 'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function hoje(){return new Date().toISOString().split('T')[0];}
-function fmtData(d){if(!d)return '—';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
-
-function stBadge(s){
-  var cls=s==='aprovado'?'st-a':s==='rejeitado'?'st-r':'st-p';
-  return '<span class="st '+cls+'">'+( s||'pendente')+'</span>';
-}
-
-/* ── Auth UI ──────────────────────────────── */
-function togglePw(){
-  var i=document.getElementById('lgSenha');
-  i.type=i.type==='password'?'text':'password';
-}
-
-async function login(){
-  var email=(document.getElementById('lgEmail').value||'').trim();
-  var senha=document.getElementById('lgSenha').value;
-  var err=document.getElementById('lgErr');
-  var btn=document.getElementById('lgBtn');
-  err.className='err-box';
-  if(!email||!senha){err.textContent='⚠️ Preencha e-mail e senha.';err.classList.add('on');return;}
-  btn.disabled=true;btn.textContent='⏳ Entrando...';
-  err.textContent='⏳ Conectando...';err.classList.add('on');
-  try{
-    var auth=await SB.auth.signIn(email,senha);
-    _user=auth.user;
-    err.textContent='⏳ Carregando perfil...';
-    _perfil=await SB.perfil();
-    if(!_perfil)throw new Error('Perfil não encontrado. Contate o administrador.');
-    if(_perfil.role!=='colaborador')throw new Error('Use o app do administrador para entrar.');
-    if(!_perfil.ativo)throw new Error('Conta desativada. Contate o administrador.');
-    _adminId=_perfil.admin_id;
-    setUI(_perfil.nome||email.split('@')[0],email);
-    err.className='err-box';
-    ov('ovLogin',false);
+// ═══════════════════════════════════════════════════════════════
+// LOGIN/LOGOUT
+// ═══════════════════════════════════════════════════════════════
+async function login() {
+  var email = document.getElementById('lgEmail').value.trim();
+  var senha = document.getElementById('lgSenha').value;
+  var err = document.getElementById('lgErr');
+  var btn = document.getElementById('lgBtn');
+  if (!email || !senha) { err.textContent = 'Preencha e-mail e senha'; err.classList.add('on'); return; }
+  btn.disabled = true; btn.textContent = '⏳...';
+  try {
+    var auth = await SB.auth.signIn(email, senha);
+    _user = auth.user;
+    _perfil = await SB.perfil();
+    if (!_perfil) throw new Error('Perfil não encontrado');
+    if (_perfil.role !== 'colaborador') throw new Error('Acesso negado');
+    if (!_perfil.ativo) throw new Error('Conta desativada');
+    _adminId = _perfil.admin_id;
+    document.getElementById('hdrNome').textContent = _perfil.nome || email.split('@')[0];
+    document.getElementById('ddNome').textContent = _perfil.nome || email.split('@')[0];
+    document.getElementById('ddEmail').textContent = email;
+    ov('ovLogin', false);
     await init();
-  }catch(e){
-    err.textContent='❌ '+e.message;err.classList.add('on');
-    btn.disabled=false;btn.textContent='🔐 Entrar';
+  } catch (e) {
+    err.textContent = '❌ ' + e.message;
+    err.classList.add('on');
+    btn.disabled = false;
+    btn.textContent = '🔐 Entrar';
   }
 }
 
-async function logout(){
-  clearInterval(_wifiTimer);
-  await SB.auth.signOut().catch(function(){});
+async function logout() {
+  await SB.auth.signOut();
   location.reload();
 }
 
-function setUI(nome,email){
-  ['hdrNome','ddNome'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=nome;});
-  var de=document.getElementById('ddEmail');if(de)de.textContent=email;
+function toggleDD() {
+  document.getElementById('ddMenu').classList.toggle('on');
 }
-
-function toggleDD(){
-  var d=document.getElementById('ddMenu');
-  d.classList.toggle('on');
-}
-document.addEventListener('click',function(e){
-  var dd=document.getElementById('ddMenu');
-  if(dd&&!dd.contains(e.target)&&!e.target.closest('.hdr-user'))dd.classList.remove('on');
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('ddMenu');
+  if (dd && !dd.contains(e.target) && !e.target.closest('.hdr-user')) dd.classList.remove('on');
 });
 
-/* ── WiFi ─────────────────────────────────── */
-async function checkWifi(){
-  ov('ovWifi',false);
-  setLoading('Verificando rede WiFi...');
-
-  _localIp=await SB.getLocalIP();
-  document.getElementById('ipDetectado').textContent=_localIp||'não detectado';
-
-  try{ _wifis=await SB.wifi.list(_adminId); }catch(e){ _wifis=[]; }
-
+// ═══════════════════════════════════════════════════════════════
+// WIFI
+// ═══════════════════════════════════════════════════════════════
+async function checkWifi() {
+  ov('ovWifi', false);
+  setLoading('Verificando WiFi...');
+  _localIp = await SB.getLocalIP();
+  document.getElementById('ipDetectado').textContent = _localIp || 'não detectado';
+  try { _wifis = await SB.wifi.list(_adminId); } catch(e) { _wifis = []; }
   hideLoading();
-
-  if(!_wifis.length){
-    _wifiOk=true;
-    setBadge(true,'Sem restrição');
-    iniciarPagina();
-    return;
-  }
-
-  var ok=false, nomeRede='';
-  if(_localIp){
-    for(var i=0;i<_wifis.length;i++){
-      if(_localIp.startsWith(_wifis[i].ip_prefix)){ok=true;nomeRede=_wifis[i].nome;break;}
+  if (!_wifis.length) { _wifiOk = true; iniciarPagina(); return; }
+  var ok = false;
+  if (_localIp) {
+    for (var i = 0; i < _wifis.length; i++) {
+      if (_localIp.startsWith(_wifis[i].ip_prefix)) { ok = true; break; }
     }
   }
-
-  _wifiOk=ok;
-  if(ok){
-    setBadge(true,nomeRede||'Conectado');
-    ov('ovWifi',false);
-    iniciarPagina();
-  }else{
-    setBadge(false,'Não autorizado');
-    mostrarBloqueio();
-  }
+  _wifiOk = ok;
+  if (ok) { iniciarPagina(); } else { mostrarBloqueio(); }
 }
 
-function setBadge(ok,txt){
-  var b=document.getElementById('wifiBadge');
-  b.className='wifi-badge '+(ok?'ok':'fail');
-  b.textContent=(ok?'📶 ':'📵 ')+(txt||'');
+function mostrarBloqueio() {
+  document.getElementById('appWrap').style.display = 'none';
+  ov('ovWifi', true);
 }
 
-function mostrarBloqueio(){
-  var html='<div style="font-size:.65rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">📶 Redes autorizadas:</div>';
-  _wifis.forEach(function(w){
-    html+='<div class="wifi-net"><div class="wifi-dot"></div>'+w.nome+' ('+w.ip_prefix+'.x)</div>';
-  });
-  document.getElementById('wifiNets').innerHTML=html;
-  document.getElementById('appWrap').style.display='none';
-  ov('ovWifi',true);
-}
-
-/* ── Init app ─────────────────────────────── */
-async function init(){
-  await checkWifi();
-  _wifiTimer=setInterval(async function(){
-    var ip=await SB.getLocalIP();
-    if(_wifis.length>0&&ip&&!_wifis.some(function(w){return ip.startsWith(w.ip_prefix);})){
-      _wifiOk=false;setBadge(false,'Desconectado');mostrarBloqueio();
-    }
-  },120000);
-}
-
-async function iniciarPagina(){
-  document.getElementById('appWrap').style.display='block';
-  setLoading('Carregando dados...');
-  try{
-    await carregarDados();
-    popularSelects();
-    renderDash();
-    renderTratos();
-    renderMort();
-    renderVendas();
-    setDefaultDatas();
-    var sync=document.getElementById('syncBar');
-    sync.classList.add('on');setTimeout(function(){sync.classList.remove('on');},3000);
-    try{
-      var pisc=await SB.userData.get(_adminId,'pisciculturas_lista');
-      if(pisc&&pisc[0]&&pisc[0].nome)document.getElementById('hdrFarm').textContent=pisc[0].nome;
-    }catch(e){}
-  }catch(e){
-    toast('⚠️ Erro ao carregar dados: '+e.message);
-    document.getElementById('offlineBadge').classList.add('on');
-  }
-  hideLoading();
-  tickClock();
-  setInterval(tickClock,30000);
-}
-
-async function sincronizar(){
-  setLoading('Sincronizando...');
-  try{
-    await carregarDados();
-    renderDash();renderTratos();renderMort();renderVendas();renderTankCards();
-    toast('✅ Sincronizado!');
-  }catch(e){toast('❌ Erro: '+e.message);}
-  hideLoading();
-}
-
-/* ── Carregar dados ───────────────────────── */
-async function carregarDados(){
-  if(!_adminId){ toast('⚠️ Refaça login'); return; }
-
+// ═══════════════════════════════════════════════════════════════
+// CARREGAR DADOS
+// ═══════════════════════════════════════════════════════════════
+async function carregarDados() {
   var results = await Promise.allSettled([
-    SB.userData.get(_adminId,'tanques'),
-    SB.userData.get(_adminId,'lotes'),
-    SB.tratos.list(_adminId,{}),
-    SB.mortalidade.list(_adminId,{}),
-    SB.vendas.list(_adminId,{}),
-    SB.userData.get(_adminId,'horariosTratos'),
-    SB.userData.get(_adminId,'configAlimentacao')
+    SB.userData.get(_adminId, 'tanques'),
+    SB.userData.get(_adminId, 'lotes'),
+    SB.userData.get(_adminId, 'horariosTratos'),
+    SB.userData.get(_adminId, 'configAlimentacao'),
+    SB.tratos.list(_adminId, {}),
+    SB.mortalidade.list(_adminId, {}),
+    SB.vendas.list(_adminId, {})
   ]);
+  _tanques = results[0].status === 'fulfilled' ? (results[0].value || []) : [];
+  _lotes = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
+  _horariosTratos = results[2].status === 'fulfilled' ? (results[2].value || []) : [];
+  _configAlim = results[3].status === 'fulfilled' ? (results[3].value || {}) : {};
+  var myId = _user.id;
+  _tratos = results[4].status === 'fulfilled' ? ((results[4].value || []).filter(function(r) { return r.colaborador_id === myId; })) : [];
+  _mort = results[5].status === 'fulfilled' ? ((results[5].value || []).filter(function(r) { return r.colaborador_id === myId; })) : [];
+  _vendas = results[6].status === 'fulfilled' ? ((results[6].value || []).filter(function(r) { return r.colaborador_id === myId; })) : [];
 
-  _tanques      = results[0].status==='fulfilled'?(results[0].value||[]):[];
-  _lotes        = results[1].status==='fulfilled'?(results[1].value||[]):[];
-  _horariosTratos = results[5].status==='fulfilled'?(results[5].value||[]):[];
-  _configAlim   = results[6].status==='fulfilled'?(results[6].value||{}):{}; 
-
-  var myId=_user.id;
-  _tratos  = results[2].status==='fulfilled'?((results[2].value||[]).filter(function(r){return r.colaborador_id===myId;})):[];
-  _mort    = results[3].status==='fulfilled'?((results[3].value||[]).filter(function(r){return r.colaborador_id===myId;})):[];
-  _vendas  = results[4].status==='fulfilled'?((results[4].value||[]).filter(function(r){return r.colaborador_id===myId;})):[];
-
+  // Carregar tratos do admin (tratos_TXX)
   _tratosAdminMap = {};
-  if(_tanques.length > 0){
-    var tanqNums = _tanques.map(function(t){ return t.num; });
-    var adminTratosResults = await Promise.all(tanqNums.map(function(num){
-      return SB.userData.get(_adminId,'tratos_'+num).catch(function(){ return null; });
-    }));
-    for(var ti=0; ti<tanqNums.length; ti++){
-      if(adminTratosResults[ti]) _tratosAdminMap[tanqNums[ti]] = adminTratosResults[ti];
-      else _tratosAdminMap[tanqNums[ti]] = [];
+  for (var i = 0; i < _tanques.length; i++) {
+    var num = _tanques[i].num;
+    var adminTratos = await SB.userData.get(_adminId, 'tratos_' + num).catch(function() { return null; });
+    if (adminTratos && Array.isArray(adminTratos)) {
+      _tratosAdminMap[num] = adminTratos;
+    } else {
+      var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
+      _tratosAdminMap[num] = horarios.map(function(h) { return { hora: h.hora, tratado: false, kgFornecidos: 0 }; });
     }
   }
-
-  try {
-    localStorage.setItem('_colab_tanques', JSON.stringify(_tanques));
-    localStorage.setItem('_colab_lotes', JSON.stringify(_lotes));
-    localStorage.setItem('_colab_horarios', JSON.stringify(_horariosTratos));
-    localStorage.setItem('_colab_config', JSON.stringify(_configAlim));
-  } catch(e){}
 }
 
-/* ── Selects tanques ──────────────────────── */
-function popularSelects(){
-  var tanqAtivos=_tanques.filter(function(t){
-    return _lotes.some(function(l){
-      return !l.encerrado&&(l.tanques||[]).some(function(lt){
-        return lt.num===t.num&&!lt.despescado&&(lt.qtdPeixes||0)>0;
-      });
-    });
-  });
-  var lista=tanqAtivos.length?tanqAtivos:_tanques;
-  var opts=lista.map(function(t){
-    var lote=_lotes.find(function(l){return !l.encerrado&&(l.tanques||[]).some(function(lt){return lt.num===t.num&&!lt.despescado;});});
-    var loteLabel=lote?' — Lote #'+String(lote.id).slice(-4):'';
-    return '<option value="'+t.num+'">Tanque '+t.num+loteLabel+'</option>';
-  }).join('');
-  var base='<option value="">Selecionar...</option>'+(opts||'<option disabled>Nenhum tanque cadastrado</option>');
-  ['aTanque','mTanque','vTanque'].forEach(function(id){
-    var s=document.getElementById(id);if(s)s.innerHTML=base;
+function popularSelects() {
+  var opts = _tanques.map(function(t) { return '<option value="' + t.num + '">Tanque ' + t.num + '</option>'; }).join('');
+  ['mTanque', 'vTanque'].forEach(function(id) {
+    var s = document.getElementById(id);
+    if (s) s.innerHTML = '<option value="">Selecionar</option>' + opts;
   });
 }
 
-function setDefaultDatas(){
-  var h=hoje(),hr=new Date().toTimeString().slice(0,5);
-  ['aData','mData','vData'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=h;});
-  var aH=document.getElementById('aHora');if(aH)aH.value=hr;
-}
-
-/* ── Clock ────────────────────────────────── */
-function tickClock(){
-  var now=new Date();
-  var dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-  var meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  document.getElementById('heroTime').textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  document.getElementById('heroDate').textContent=now.getDate()+' de '+meses[now.getMonth()]+' · '+now.getFullYear();
-  document.getElementById('heroDay').textContent=dias[now.getDay()];
-}
-
-/* ── Dashboard ────────────────────────────── */
-function renderDash(){
-  var h=hoje();
-  var tH=_tratos.filter(function(t){return t.data===h;});
-  var mH=_mort.filter(function(m){return m.data===h;});
-  var vH=_vendas.filter(function(v){return v.data===h;});
-  document.getElementById('kTratos').textContent=tH.length;
-  document.getElementById('kMort').textContent=mH.reduce(function(s,m){return s+(m.quantidade||0);},0);
-  document.getElementById('kVendas').textContent=vH.length;
-  document.getElementById('mKpiHoje').textContent=mH.reduce(function(s,m){return s+(m.quantidade||0);},0);
-  document.getElementById('mKpi7d').textContent=_mort.reduce(function(s,m){return s+(m.quantidade||0);},0);
-  var vValH=vH.reduce(function(s,v){return s+(v.valor_total||0);},0);
-  var vKgH=vH.reduce(function(s,v){return s+(v.kg_vendidos||0);},0);
-  document.getElementById('vKpiValor').textContent=fmtR(vValH);
-  document.getElementById('vKpiKg').textContent=vKgH.toFixed(1)+' kg';
-  renderTarefas(tH);
-  renderUltimos();
-}
-
-function renderTarefas(tH){
-  var tanqA=_tanques.filter(function(t){return _lotes.some(function(l){return !l.encerrado&&(l.tanques||[]).some(function(lt){return lt.num===t.num&&!lt.despescado;});});});
-  var div=document.getElementById('listaTarefas');
-  if(!tanqA.length){div.innerHTML='<div class="empty"><span class="empty-ico">🏞️</span>Sem tanques ativos cadastrados</div>';return;}
-  div.innerHTML=tanqA.map(function(t){
-    var feito=tH.some(function(tr){return tr.tanque_num===t.num;});
-    return '<div class="task '+(feito?'done':'pend')+'">'
-      +'<span class="task-ico">'+(feito?'✅':'⏳')+'</span>'
-      +'<div style="flex:1"><div class="task-t">Tanque '+t.num+' — Alimentação</div><div class="task-s">'+(feito?'Registrado hoje':'Pendente')+'</div></div>'
-      +(!feito?'<button class="btn-g btn-sm" onclick="navTo(\'alimentacao\');setTimeout(function(){document.getElementById(\'aTanque\').value=\''+t.num+'\';},120)">Registrar</button>':'')
-      +'</div>';
-  }).join('');
-}
-
-function renderUltimos(){
-  var todos=[].concat(
-    _tratos.map(function(t){return {ico:'🌾',desc:'Trato — Tanque '+t.tanque_num+' — '+t.kg_racao+'kg',st:t.status,ts:t.created_at};}),
-    _mort.map(function(m){return {ico:'💀',desc:'Mortalidade — Tanque '+m.tanque_num+' — '+m.quantidade+' peixes',st:m.status,ts:m.created_at};}),
-    _vendas.map(function(v){return {ico:'🛒',desc:'Venda — '+(v.cliente||'sem nome')+' — '+fmtR(v.valor_total),st:v.status,ts:v.created_at};})
-  ).sort(function(a,b){return new Date(b.ts)-new Date(a.ts);}).slice(0,6);
-  var div=document.getElementById('ultimosRegs');
-  if(!todos.length){div.innerHTML='<div class="empty"><span class="empty-ico">📄</span>Nenhum registro ainda</div>';return;}
-  div.innerHTML=todos.map(function(r){
-    return '<div class="task '+(r.st==='aprovado'?'done':'pend')+'"><span class="task-ico">'+r.ico+'</span><div><div class="task-t">'+r.desc+'</div><div class="task-s">'+stBadge(r.st)+'</div></div></div>';
-  }).join('');
-}
-
-function onTanqueChange(){
-  var tanque=document.getElementById('aTanque').value;
-  var info=document.getElementById('aLoteInfo');
-  var det=document.getElementById('aLoteDetalhe');
-  if(!tanque||!info){return;}
-  var lote=_lotes.find(function(l){
-    return !l.encerrado&&(l.tanques||[]).some(function(lt){return lt.num===tanque&&!lt.despescado;});
-  });
-  if(lote){
-    var ltI=(lote.tanques||[]).find(function(lt){return lt.num===tanque;});
-    det.innerHTML='Lote #'+String(lote.id).slice(-4)+' · <strong>'+(ltI?ltI.qtdPeixes||0:0)+' peixes</strong>'+(ltI&&ltI.pesoMedio?' · '+ltI.pesoMedio+'g':'')+(lote.especie?' · '+lote.especie:'');
-    info.style.display='block';
-  } else {
-    det.innerHTML='<span style="color:var(--amber)">⚠️ Nenhum lote ativo neste tanque</span>';
-    info.style.display='block';
-  }
-}
-
-function hoje_str(){
-  var d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-
-window._tankRenderList=[];
-var _abertosColab = new Set();
-
-// ── Tabela GPD ──
+// ═══════════════════════════════════════════════════════════════
+// BUILD TANQUES OCUPADOS (cálculo igual ao admin)
+// ═══════════════════════════════════════════════════════════════
 var _tabelaGPD = [
-  {peso:1,gpd:0.08},{peso:2,gpd:0.15},{peso:3,gpd:0.22},{peso:5,gpd:0.35},
-  {peso:10,gpd:0.65},{peso:20,gpd:1.2},{peso:50,gpd:2.0},{peso:100,gpd:3.2},
-  {peso:200,gpd:4.5},{peso:300,gpd:5.5},{peso:500,gpd:6.5},{peso:800,gpd:7.5},
-  {peso:1000,gpd:8.0},{peso:1300,gpd:8.5}
+  { peso: 1, gpd: 0.08 }, { peso: 2, gpd: 0.15 }, { peso: 3, gpd: 0.22 }, { peso: 5, gpd: 0.35 },
+  { peso: 10, gpd: 0.65 }, { peso: 20, gpd: 1.2 }, { peso: 50, gpd: 2.0 }, { peso: 100, gpd: 3.2 },
+  { peso: 200, gpd: 4.5 }, { peso: 300, gpd: 5.5 }, { peso: 500, gpd: 6.5 }, { peso: 800, gpd: 7.5 },
+  { peso: 1000, gpd: 8.0 }, { peso: 1300, gpd: 8.5 }
 ];
 
-function _obterGPD(pm){
-  if(pm<=0)return 0.05;
-  for(var i=0;i<_tabelaGPD.length-1;i++){
-    if(pm>=_tabelaGPD[i].peso&&pm<=_tabelaGPD[i+1].peso){
-      var f=(pm-_tabelaGPD[i].peso)/(_tabelaGPD[i+1].peso-_tabelaGPD[i].peso);
-      return parseFloat((_tabelaGPD[i].gpd+(_tabelaGPD[i+1].gpd-_tabelaGPD[i].gpd)*f).toFixed(3));
+function obterGPD(pm) {
+  if (pm <= 0) return 0.05;
+  for (var i = 0; i < _tabelaGPD.length - 1; i++) {
+    if (pm >= _tabelaGPD[i].peso && pm <= _tabelaGPD[i + 1].peso) {
+      var f = (pm - _tabelaGPD[i].peso) / (_tabelaGPD[i + 1].peso - _tabelaGPD[i].peso);
+      return parseFloat((_tabelaGPD[i].gpd + (_tabelaGPD[i + 1].gpd - _tabelaGPD[i].gpd) * f).toFixed(3));
     }
-  }
-  if(pm>_tabelaGPD[_tabelaGPD.length-1].peso){
-    var u=_tabelaGPD[_tabelaGPD.length-1],p=_tabelaGPD[_tabelaGPD.length-2];
-    var inc=(u.gpd-p.gpd)/(u.peso-p.peso);
-    return parseFloat(Math.min(u.gpd+inc*(pm-u.peso),9.5).toFixed(3));
   }
   return 0.5;
 }
-function _getCA(pm,ca){return pm<=30?1.0:ca;}
-function _tipoRacao(pm){
-  if(pm<=1)return'🍼 Pó (55% PB)';if(pm<=2)return'⚫ 0.8–1mm (45% PB)';
-  if(pm<=6)return'🟤 1.3–1.5mm (45% PB)';if(pm<=15)return'🟠 1.8–2.3mm (40% PB)';
-  if(pm<=50)return'🟡 2–3mm (36% PB)';if(pm<=250)return'🟢 4–6mm (32% PB)';
-  return'🔵 6–8mm (32% PB)';
-}
 
-function _buildTanquesOcupados(){
-  var lista=[];
-  var caSel=parseFloat((_configAlim&&_configAlim.ca)||1.4)||1.4;
-  var pesoCopo=parseFloat((_configAlim&&_configAlim.pesoCopo)||1)||1;
-
-  function _gerarHorarios(){
-    if(_horariosTratos&&_horariosTratos.length>0&&_horariosTratos[0].hora){
-      return _horariosTratos.map(function(h){return {hora:h.hora};});
-    }
-    var cfg=_configAlim||{};
-    var n=parseInt(cfg.numTratos)||3;
-    var primeira=cfg.horaPrimeira||'08:00';
-    var ultima=cfg.horaUltima||'17:00';
-    var inicio=new Date('2000-01-01T'+primeira+':00');
-    var fim=new Date('2000-01-01T'+ultima+':00');
-    if(fim<=inicio){fim=new Date(inicio.getTime()+9*3600000);}
-    var diff=(fim-inicio)/3600000;
-    var intervalo=n>1?diff/(n-1):0;
-    var arr=[];
-    for(var i=0;i<n;i++){
-      var d=new Date(inicio.getTime()+i*intervalo*3600000);
-      var h=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-      arr.push({hora:h});
-    }
-    return arr;
-  }
-  var _horariosCalc=_gerarHorarios();
+function buildTanquesOcupados() {
+  var lista = [];
+  var caSel = parseFloat((_configAlim && _configAlim.ca) || 1.4) || 1.4;
+  var pesoCopo = parseFloat((_configAlim && _configAlim.pesoCopo) || 1) || 1;
+  var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
   
-  for(var li=0;li<_lotes.length;li++){
-    var lote=_lotes[li];
-    if(lote.encerrado)continue;
-    for(var ti=0;ti<(lote.tanques||[]).length;ti++){
-      var tanque=lote.tanques[ti];
-      if(!tanque.qtdPeixes||tanque.despescado)continue;
-      var pm=0;
-      if(lote.biometrias&&lote.biometrias.length){
-        var bioTanque=lote.biometrias.slice().reverse().find(function(b){return b.tanque===tanque.num;});
-        if(bioTanque) pm=parseFloat(bioTanque.pesoMedio)||0;
-        if(!pm){var bioGeral=lote.biometrias[lote.biometrias.length-1];pm=parseFloat(bioGeral&&bioGeral.pesoMedio)||0;}
-      }
-      if(!pm) pm=parseFloat(tanque.ultimoPesoMedio||lote.pesoMedioAlevino||5)||5;
+  for (var i = 0; i < _lotes.length; i++) {
+    var lote = _lotes[i];
+    if (lote.encerrado) continue;
+    for (var j = 0; j < (lote.tanques || []).length; j++) {
+      var tanque = lote.tanques[j];
+      if (!tanque.qtdPeixes || tanque.despescado) continue;
       
-      var gpd=_obterGPD(pm);
-      var ca=_getCA(pm,caSel);
-      var racaoDia=(tanque.qtdPeixes*gpd/1000)*ca;
-      var horariosPadrao=_horariosCalc;
-      var tratos=_tratosAdminMap[tanque.num];
-      if(!tratos||!Array.isArray(tratos)||tratos.length===0){
-        tratos=horariosPadrao.map(function(h){return {hora:h.hora,tratado:false,kgFornecidos:0};});
+      var pm = 0;
+      if (lote.biometrias && lote.biometrias.length) {
+        var bioTanque = lote.biometrias.slice().reverse().find(function(b) { return b.tanque === tanque.num; });
+        if (bioTanque) pm = parseFloat(bioTanque.pesoMedio) || 0;
+        if (!pm) { var bioGeral = lote.biometrias[lote.biometrias.length - 1]; pm = parseFloat(bioGeral && bioGeral.pesoMedio) || 0; }
       }
-      if(tratos.length!==horariosPadrao.length){
-        var novosTratos=horariosPadrao.map(function(h,idx){
-          return tratos[idx]?{...tratos[idx],hora:h.hora}:{hora:h.hora,tratado:false,kgFornecidos:0};
-        });
-        tratos=novosTratos;
+      if (!pm) pm = parseFloat(tanque.ultimoPesoMedio || lote.pesoMedioAlevino || 5) || 5;
+      
+      var gpd = obterGPD(pm);
+      var ca = pm <= 30 ? 1.0 : caSel;
+      var racaoDia = (tanque.qtdPeixes * gpd / 1000) * ca;
+      var tratos = _tratosAdminMap[tanque.num];
+      if (!tratos || !Array.isArray(tratos)) {
+        tratos = horarios.map(function(h) { return { hora: h.hora, tratado: false, kgFornecidos: 0 }; });
       }
       
       lista.push({
-        num:tanque.num, qtdPeixes:tanque.qtdPeixes, pesoMedio:pm,
-        loteId:lote.id, gpd:gpd, ca:ca, racaoDia:racaoDia,
-        tipoRacao:_tipoRacao(pm), tratos:tratos, pesoCopo:pesoCopo
+        num: tanque.num,
+        qtdPeixes: tanque.qtdPeixes,
+        pesoMedio: pm,
+        loteId: lote.id,
+        gpd: gpd,
+        ca: ca,
+        racaoDia: racaoDia,
+        tipoRacao: 'Ração',
+        tratos: tratos,
+        pesoCopo: pesoCopo
       });
     }
   }
@@ -1229,521 +645,482 @@ function _buildTanquesOcupados(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FUNÇÕES CORRIGIDAS DE TRATOS
+// SINCRONIZAR TRATO ADMIN (chave tratos_TXX)
 // ═══════════════════════════════════════════════════════════════
-
-async function _syncTratoAdmin(tanqueNum, tratoIdx, kgFornecido, hora, isManual = false) {
-    try {
-        const chave = 'tratos_' + tanqueNum;
-        let tratosAtual = await SB.userData.get(_adminId, chave).catch(() => null);
-        const horarios = (_horariosTratos && _horariosTratos.length) ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
-        
-        if (!tratosAtual || !Array.isArray(tratosAtual) || tratosAtual.length !== horarios.length) {
-            tratosAtual = horarios.map(h => ({ hora: h.hora, tratado: false, kgFornecidos: 0 }));
-        }
-        
-        if (tratosAtual[tratoIdx]) {
-            tratosAtual[tratoIdx] = {
-                ...tratosAtual[tratoIdx],
-                tratado: true,
-                kgFornecidos: kgFornecido,
-                registradoPor: isManual ? 'colaborador_manual' : 'colaborador',
-                registradoEm: new Date().toLocaleString('pt-BR')
-            };
-        }
-        
-        const session = JSON.parse(localStorage.getItem('aq_session') || 'null');
-        const token = session && session.access_token ? session.access_token : SB.key;
-        await fetch(SB.url + '/rest/v1/user_data', {
-            method: 'POST',
-            headers: {
-                'apikey': SB.key,
-                'Authorization': 'Bearer ' + token,
-                'Content-Type': 'application/json',
-                'Prefer': 'resolution=merge-duplicates,return=minimal'
-            },
-            body: JSON.stringify({ user_id: _adminId, full_key: chave, data_value: tratosAtual, updated_at: new Date().toISOString() })
-        });
-        
-        _tratosAdminMap[tanqueNum] = tratosAtual;
-        return true;
-    } catch (e) {
-        console.warn('_syncTratoAdmin error:', e);
-        return false;
+async function syncTratoAdmin(tanqueNum, tratoIdx, kgFornecido, hora) {
+  try {
+    var chave = 'tratos_' + tanqueNum;
+    var tratosAtual = _tratosAdminMap[tanqueNum] || [];
+    var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
+    
+    if (tratosAtual.length !== horarios.length) {
+      tratosAtual = horarios.map(function(h) { return { hora: h.hora, tratado: false, kgFornecidos: 0 }; });
     }
+    
+    if (tratoIdx >= 0 && tratosAtual[tratoIdx]) {
+      tratosAtual[tratoIdx] = {
+        ...tratosAtual[tratoIdx],
+        tratado: true,
+        kgFornecidos: kgFornecido,
+        registradoPor: 'colaborador',
+        registradoEm: new Date().toLocaleString('pt-BR')
+      };
+    }
+    
+    var session = JSON.parse(localStorage.getItem('aq_session') || 'null');
+    var token = session && session.access_token ? session.access_token : SB.key;
+    await fetch(SB.url + '/rest/v1/user_data', {
+      method: 'POST',
+      headers: {
+        'apikey': SB.key,
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({ user_id: _adminId, full_key: chave, data_value: tratosAtual, updated_at: new Date().toISOString() })
+    });
+    _tratosAdminMap[tanqueNum] = tratosAtual;
+    return true;
+  } catch (e) {
+    console.error('syncTratoAdmin error:', e);
+    return false;
+  }
 }
 
-async function _fornecerTrato(tankIdx, tratoIdx, kgRecomendado) {
-    const t = window._tankRenderList[tankIdx];
-    if (!t) return;
-    
-    const lote = _lotes.find(l => !l.encerrado && (l.tanques || []).some(lt => lt.num === t.num && !lt.despescado));
-    const hojeStr = hoje_str();
-    const horarios = (_horariosTratos && _horariosTratos.length) ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
-    const hora = (t.tratos && t.tratos[tratoIdx] && t.tratos[tratoIdx].hora) || horarios[tratoIdx]?.hora || new Date().toTimeString().slice(0, 5);
-    
-    const tipoRacao = (lote && lote.tanques && lote.tanques.find(lt => lt.num === t.num)?.tipoRacao) || t.tipoRacao || '';
-    
-    const reg = {
+// ═══════════════════════════════════════════════════════════════
+// REGISTRAR TRATO (FORNECER)
+// ═══════════════════════════════════════════════════════════════
+async function fornecerTrato(tankIdx, tratoIdx, kgRecomendado) {
+  var t = window._tankRenderList[tankIdx];
+  if (!t) return;
+  
+  var hojeStr = hoje();
+  var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
+  var hora = horarios[tratoIdx] ? horarios[tratoIdx].hora : new Date().toTimeString().slice(0, 5);
+  
+  var reg = {
+    colaborador_id: _user.id,
+    admin_id: _adminId,
+    data: hojeStr,
+    tanque_num: t.num,
+    lote_id: String(t.loteId),
+    kg_racao: kgRecomendado,
+    tipo_racao: t.tipoRacao || '',
+    hora_trato: hora,
+    obs: '',
+    status: 'pendente'
+  };
+  
+  try {
+    await SB.tratos.add(reg);
+    await syncTratoAdmin(t.num, tratoIdx, kgRecomendado, hora);
+    toast('✅ ' + kgRecomendado.toFixed(2) + 'kg · Tanque ' + t.num);
+    await atualizarTela();
+  } catch (e) {
+    toast('❌ Erro: ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TODOS TRATOS PENDENTES DE UM TANQUE
+// ═══════════════════════════════════════════════════════════════
+async function todosTratos(tankIdx) {
+  var t = window._tankRenderList[tankIdx];
+  if (!t) return;
+  
+  var horarios = t.tratos;
+  var kgPorTrato = t.racaoDia / horarios.length;
+  var hojeStr = hoje();
+  var count = 0;
+  
+  for (var i = 0; i < horarios.length; i++) {
+    if (!horarios[i].tratado) {
+      var reg = {
         colaborador_id: _user.id,
         admin_id: _adminId,
         data: hojeStr,
         tanque_num: t.num,
-        lote_id: lote ? String(lote.id) : '',
-        kg_racao: kgRecomendado,
-        tipo_racao: tipoRacao,
-        hora_trato: hora,
-        obs: '',
+        lote_id: String(t.loteId),
+        kg_racao: parseFloat(kgPorTrato.toFixed(2)),
+        tipo_racao: t.tipoRacao || '',
+        hora_trato: horarios[i].hora,
+        obs: 'Trato em lote',
         status: 'pendente'
+      };
+      try {
+        await SB.tratos.add(reg);
+        await syncTratoAdmin(t.num, i, parseFloat(kgPorTrato.toFixed(2)), horarios[i].hora);
+        count++;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+  
+  if (count > 0) {
+    toast('✅ ' + count + ' trato(s) registrados para o Tanque ' + t.num);
+    await atualizarTela();
+  } else {
+    toast('⚠️ Todos os tratos já foram realizados hoje!');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 1 TRATO TODOS (primeiro pendente de cada tanque)
+// ═══════════════════════════════════════════════════════════════
+async function umTratoTodos() {
+  var tanquesOcupados = buildTanquesOcupados();
+  var hojeStr = hoje();
+  var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
+  var total = 0;
+  
+  for (var i = 0; i < tanquesOcupados.length; i++) {
+    var t = tanquesOcupados[i];
+    var tratosAtuais = _tratosAdminMap[t.num];
+    if (!tratosAtuais) continue;
+    
+    var proximoIdx = -1;
+    for (var j = 0; j < tratosAtuais.length; j++) {
+      if (!tratosAtuais[j].tratado) {
+        proximoIdx = j;
+        break;
+      }
+    }
+    if (proximoIdx === -1) continue;
+    
+    var kgPorTrato = t.racaoDia / tratosAtuais.length;
+    var reg = {
+      colaborador_id: _user.id,
+      admin_id: _adminId,
+      data: hojeStr,
+      tanque_num: t.num,
+      lote_id: String(t.loteId),
+      kg_racao: parseFloat(kgPorTrato.toFixed(2)),
+      tipo_racao: t.tipoRacao || '',
+      hora_trato: tratosAtuais[proximoIdx].hora,
+      obs: '1 trato rápido',
+      status: 'pendente'
     };
     
     try {
-        const res = await SB.tratos.add(reg);
-        const novoTrato = Array.isArray(res) ? res[0] : { ...reg, id: Date.now(), created_at: new Date().toISOString() };
-        _tratos = [novoTrato, ..._tratos.filter(tr => !(tr.tanque_num === t.num && tr.data === hojeStr && tr.hora_trato === hora))];
-        
-        await _syncTratoAdmin(t.num, tratoIdx, kgRecomendado, hora, true);
-        
-        await carregarDados();
-        window._tankRenderList = _buildTanquesOcupados();
-        
-        toast('✅ Trato registrado! ' + kgRecomendado.toFixed(2) + 'kg · Tanque ' + t.num);
-        
-        renderTankCards();
-        renderDash();
-        renderTratos();
+      await SB.tratos.add(reg);
+      await syncTratoAdmin(t.num, proximoIdx, parseFloat(kgPorTrato.toFixed(2)), tratosAtuais[proximoIdx].hora);
+      total++;
     } catch (e) {
-        toast('❌ Erro ao registrar trato: ' + e.message);
-        console.error(e);
+      console.error('Erro no tanque ' + t.num, e);
     }
-}
-
-async function _todosTratos(tankIdx) {
-    const t = window._tankRenderList[tankIdx];
-    if (!t) return;
-    
-    const horarios = (t.tratos && t.tratos.length) ? t.tratos : 
-                     ((_horariosTratos && _horariosTratos.length) ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }]);
-    
-    const pendentes = [];
-    for (let i = 0; i < horarios.length; i++) {
-        const trato = t.tratos && t.tratos[i];
-        if (!trato || !trato.tratado) {
-            pendentes.push(i);
-        }
-    }
-    
-    if (pendentes.length === 0) {
-        toast('⚠️ Todos os tratos do Tanque ' + t.num + ' já foram realizados hoje!');
-        return;
-    }
-    
-    const kgPorTrato = t.racaoDia / horarios.length;
-    let count = 0;
-    
-    for (const idx of pendentes) {
-        const hora = horarios[idx].hora || '08:00';
-        const kgRecomendado = parseFloat(kgPorTrato.toFixed(2));
-        
-        const lote = _lotes.find(l => !l.encerrado && (l.tanques || []).some(lt => lt.num === t.num && !lt.despescado));
-        const reg = {
-            colaborador_id: _user.id,
-            admin_id: _adminId,
-            data: hoje_str(),
-            tanque_num: t.num,
-            lote_id: lote ? String(lote.id) : '',
-            kg_racao: kgRecomendado,
-            tipo_racao: t.tipoRacao || '',
-            hora_trato: hora,
-            obs: 'Trato em lote',
-            status: 'pendente'
-        };
-        
-        try {
-            await SB.tratos.add(reg);
-            await _syncTratoAdmin(t.num, idx, kgRecomendado, hora, false);
-            count++;
-        } catch (e) {
-            console.error('Erro ao registrar trato #' + idx, e);
-        }
-    }
-    
-    if (count > 0) {
-        toast('✅ ' + count + ' trato(s) registrado(s) para o Tanque ' + t.num);
-        await carregarDados();
-        window._tankRenderList = _buildTanquesOcupados();
-        renderTankCards();
-        renderDash();
-        renderTratos();
-    } else {
-        toast('❌ Nenhum trato foi registrado. Verifique sua conexão.');
-    }
-}
-
-async function umTratoTodos() {
-    const ativos = _tanques.filter(t => 
-        _lotes.some(l => !l.encerrado && (l.tanques || []).some(lt => lt.num === t.num && !lt.despescado && (lt.qtdPeixes || 0) > 0))
-    );
-    
-    if (!ativos.length) {
-        toast('⚠️ Nenhum tanque ativo');
-        return;
-    }
-    
-    const hoje = hoje_str();
-    const horaAtual = new Date().toTimeString().slice(0, 5);
-    const horarios = (_horariosTratos && _horariosTratos.length) ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
-    
-    let totalRegistros = 0;
-    let tanquesAtualizados = [];
-    
-    for (const t of ativos) {
-        let tratosAtuais = _tratosAdminMap[t.num];
-        if (!tratosAtuais || tratosAtuais.length !== horarios.length) {
-            tratosAtuais = horarios.map(h => ({ hora: h.hora, tratado: false, kgFornecidos: 0 }));
-        }
-        
-        let proximoIdx = -1;
-        for (let i = 0; i < tratosAtuais.length; i++) {
-            if (!tratosAtuais[i].tratado) {
-                proximoIdx = i;
-                break;
-            }
-        }
-        
-        if (proximoIdx === -1) continue;
-        
-        const lote = _lotes.find(l => !l.encerrado && (l.tanques || []).some(lt => lt.num === t.num && !lt.despescado));
-        const ltInfo = lote?.tanques?.find(lt => lt.num === t.num);
-        const qtd = ltInfo?.qtdPeixes || 0;
-        let pm = 0;
-        if (lote) {
-            if (lote.biometrias && lote.biometrias.length) {
-                const lastBio = lote.biometrias[lote.biometrias.length - 1];
-                pm = parseFloat(lastBio.pesoMedio || lastBio.peso || 0) || 0;
-            }
-            if (!pm && lote.biomassaInicial && lote.qtdTotal) pm = parseFloat((lote.biomassaInicial * 1000 / lote.qtdTotal).toFixed(1)) || 0;
-            if (!pm && lote.pesoMedioAlevino) pm = parseFloat(lote.pesoMedioAlevino) || 0;
-        }
-        const ca = parseFloat((ltInfo && ltInfo.ca) || 1.4) || 1.4;
-        const gpd = parseFloat((ltInfo && ltInfo.gpd) || 5) || 5;
-        const biomassa = (qtd * pm) / 1000;
-        const racaoDia = (biomassa * ca * gpd) / 1000;
-        const kgPorTrato = horarios.length > 0 ? racaoDia / horarios.length : 0;
-        
-        const reg = {
-            colaborador_id: _user.id,
-            admin_id: _adminId,
-            data: hoje,
-            tanque_num: t.num,
-            lote_id: lote ? String(lote.id) : '',
-            kg_racao: parseFloat(kgPorTrato.toFixed(2)),
-            tipo_racao: ltInfo?.tipoRacao || '',
-            hora_trato: horarios[proximoIdx].hora,
-            obs: '1 trato rápido',
-            status: 'pendente'
-        };
-        
-        try {
-            await SB.tratos.add(reg);
-            await _syncTratoAdmin(t.num, proximoIdx, parseFloat(kgPorTrato.toFixed(2)), horarios[proximoIdx].hora, false);
-            totalRegistros++;
-            tanquesAtualizados.push(t.num);
-        } catch (e) {
-            console.error('Erro ao registrar 1 trato no tanque', t.num, e);
-        }
-    }
-    
-    if (totalRegistros > 0) {
-        toast('✅ 1 trato registrado em ' + totalRegistros + ' tanque(s)!');
-        await carregarDados();
-        window._tankRenderList = _buildTanquesOcupados();
-        renderTankCards();
-        renderDash();
-        renderTratos();
-    } else {
-        toast('⚠️ Nenhum trato pendente encontrado. Todos os tanques já estão com os tratos do dia concluídos.');
-    }
-}
-
-async function concluirDia(){
-  if(!confirm('Finalizar dia de alimentação? Os tratos serão resetados para amanhã.'))return;
-  var lista=_buildTanquesOcupados();
-  var _hc3=typeof _horariosCalc!=='undefined'&&_horariosCalc.length?_horariosCalc:(_horariosTratos.length?_horariosTratos:[{hora:'08:00'},{hora:'12:30'},{hora:'17:00'}]);
-  var newTratos=_hc3.map(function(h){return {hora:h.hora,tratado:false,kgFornecidos:0};});
-  for(var i=0;i<lista.length;i++){
-    await _syncTratoAdmin(lista[i].num, -1, 0, '', false);
   }
-  toast('✅ Dia concluído! Tratos resetados para amanhã.');
-  renderTankCards();renderDash();
+  
+  if (total > 0) {
+    toast('✅ 1 trato em ' + total + ' tanque(s)!');
+    await atualizarTela();
+  } else {
+    toast('⚠️ Nenhum trato pendente encontrado!');
+  }
 }
 
-async function resetarDia(){
-  if(!confirm('Resetar TODOS os tratos de hoje?'))return;
-  var lista=_buildTanquesOcupados();
-  var _hc4=typeof _horariosCalc!=='undefined'&&_horariosCalc.length?_horariosCalc:(_horariosTratos.length?_horariosTratos:[{hora:'08:00'},{hora:'12:30'},{hora:'17:00'}]);
-  var newTratos=_hc4.map(function(h){return {hora:h.hora,tratado:false,kgFornecidos:0};});
-  var hojeStr=hoje_str();
-  for(var i=0;i<lista.length;i++){
-    await _syncTratoAdmin(lista[i].num, -1, 0, '', false);
+// ═══════════════════════════════════════════════════════════════
+// RESETAR DIA (limpar todos os tratos do admin)
+// ═══════════════════════════════════════════════════════════════
+async function resetarDia() {
+  if (!confirm('Resetar TODOS os tratos de hoje?')) return;
+  var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
+  var novosTratos = horarios.map(function(h) { return { hora: h.hora, tratado: false, kgFornecidos: 0 }; });
+  
+  for (var num in _tratosAdminMap) {
+    await syncTratoAdmin(parseInt(num), -1, 0, '');
   }
-  _tratos=_tratos.filter(function(tr){return tr.data!==hojeStr;});
+  
+  var hojeStr = hoje();
+  _tratos = _tratos.filter(function(tr) { return tr.data !== hojeStr; });
   toast('🔄 Todos os tratos resetados!');
-  renderTankCards();renderDash();renderTratos();
+  await atualizarTela();
 }
 
-function renderTankCards(){
-  var container=document.getElementById('tankCardsContainer');
-  if(!container)return;
+// ═══════════════════════════════════════════════════════════════
+// ATUALIZAR TELA APÓS QUALQUER OPERAÇÃO
+// ═══════════════════════════════════════════════════════════════
+async function atualizarTela() {
+  await carregarDados();
+  window._tankRenderList = buildTanquesOcupados();
+  renderTankCards();
+  renderDash();
+  renderTratos();
+  renderMort();
+  renderVendas();
+}
 
-  var lista=_buildTanquesOcupados();
-  window._tankRenderList=lista;
+// ═══════════════════════════════════════════════════════════════
+// RENDER CARDS DOS TANQUES
+// ═══════════════════════════════════════════════════════════════
+window._tankRenderList = [];
+var _abertos = new Set();
 
-  if(!lista.length){
-    container.innerHTML='<div class="empty"><span class="empty-ico">🏞️</span>'+(_tanques.length?'Nenhum tanque com lote ativo.':'Nenhum tanque cadastrado.')+'</div>';
+function renderTankCards() {
+  var container = document.getElementById('tankCardsContainer');
+  if (!container) return;
+  
+  var lista = window._tankRenderList;
+  if (!lista.length) {
+    container.innerHTML = '<div class="empty"><span class="empty-ico">🏞️</span>Nenhum tanque ativo</div>';
     return;
   }
-
-  var horarios=(_horariosTratos&&_horariosTratos.length)?_horariosTratos:[{hora:'08:00'},{hora:'12:30'},{hora:'17:00'}];
-  var html='';
-
-  for(var i=0;i<lista.length;i++){
-    var t=lista[i];
-    var totalKgForn=t.tratos.reduce(function(s,tr){return s+(tr.tratado?(parseFloat(tr.kgFornecidos)||0):0);},0);
-    var todosTratados=t.tratos.length>0&&t.tratos.every(function(tr){return tr.tratado;});
-    var progPct=t.racaoDia>0?Math.min(100,(totalKgForn/t.racaoDia)*100):0;
-    var statusClass=todosTratados?'concluido':'pendente';
-    var statusLabel=todosTratados?'✅ Concluído':'⏳ Pendente';
-    var detailId='td_'+t.num;
-    var chevronId='chv_'+t.num;
-    var isOpen=_abertosColab.has(detailId);
+  
+  var html = '';
+  for (var i = 0; i < lista.length; i++) {
+    var t = lista[i];
+    var totalKg = t.tratos.reduce(function(s, tr) { return s + (tr.tratado ? (tr.kgFornecidos || 0) : 0); }, 0);
+    var todosFeitos = t.tratos.every(function(tr) { return tr.tratado; });
+    var pct = t.racaoDia > 0 ? (totalKg / t.racaoDia) * 100 : 0;
+    var detailId = 'td_' + t.num;
+    var chevId = 'chv_' + t.num;
+    var aberto = _abertos.has(detailId);
     
-    var racaoPorTrato=t.racaoDia/horarios.length;
-    var coposPorTrato=t.pesoCopo>0?(racaoPorTrato/t.pesoCopo).toFixed(1):'—';
-    var coposDia=t.pesoCopo>0?(t.racaoDia/t.pesoCopo).toFixed(1):'—';
-
-    var tratosHtml='';
-    for(var h=0;h<t.tratos.length;h++){
-      var trato=t.tratos[h];
-      var done=trato.tratado;
-      var action='';
-      if(!done){
-        action='<button onclick="_fornecerTrato('+i+','+h+','+racaoPorTrato.toFixed(2)+')" style="background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:10px;color:#fff;font-size:.72rem;font-weight:700;padding:6px 14px;cursor:pointer;white-space:nowrap">✅ Fornecer</button>';
-      } else {
-        action='<div style="display:flex;align-items:center;gap:5px">'+
-          '<span style="font-size:.72rem;color:var(--green);font-weight:600">✅ '+parseFloat(trato.kgFornecidos||0).toFixed(2)+'kg'+(trato.registradoPor==='colaborador'?' 👷':'')+'</span>'+
-          '</div>';
-      }
-      tratosHtml+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)'+(h===t.tratos.length-1?';border-bottom:none':'')+'">'+ 
-        '<div>'+
-          '<div style="font-size:.8rem;font-weight:600;color:'+(done?'var(--green)':'var(--text)')+'">'+(h+1)+'º Trato — '+trato.hora+'</div>'+
-          '<div style="font-size:.72rem;color:var(--text3)">'+racaoPorTrato.toFixed(2)+' kg · '+coposPorTrato+' copos</div>'+
-        '</div>'+
-        action+'</div>';
+    var tratosHtml = '';
+    var kgPorTrato = t.racaoDia / t.tratos.length;
+    for (var j = 0; j < t.tratos.length; j++) {
+      var tr = t.tratos[j];
+      var feito = tr.tratado;
+      tratosHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
+        '<div><div style="font-weight:600">' + (j + 1) + 'º Trato — ' + tr.hora + '</div>' +
+        '<div style="font-size:.7rem;color:var(--text3)">' + kgPorTrato.toFixed(2) + ' kg</div></div>' +
+        (feito ? '<div><span style="color:var(--green)">✅ ' + (tr.kgFornecidos || 0).toFixed(2) + 'kg</span></div>' :
+         '<button onclick="fornecerTrato(' + i + ',' + j + ',' + kgPorTrato.toFixed(2) + ')" style="background:#16a34a;padding:6px 14px;font-size:.7rem">Fornecer</button>') +
+        '</div>';
     }
-
-    html+='<div class="tank-card '+(todosTratados?'done':'')+'" style="margin:8px 0">'+
-      '<div class="tank-header" onclick="_tcardColab(this)" style="cursor:pointer" data-detail="'+detailId+'" data-chev="'+chevronId+'">'+
-        '<div class="tank-info">'+
-          '<div class="tank-name">🏞️ Tanque '+t.num+
-            ' <small style="font-weight:500;color:var(--text3);font-size:.65rem">Lote #'+String(t.loteId).slice(-4)+'</small>'+
-            ' <small style="font-weight:700;color:var(--cyan);font-size:.68rem;background:rgba(6,214,240,.1);padding:1px 7px;border-radius:20px">🥤 '+coposPorTrato+' copos/trato · '+coposDia+' copos/dia</small>'+
-          '</div>'+
-          '<div class="tank-meta">'+t.qtdPeixes+' peixes · '+t.pesoMedio.toFixed(0)+'g · '+t.tipoRacao+'</div>'+
-          '<div class="tank-progress-wrap">'+
-            '<div class="tank-progress-bar"><div class="tank-progress-fill '+(todosTratados?'done':'')+'" style="width:'+progPct.toFixed(1)+'%"></div></div>'+
-            '<div class="tank-progress-text">'+totalKgForn.toFixed(1)+' / '+t.racaoDia.toFixed(1)+' kg · faltam '+Math.max(0,t.racaoDia-totalKgForn).toFixed(1)+' kg</div>'+
-          '</div>'+
-        '</div>'+
-        '<div class="tank-right">'+
-          '<span class="status-pill '+statusClass+'">'+statusLabel+'</span>'+
-          '<span class="tank-chevron '+(isOpen?'open':'')+'" id="'+chevronId+'">▼</span>'+
-        '</div>'+
-      '</div>'+
-      '<div class="tank-details" id="'+detailId+'" style="display:'+(isOpen?'block':'none')+'">'+
-        '<div style="font-size:.75rem;font-weight:600;color:var(--text2);margin-bottom:10px">'+
-          '🍽️ '+t.racaoDia.toFixed(2)+' kg/dia · CA '+t.ca.toFixed(2)+' · GPD '+t.gpd.toFixed(2)+'g · Copo '+t.pesoCopo+'kg'+
-        '</div>'+
-        tratosHtml+
-        '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
-          '<button onclick="_todosTratos('+i+')" style="flex:1;background:var(--green);border:none;border-radius:10px;color:#000;font-size:.72rem;font-weight:700;padding:8px;cursor:pointer">🎯 Todos pendentes</button>'+
-          '<button onclick="_resetarTanque('+i+')" style="flex:1;background:var(--surf);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.72rem;font-weight:700;padding:8px;cursor:pointer">🔄 Resetar</button>'+
-        '</div>'+
-      '</div>'+
+    
+    html += '<div class="tank-card ' + (todosFeitos ? 'done' : '') + '">' +
+      '<div class="tank-header" onclick="toggleDetalhe(\'' + detailId + '\', \'' + chevId + '\')">' +
+        '<div class="tank-info">' +
+          '<div class="tank-name">🏞️ Tanque ' + t.num + ' <small style="color:var(--text3)">Lote #' + String(t.loteId).slice(-4) + '</small></div>' +
+          '<div class="tank-meta">' + t.qtdPeixes + ' peixes · ' + t.pesoMedio.toFixed(0) + 'g</div>' +
+          '<div class="tank-progress-wrap">' +
+            '<div class="tank-progress-bar"><div class="tank-progress-fill ' + (todosFeitos ? 'done' : '') + '" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+            '<div class="tank-progress-text">' + totalKg.toFixed(1) + ' / ' + t.racaoDia.toFixed(1) + ' kg</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="tank-right">' +
+          '<span class="status-pill ' + (todosFeitos ? 'concluido' : 'pendente') + '">' + (todosFeitos ? '✅ Concluído' : '⏳ Pendente') + '</span>' +
+          '<span class="tank-chevron" id="' + chevId + '">▼</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tank-details" id="' + detailId + '" style="display:' + (aberto ? 'block' : 'none') + '">' +
+        '<div style="margin-bottom:10px;font-size:.75rem">🍽️ ' + t.racaoDia.toFixed(2) + ' kg/dia · CA ' + t.ca.toFixed(2) + ' · GPD ' + t.gpd.toFixed(2) + 'g</div>' +
+        tratosHtml +
+        '<div style="display:flex;gap:8px;margin-top:12px">' +
+          '<button onclick="todosTratos(' + i + ')" style="flex:1;background:var(--green);color:#000">🎯 Todos pendentes</button>' +
+        '</div>' +
+      '</div>' +
     '</div>';
   }
-  container.innerHTML=html;
+  container.innerHTML = html;
 }
 
-function _tcardColab(el){
-  var detailId=el.dataset.detail;var chevronId=el.dataset.chev;
-  var d=document.getElementById(detailId);var c=document.getElementById(chevronId);
-  if(!d)return;
-  var op=d.style.display==='none';
-  d.style.display=op?'block':'none';
-  if(op)_abertosColab.add(detailId);else _abertosColab.delete(detailId);
-  if(c)c.classList.toggle('open',op);
+function toggleDetalhe(detailId, chevId) {
+  var d = document.getElementById(detailId);
+  var c = document.getElementById(chevId);
+  if (!d) return;
+  var visible = d.style.display !== 'none';
+  d.style.display = visible ? 'none' : 'block';
+  if (c) c.classList.toggle('open', !visible);
+  if (!visible) _abertos.add(detailId);
+  else _abertos.delete(detailId);
 }
 
-async function _resetarTanque(tankIdx){
-  var t=window._tankRenderList[tankIdx];
-  if(!t||!confirm('Resetar tratos de hoje do Tanque '+t.num+'?'))return;
-  var hojeStr=hoje_str();
-  _tratos=_tratos.filter(function(tr){return !(tr.tanque_num===t.num&&tr.data===hojeStr);});
-  toast('🔄 Tratos do Tanque '+t.num+' resetados!');
-  renderTankCards();renderDash();renderTratos();
+// ═══════════════════════════════════════════════════════════════
+// RENDER DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDash() {
+  var h = hoje();
+  var tH = _tratos.filter(function(t) { return t.data === h; });
+  var mH = _mort.filter(function(m) { return m.data === h; });
+  var vH = _vendas.filter(function(v) { return v.data === h; });
+  document.getElementById('kTratos').textContent = tH.length;
+  document.getElementById('kMort').textContent = mH.reduce(function(s, m) { return s + (m.quantidade || 0); }, 0);
+  document.getElementById('kVendas').textContent = vH.length;
+  
+  // Tarefas do dia
+  var tanquesAtivos = buildTanquesOcupados();
+  var tarefasHtml = tanquesAtivos.length ? tanquesAtivos.map(function(t) {
+    var feito = t.tratos.every(function(tr) { return tr.tratado; });
+    return '<div class="task ' + (feito ? 'done' : 'pend') + '">' +
+      '<span class="task-ico">' + (feito ? '✅' : '⏳') + '</span>' +
+      '<div><div class="task-t">Tanque ' + t.num + ' — Alimentação</div>' +
+      '<div class="task-s">' + (feito ? 'Concluído' : 'Pendente') + '</div></div>' +
+      (!feito ? '<button class="btn-sm" style="margin-left:auto" onclick="navTo(\'alimentacao\')">Registrar</button>' : '') +
+      '</div>';
+  }).join('') : '<div class="empty">Sem tanques ativos</div>';
+  document.getElementById('listaTarefas').innerHTML = tarefasHtml;
+  
+  // Últimos registros
+  var ultimos = [].concat(
+    _tratos.slice(0, 5).map(function(t) { return { ico: '🌾', desc: 'Trato Tanque ' + t.tanque_num + ' - ' + t.kg_racao + 'kg', st: t.status }; }),
+    _mort.slice(0, 3).map(function(m) { return { ico: '💀', desc: 'Mortalidade Tanque ' + m.tanque_num + ' - ' + m.quantidade + ' peixes', st: m.status }; }),
+    _vendas.slice(0, 3).map(function(v) { return { ico: '🛒', desc: 'Venda - ' + fmtR(v.valor_total), st: v.status }; })
+  ).slice(0, 6);
+  document.getElementById('ultimosRegs').innerHTML = ultimos.length ? ultimos.map(function(r) {
+    return '<div class="task pend"><span class="task-ico">' + r.ico + '</span><div><div class="task-t">' + r.desc + '</div><div class="task-s">' + stBadge(r.st) + '</div></div></div>';
+  }).join('') : '<div class="empty">Nenhum registro</div>';
 }
 
-async function salvarTrato(){
-  if(!_wifiOk&&_wifis.length){toast('📵 Conecte-se ao WiFi da piscicultura');return;}
-  var data=document.getElementById('aData').value;
-  var tanque=document.getElementById('aTanque').value;
-  var kg=parseFloat(document.getElementById('aKg').value);
-  var hora=document.getElementById('aHora').value;
-  var tipo=document.getElementById('aTipo').value;
-  var obs=(document.getElementById('aObs').value||'').trim();
-  if(!data){toast('⚠️ Informe a data');return;}
-  if(!tanque){toast('⚠️ Selecione o tanque');return;}
-  if(!kg||kg<=0){toast('⚠️ Informe a quantidade em kg');return;}
-  var lote=_lotes.find(function(l){return !l.encerrado&&(l.tanques||[]).some(function(lt){return lt.num===tanque&&!lt.despescado;});});
-  var reg={colaborador_id:_user.id,admin_id:_adminId,data:data,tanque_num:tanque,lote_id:lote?String(lote.id):'',kg_racao:kg,tipo_racao:tipo,hora_trato:hora,obs:obs,status:'pendente'};
-  try{
-    var res=await SB.tratos.add(reg);
-    _tratos.unshift(Array.isArray(res)?res[0]:{...reg,id:Date.now(),created_at:new Date().toISOString()});
-    toast('✅ Trato registrado!');
-    document.getElementById('aKg').value='';
-    document.getElementById('aObs').value='';
-    renderDash();renderTratos();
-  }catch(e){toast('❌ '+e.message);}
+function renderTratos() {
+  var h = hoje();
+  var hj = _tratos.filter(function(t) { return t.data === h; });
+  document.getElementById('tratosHoje').innerHTML = hj.length ? hj.map(function(t) {
+    return '<div class="li"><div class="li-m"><div class="li-t">🏞️ Tanque ' + t.tanque_num + ' — ' + t.kg_racao + 'kg</div><div class="li-s">⏰ ' + (t.hora_trato || '—') + ' · ' + stBadge(t.status) + (t.obs ? '<br>📝 ' + t.obs : '') + '</div></div></div>';
+  }).join('') : '<div class="empty">Nenhum trato hoje</div>';
 }
 
-function renderTratos(){
-  var h=hoje();
-  var hj=_tratos.filter(function(t){return t.data===h;});
-  var hist=_tratos.filter(function(t){return t.data!==h;}).slice(0,12);
-  var hDiv=document.getElementById('tratosHoje');
-  hDiv.innerHTML=hj.length?hj.map(function(t){
-    return '<div class="li"><div class="li-m"><div class="li-t">🏞️ Tanque '+t.tanque_num+' — '+t.kg_racao+'kg</div><div class="li-s">⏰ '+(t.hora_trato||'—')+' · '+(t.tipo_racao||'—')+' · '+stBadge(t.status)+(t.obs?'<br>📝 '+t.obs:'')+'</div></div></div>';
-  }).join(''):'<div class="empty"><span class="empty-ico">🌾</span>Nenhum trato hoje</div>';
-  var htDiv=document.getElementById('tratosHist');
-  htDiv.innerHTML=hist.length?hist.map(function(t){
-    return '<div class="li"><div class="li-m"><div class="li-t">🏞️ Tanque '+t.tanque_num+' — '+t.kg_racao+'kg</div><div class="li-s">📅 '+fmtData(t.data)+' · '+stBadge(t.status)+'</div></div></div>';
-  }).join(''):'<div class="empty"><span class="empty-ico">📋</span>Nenhum histórico</div>';
+function renderMort() {
+  document.getElementById('listaMort').innerHTML = _mort.length ? _mort.slice(0, 10).map(function(m) {
+    return '<div class="li"><div class="li-m"><div class="li-t">🏞️ Tanque ' + m.tanque_num + ' — ' + m.quantidade + ' peixes</div><div class="li-s">📅 ' + fmtData(m.data) + ' · ' + stBadge(m.status) + '</div></div></div>';
+  }).join('') : '<div class="empty">Nenhum registro</div>';
 }
 
-/* ── Salvar Mortalidade ───────────────────── */
-async function salvarMort(){
-  if(!_wifiOk&&_wifis.length){toast('📵 Conecte-se ao WiFi da piscicultura');return;}
-  var data=document.getElementById('mData').value;
-  var tanque=document.getElementById('mTanque').value;
-  var qtd=parseInt(document.getElementById('mQtd').value);
-  var causa=document.getElementById('mCausa').value;
-  var obs=(document.getElementById('mObs').value||'').trim();
-  if(!data){toast('⚠️ Informe a data');return;}
-  if(!tanque){toast('⚠️ Selecione o tanque');return;}
-  if(!qtd||qtd<=0){toast('⚠️ Informe a quantidade');return;}
-  if(!causa){toast('⚠️ Selecione a causa');return;}
-  var lote=_lotes.find(function(l){return !l.encerrado&&(l.tanques||[]).some(function(lt){return lt.num===tanque&&!lt.despescado;});});
-  var reg={colaborador_id:_user.id,admin_id:_adminId,data:data,tanque_num:tanque,lote_id:lote?String(lote.id):'',quantidade:qtd,causa:causa,obs:obs,status:'pendente'};
-  try{
-    var res=await SB.mortalidade.add(reg);
-    _mort.unshift(Array.isArray(res)?res[0]:{...reg,id:Date.now(),created_at:new Date().toISOString()});
+function renderVendas() {
+  document.getElementById('listaVendas').innerHTML = _vendas.length ? _vendas.slice(0, 10).map(function(v) {
+    return '<div class="li"><div class="li-m"><div class="li-t">👤 ' + (v.cliente || 'sem nome') + ' — ' + fmtR(v.valor_total) + '</div><div class="li-s">📅 ' + fmtData(v.data) + ' · ' + v.kg_vendidos + 'kg · ' + stBadge(v.status) + '</div></div></div>';
+  }).join('') : '<div class="empty">Nenhuma venda</div>';
+}
+
+function calcTotal() {
+  var kg = parseFloat(document.getElementById('vKg').value) || 0;
+  var pr = parseFloat(document.getElementById('vPreco').value) || 0;
+  document.getElementById('vTotal').textContent = fmtR(kg * pr);
+}
+
+async function salvarMort() {
+  var reg = {
+    colaborador_id: _user.id,
+    admin_id: _adminId,
+    data: document.getElementById('mData').value,
+    tanque_num: document.getElementById('mTanque').value,
+    quantidade: parseInt(document.getElementById('mQtd').value),
+    causa: document.getElementById('mCausa').value,
+    obs: '',
+    status: 'pendente'
+  };
+  try {
+    await SB.mortalidade.add(reg);
     toast('✅ Mortalidade registrada!');
-    document.getElementById('mQtd').value='';
-    document.getElementById('mObs').value='';
-    document.getElementById('mCausa').value='';
-    renderDash();renderMort();
-  }catch(e){toast('❌ '+e.message);}
+    await atualizarTela();
+    document.getElementById('mQtd').value = '';
+  } catch (e) { toast('❌ ' + e.message); }
 }
 
-function renderMort(){
-  var div=document.getElementById('listaMort');
-  div.innerHTML=_mort.length?_mort.slice(0,20).map(function(m){
-    return '<div class="li"><div class="li-m"><div class="li-t">🏞️ Tanque '+m.tanque_num+' — <span style="color:var(--red)">'+m.quantidade+' peixe(s)</span></div><div class="li-s">📅 '+fmtData(m.data)+' · '+(m.causa||'—')+' · '+stBadge(m.status)+(m.obs?'<br>📝 '+m.obs:'')+'</div></div></div>';
-  }).join(''):'<div class="empty"><span class="empty-ico">💀</span>Nenhum registro</div>';
-}
-
-/* ── Salvar Venda ─────────────────────────── */
-function calcTotal(){
-  var kg=parseFloat(document.getElementById('vKg').value)||0;
-  var pr=parseFloat(document.getElementById('vPreco').value)||0;
-  document.getElementById('vTotal').textContent=fmtR(kg*pr);
-}
-
-async function salvarVenda(){
-  if(!_wifiOk&&_wifis.length){toast('📵 Conecte-se ao WiFi da piscicultura');return;}
-  var data=document.getElementById('vData').value;
-  var cliente=(document.getElementById('vCliente').value||'').trim();
-  var tel=(document.getElementById('vTel').value||'').trim();
-  var tanque=document.getElementById('vTanque').value;
-  var cat=document.getElementById('vCat').value;
-  var kg=parseFloat(document.getElementById('vKg').value);
-  var preco=parseFloat(document.getElementById('vPreco').value);
-  var pag=document.getElementById('vPag').value;
-  var obs=(document.getElementById('vObs').value||'').trim();
-  if(!data){toast('⚠️ Informe a data');return;}
-  if(!cliente){toast('⚠️ Informe o nome do cliente');return;}
-  if(!kg||kg<=0){toast('⚠️ Informe os kg vendidos');return;}
-  if(!preco||preco<=0){toast('⚠️ Informe o preço por kg');return;}
-  var lote=tanque?_lotes.find(function(l){return !l.encerrado&&(l.tanques||[]).some(function(lt){return lt.num===tanque&&!lt.despescado;});}):null;
-  var reg={colaborador_id:_user.id,admin_id:_adminId,data:data,cliente:cliente,telefone:tel,tanque_origem:tanque,lote_id:lote?String(lote.id):'',kg_vendidos:kg,valor_kg:preco,valor_total:kg*preco,categoria:cat,forma_pagamento:pag,obs:obs,status:'pendente'};
-  try{
-    var res=await SB.vendas.add(reg);
-    _vendas.unshift(Array.isArray(res)?res[0]:{...reg,id:Date.now(),created_at:new Date().toISOString()});
+async function salvarVenda() {
+  var kg = parseFloat(document.getElementById('vKg').value);
+  var preco = parseFloat(document.getElementById('vPreco').value);
+  var reg = {
+    colaborador_id: _user.id,
+    admin_id: _adminId,
+    data: document.getElementById('vData').value,
+    cliente: document.getElementById('vCliente').value,
+    kg_vendidos: kg,
+    valor_kg: preco,
+    valor_total: kg * preco,
+    tanque_origem: document.getElementById('vTanque').value,
+    forma_pagamento: '',
+    obs: '',
+    status: 'pendente'
+  };
+  try {
+    await SB.vendas.add(reg);
     toast('✅ Venda registrada!');
-    ['vCliente','vTel','vKg','vPreco','vObs'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-    document.getElementById('vTotal').textContent='R$ 0,00';
-    renderDash();renderVendas();
-  }catch(e){toast('❌ '+e.message);}
+    await atualizarTela();
+    document.getElementById('vCliente').value = '';
+    document.getElementById('vKg').value = '';
+    document.getElementById('vPreco').value = '';
+    document.getElementById('vTotal').textContent = 'R$ 0,00';
+  } catch (e) { toast('❌ ' + e.message); }
 }
 
-function renderVendas(){
-  var div=document.getElementById('listaVendas');
-  div.innerHTML=_vendas.length?_vendas.slice(0,20).map(function(v){
-    return '<div class="li"><div class="li-m"><div class="li-t">👤 '+(v.cliente||'sem nome')+' — <span style="color:var(--amber)">'+fmtR(v.valor_total)+'</span></div><div class="li-s">📅 '+fmtData(v.data)+' · '+v.kg_vendidos+'kg · '+(v.tanque_origem?'Tanque '+v.tanque_origem+' · ':'')+stBadge(v.status)+'</div></div></div>';
-  }).join(''):'<div class="empty"><span class="empty-ico">🛒</span>Nenhuma venda registrada</div>';
+// ═══════════════════════════════════════════════════════════════
+// CLOCK E NAVEGAÇÃO
+// ═══════════════════════════════════════════════════════════════
+function tickClock() {
+  var now = new Date();
+  document.getElementById('heroTime').textContent = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+  document.getElementById('heroDate').textContent = now.toLocaleDateString('pt-BR');
 }
 
-/* ── Navegação ────────────────────────────── */
-function navTo(p){
-  document.querySelectorAll('.page').forEach(function(pg){pg.classList.remove('active');});
-  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('active');});
-  document.getElementById('pg-'+p).classList.add('active');
-  var nb=document.getElementById('nb-'+p);if(nb)nb.classList.add('active');
-  window.scrollTo(0,0);
-  if(p==='alimentacao'){
-    renderTankCards();
-    popularSelects();
-  }
+function navTo(p) {
+  document.querySelectorAll('.page').forEach(function(pg) { pg.classList.remove('active'); });
+  document.getElementById('pg-' + p).classList.add('active');
+  window.scrollTo(0, 0);
 }
 
-/* ══ BOOT ════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded',async function(){
-  var cfg={};try{cfg=JSON.parse(localStorage.getItem('aq_config')||'{}');}catch(e){}
-  if(!cfg.url||!cfg.key){window.location.href='index.html';return;}
+async function sincronizar() {
+  setLoading('Sincronizando...');
+  await atualizarTela();
+  hideLoading();
+  toast('✅ Sincronizado!');
+}
 
-  var adminLabel=document.getElementById('lgAdminLabel');
-  if(adminLabel&&cfg.adminNome)adminLabel.textContent=cfg.adminNome;
+async function iniciarPagina() {
+  document.getElementById('appWrap').style.display = 'block';
+  setLoading('Carregando...');
+  await carregarDados();
+  popularSelects();
+  var hojeStr = hoje();
+  document.getElementById('mData').value = hojeStr;
+  document.getElementById('vData').value = hojeStr;
+  window._tankRenderList = buildTanquesOcupados();
+  renderTankCards();
+  renderDash();
+  renderTratos();
+  renderMort();
+  renderVendas();
+  hideLoading();
+  tickClock();
+  setInterval(tickClock, 1000);
+}
 
-  var sess=SB.auth.session();
-  if(sess){
-    _user=sess.user;
-    setLoading('Verificando sessão...');
-    try{
-      _perfil=await SB.perfil();
-      if(_perfil&&_perfil.role==='colaborador'&&_perfil.ativo){
-        _adminId=_perfil.admin_id;
-        setUI(_perfil.nome||sess.user.email.split('@')[0],sess.user.email);
-        ov('ovLogin',false);
+async function init() {
+  await checkWifi();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  var sess = SB.auth.session();
+  if (sess) {
+    _user = sess.user;
+    setLoading('Verificando...');
+    SB.perfil().then(function(p) {
+      if (p && p.role === 'colaborador' && p.ativo) {
+        _perfil = p;
+        _adminId = p.admin_id;
+        document.getElementById('hdrNome').textContent = p.nome || _user.email.split('@')[0];
+        document.getElementById('ddNome').textContent = p.nome || _user.email.split('@')[0];
+        document.getElementById('ddEmail').textContent = _user.email;
+        ov('ovLogin', false);
         hideLoading();
-        await init();
+        init();
         return;
       }
-    }catch(e){}
-    SB.auth.signOut();
-    hideLoading();
+      SB.auth.signOut();
+      hideLoading();
+    }).catch(function() { hideLoading(); });
   }
 });
+
+// EXPOR FUNÇÕES GLOBAIS
+window.fornecerTrato = fornecerTrato;
+window.todosTratos = todosTratos;
+window.umTratoTodos = umTratoTodos;
+window.resetarDia = resetarDia;
+window.toggleDetalhe = toggleDetalhe;
+window.salvarMort = salvarMort;
+window.salvarVenda = salvarVenda;
+window.calcTotal = calcTotal;
+window.navTo = navTo;
+window.sincronizar = sincronizar;
+window.toggleDD = toggleDD;
+window.logout = logout;
+window.login = login;
+window.checkWifi = checkWifi;
 </script>
 </body>
 </html>
