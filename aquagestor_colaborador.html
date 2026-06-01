@@ -326,7 +326,7 @@ header {
 .btn-dia { background: linear-gradient(135deg, #16a34a, #15803d); }
 .btn-reset { background: linear-gradient(135deg, #dc2626, #b91c1c); }
 
-/* Tank Card - Estilo igual à imagem */
+/* Tank Card */
 .tank-card {
   background: #0f172a;
   border-radius: 20px;
@@ -338,114 +338,22 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  cursor: pointer;
 }
-.tank-name {
-  font-size: 1rem;
-  font-weight: 800;
-}
-.tank-lote {
-  font-size: 0.7rem;
-  color: #64748b;
-  margin-top: 2px;
-}
-.tank-copos {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #06b6d4;
-  background: rgba(6, 182, 212, 0.1);
-  padding: 2px 10px;
-  border-radius: 20px;
-  display: inline-block;
-  margin-top: 6px;
-}
-.tank-stats {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  margin: 8px 0;
-}
-.tank-stats strong { color: #f1f5f9; }
-.tank-progress {
-  margin: 10px 0;
-}
-.progress-bar {
-  background: #1e293b;
-  border-radius: 99px;
-  height: 8px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 99px;
-  background: #3b82f6;
-  transition: width 0.3s;
-}
+.tank-name { font-size: 1rem; font-weight: 800; }
+.tank-lote { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+.tank-copos { font-size: 0.7rem; font-weight: 700; color: #06b6d4; background: rgba(6, 182, 212, 0.1); padding: 2px 10px; border-radius: 20px; display: inline-block; margin-top: 6px; }
+.tank-stats { font-size: 0.75rem; color: #94a3b8; margin: 8px 0; }
+.tank-progress { margin: 10px 0; }
+.progress-bar { background: #1e293b; border-radius: 99px; height: 8px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; background: #3b82f6; transition: width 0.3s; }
 .progress-fill.done { background: #22c55e; }
-.progress-text {
-  font-size: 0.7rem;
-  color: #64748b;
-  margin-top: 6px;
-  display: flex;
-  justify-content: space-between;
-}
-.tank-right {
-  text-align: right;
-}
-.status-pill {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 99px;
-  font-size: 0.7rem;
-  font-weight: 700;
-}
+.progress-text { font-size: 0.7rem; color: #64748b; margin-top: 6px; display: flex; justify-content: space-between; }
+.tank-right { text-align: right; }
+.status-pill { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; }
 .status-pill.pendente { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 .status-pill.concluido { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-.tank-details {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #1e293b;
-  display: none;
-}
-.tank-details.open { display: block; }
-.trato-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #1e293b;
-}
-.trato-row:last-child { border-bottom: none; }
-.trato-time { font-weight: 600; font-size: 0.8rem; }
-.trato-kg { font-size: 0.7rem; color: #64748b; }
-.trato-btn {
-  background: #22c55e;
-  border: none;
-  border-radius: 10px;
-  padding: 6px 14px;
-  color: #000;
-  font-size: 0.7rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-.trato-done {
-  color: #22c55e;
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-.tank-footer {
-  display: flex;
-  gap: 8px;
-  margin-top: 16px;
-}
-.tank-footer button {
-  flex: 1;
-  padding: 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-}
+.tank-footer { display: flex; gap: 8px; margin-top: 12px; }
+.tank-footer button { flex: 1; padding: 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; border: none; }
 .btn-pendentes { background: #22c55e; color: #000; }
 .btn-reset-tanque { background: #1e293b; color: #f1f5f9; border: 1px solid #334155; }
 
@@ -456,36 +364,37 @@ header {
   padding: 16px;
   margin-top: 20px;
 }
-.consumo-titulo {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #94a3b8;
-  margin-bottom: 12px;
-}
-.consumo-lista {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.consumo-item {
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  font-size: 0.75rem;
-}
+.consumo-titulo { font-size: 0.8rem; font-weight: 700; color: #94a3b8; margin-bottom: 12px; }
+.consumo-lista { display: flex; flex-wrap: wrap; gap: 12px; }
+.consumo-item { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 8px 12px; display: flex; justify-content: space-between; gap: 16px; font-size: 0.75rem; }
 .consumo-item span:first-child { color: #94a3b8; }
 .consumo-item span:last-child { font-weight: 700; color: #f1f5f9; }
-.consumo-total {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #1e293b;
-  display: flex;
-  justify-content: space-between;
-  font-weight: 800;
+.consumo-total { margin-top: 12px; padding-top: 12px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; font-weight: 800; }
+
+/* Formulários */
+.ff { margin-bottom: 12px; }
+.ff label { display: block; font-size: 0.7rem; font-weight: 600; color: #94a3b8; margin-bottom: 5px; }
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #1e293b;
+  background: #1e293b;
+  color: #f1f5f9;
+  font-family: inherit;
+  font-size: 0.85rem;
 }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-primary { background: #3b82f6; border: none; border-radius: 99px; padding: 12px 24px; color: #fff; font-weight: 700; cursor: pointer; width: 100%; }
+.btn-red { background: #ef4444; border: none; border-radius: 99px; padding: 12px; color: #fff; font-weight: 700; cursor: pointer; width: 100%; }
+.btn-amber { background: #f59e0b; border: none; border-radius: 99px; padding: 12px; color: #000; font-weight: 700; cursor: pointer; width: 100%; }
+.venda-preview { background: #1e293b; border-radius: 14px; padding: 12px; margin: 12px 0; display: flex; justify-content: space-between; }
+.li { background: #1e293b; border-radius: 14px; padding: 12px; margin: 8px 0; }
+.li-t { font-weight: 700; font-size: 0.85rem; }
+.li-s { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
+.empty { text-align: center; padding: 40px; color: #64748b; }
+.st { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.6rem; font-weight: 700; }
+.st-p { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 
 /* Bottom Nav */
 nav {
@@ -536,9 +445,6 @@ nav {
 /* Pages */
 .page { display: none; }
 .page.active { display: block; }
-
-/* Empty */
-.empty { text-align: center; padding: 40px; color: #64748b; }
 
 /* Toast */
 #toast {
@@ -613,11 +519,9 @@ nav {
   <button class="dd-logout" onclick="logout()">↩ Sair</button>
 </div>
 
-<!-- PÁGINA PRINCIPAL (ALIMENTAÇÃO) -->
+<!-- PÁGINA ALIMENTAÇÃO (PRINCIPAL) -->
 <div class="page active" id="pg-alimentacao">
   <div class="container">
-    
-    <!-- Hero / KPIs -->
     <div class="hero">
       <div class="hero-date" id="heroDate">Carregando...</div>
       <div class="hero-time" id="heroTime">--:--</div>
@@ -628,23 +532,135 @@ nav {
       </div>
     </div>
 
-    <!-- Botões de Ação -->
     <div class="action-buttons">
       <button class="action-btn btn-trato" onclick="umTratoTodos()"><span>🎯</span>1 Trato Todos</button>
       <button class="action-btn btn-dia" onclick="concluirDia()"><span>✅</span>Concluir Dia</button>
       <button class="action-btn btn-reset" onclick="resetarDia()"><span>🔄</span>Resetar Dia</button>
     </div>
 
-    <!-- Cards dos Tanques -->
     <div id="tankCardsContainer"></div>
 
-    <!-- Card de Consumo Total -->
     <div id="consumoCard" class="consumo-card" style="display:none">
       <div class="consumo-titulo">📊 Consumo de hoje</div>
       <div id="consumoLista" class="consumo-lista"></div>
       <div id="consumoTotal" class="consumo-total"></div>
     </div>
+  </div>
+</div>
 
+<!-- PÁGINA RESUMO -->
+<div class="page" id="pg-resumo">
+  <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,#1e3a8a,#0f172a)">
+      <div class="consumo-titulo">🍽️ Consumo de hoje</div>
+      <div id="resumoConsumoLista" class="consumo-lista"></div>
+      <div id="resumoConsumoTotal" class="consumo-total"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PÁGINA MORTALIDADE (VERSÃO ORIGINAL RESTAURADA) -->
+<div class="page" id="pg-mortalidade">
+  <div class="container">
+    <div class="card">
+      <div class="sec-ttl">💀 REGISTRAR MORTALIDADE</div>
+      <div class="ff"><label>📅 Data</label><input type="date" id="mData"></div>
+      <div class="g2">
+        <div class="ff"><label>🏞️ Tanque</label><select id="mTanque"><option value="">Selecionar...</option></select></div>
+        <div class="ff"><label>💀 Quantidade</label><input type="number" id="mQtd" placeholder="Nº de peixes" min="1"></div>
+      </div>
+      <div class="ff"><label>🔍 Causa</label>
+        <select id="mCausa">
+          <option value="">Selecionar...</option>
+          <option value="doença">🦠 Doença</option>
+          <option value="baixo_oxigenio">💨 Baixo oxigênio</option>
+          <option value="temperatura">🌡️ Temperatura extrema</option>
+          <option value="estresse">😤 Estresse/manejo</option>
+          <option value="predador">🦅 Predador</option>
+          <option value="qualidade_agua">💧 Qualidade da água</option>
+          <option value="desconhecida">❓ Causa desconhecida</option>
+          <option value="outra">📝 Outra</option>
+        </select>
+      </div>
+      <div class="ff"><label>📝 Observação</label><textarea id="mObs" rows="2" placeholder="Descreva o que observou..."></textarea></div>
+      <button class="btn-red" onclick="salvarMort()">💀 Registrar Mortalidade</button>
+    </div>
+
+    <div class="g2" style="margin:10px 0">
+      <div class="card" style="padding:14px;text-align:center">
+        <div style="font-size:1.8rem;font-weight:900;color:#ef4444" id="mKpiHoje">0</div>
+        <div style="font-size:.62rem;font-weight:700;color:#64748b">Hoje</div>
+      </div>
+      <div class="card" style="padding:14px;text-align:center">
+        <div style="font-size:1.8rem;font-weight:900;color:#f59e0b" id="mKpi7d">0</div>
+        <div style="font-size:.62rem;font-weight:700;color:#64748b">7 dias</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-ttl">📋 REGISTROS DE MORTALIDADE</div>
+      <div id="listaMort"><div class="empty">Nenhum registro</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PÁGINA VENDAS (VERSÃO ORIGINAL RESTAURADA) -->
+<div class="page" id="pg-vendas">
+  <div class="container">
+    <div class="card">
+      <div class="sec-ttl">🛒 REGISTRAR VENDA</div>
+      <div class="ff"><label>📅 Data</label><input type="date" id="vData"></div>
+      <div class="g2">
+        <div class="ff"><label>👤 Cliente</label><input type="text" id="vCliente" placeholder="Nome do cliente"></div>
+        <div class="ff"><label>📞 Telefone</label><input type="tel" id="vTel" placeholder="(00) 00000-0000"></div>
+      </div>
+      <div class="g2">
+        <div class="ff"><label>🏞️ Tanque Origem</label><select id="vTanque"><option value="">Selecionar...</option></select></div>
+        <div class="ff"><label>📦 Categoria</label>
+          <select id="vCat">
+            <option value="">Selecionar...</option>
+            <option value="grade">🟢 Grande (900g–1200g)</option>
+            <option value="media">🔵 Médio (600g–899g)</option>
+            <option value="pequena">🟡 Pequeno (400g–599g)</option>
+            <option value="minima">🔴 Abaixo de 400g</option>
+          </select>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="ff"><label>⚖️ Kg Vendidos</label><input type="number" id="vKg" placeholder="ex: 80" step="0.1" min="0" oninput="calcTotal()"></div>
+        <div class="ff"><label>💰 Preço/kg (R$)</label><input type="number" id="vPreco" placeholder="ex: 12.50" step="0.01" min="0" oninput="calcTotal()"></div>
+      </div>
+      <div class="venda-preview"><span>💵 Valor Total:</span><span id="vTotal">R$ 0,00</span></div>
+      <div class="ff"><label>💳 Forma de Pagamento</label>
+        <select id="vPag">
+          <option value="">Selecionar...</option>
+          <option value="dinheiro">💵 Dinheiro</option>
+          <option value="pix">📱 PIX</option>
+          <option value="cartao_credito">💳 Cartão Crédito</option>
+          <option value="cartao_debito">💳 Cartão Débito</option>
+          <option value="transferencia">🏦 Transferência</option>
+          <option value="fiado">📋 Fiado</option>
+        </select>
+      </div>
+      <div class="ff"><label>📝 Observação</label><textarea id="vObs" rows="2" placeholder="Observações adicionais..."></textarea></div>
+      <button class="btn-amber" onclick="salvarVenda()">🛒 Registrar Venda</button>
+    </div>
+
+    <div class="g2" style="margin:10px 0">
+      <div class="card" style="padding:14px;text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#f59e0b" id="vKpiValor">R$ 0</div>
+        <div style="font-size:.62rem;font-weight:700;color:#64748b">Valor Hoje</div>
+      </div>
+      <div class="card" style="padding:14px;text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#3b82f6" id="vKpiKg">0 kg</div>
+        <div style="font-size:.62rem;font-weight:700;color:#64748b">Kg Hoje</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-ttl">📋 VENDAS REGISTRADAS</div>
+      <div id="listaVendas"><div class="empty">Nenhuma venda registrada</div></div>
+    </div>
   </div>
 </div>
 
@@ -655,49 +671,6 @@ nav {
   <button class="nav-item" onclick="navTo('mortalidade')"><span class="nav-ico">💀</span><span>Mortalidade</span></button>
   <button class="nav-item" onclick="navTo('vendas')"><span class="nav-ico">🛒</span><span>Vendas</span></button>
 </nav>
-
-<!-- PÁGINA RESUMO (igual à segunda imagem) -->
-<div class="page" id="pg-resumo">
-  <div class="container">
-    <div class="pg-ttl green">📊 Resumo do Dia</div>
-    <div id="resumoConsumoCard" class="consumo-card">
-      <div class="consumo-titulo">🍽️ Consumo de hoje</div>
-      <div id="resumoConsumoLista" class="consumo-lista"></div>
-      <div id="resumoConsumoTotal" class="consumo-total"></div>
-    </div>
-  </div>
-</div>
-
-<!-- PÁGINA MORTALIDADE -->
-<div class="page" id="pg-mortalidade">
-  <div class="container">
-    <div class="pg-ttl red">💀 Registrar Mortalidade</div>
-    <div class="card">
-      <div class="ff"><label>📅 Data</label><input type="date" id="mData"></div>
-      <div class="ff"><label>🏞️ Tanque</label><select id="mTanque"></select></div>
-      <div class="ff"><label>💀 Quantidade</label><input type="number" id="mQtd" placeholder="Nº de peixes"></div>
-      <div class="ff"><label>🔍 Causa</label><select id="mCausa"><option value="">Selecionar</option><option value="doença">Doença</option><option value="oxigenio">Baixo oxigênio</option><option value="temperatura">Temperatura</option></select></div>
-      <button class="btn-red" style="width:100%;padding:12px" onclick="salvarMort()">💀 Registrar</button>
-    </div>
-    <div class="card"><div class="sec-ttl">📋 Histórico</div><div id="listaMort"></div></div>
-  </div>
-</div>
-
-<!-- PÁGINA VENDAS -->
-<div class="page" id="pg-vendas">
-  <div class="container">
-    <div class="pg-ttl amber">🛒 Registrar Venda</div>
-    <div class="card">
-      <div class="ff"><label>📅 Data</label><input type="date" id="vData"></div>
-      <div class="ff"><label>👤 Cliente</label><input type="text" id="vCliente" placeholder="Nome"></div>
-      <div class="g2"><div class="ff"><label>⚖️ Kg</label><input type="number" id="vKg" oninput="calcTotal()"></div><div class="ff"><label>💰 R$/kg</label><input type="number" id="vPreco" oninput="calcTotal()"></div></div>
-      <div class="ff"><label>🏞️ Tanque</label><select id="vTanque"></select></div>
-      <div class="venda-preview" style="display:flex;justify-content:space-between;background:#1e293b;border-radius:12px;padding:12px;margin:12px 0"><span>Total:</span><span id="vTotal">R$ 0,00</span></div>
-      <button class="btn-primary" style="width:100%" onclick="salvarVenda()">🛒 Registrar</button>
-    </div>
-    <div class="card"><div class="sec-ttl">📋 Vendas</div><div id="listaVendas"></div></div>
-  </div>
-</div>
 
 </div>
 <div id="toast"></div>
@@ -720,6 +693,8 @@ function hideLoading() { ov('ovLoad', false); }
 function toast(msg) { var el = document.getElementById('toast'); el.textContent = msg; el.classList.add('on'); setTimeout(function() { el.classList.remove('on'); }, 2500); }
 function fmtR(v) { return 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 function hoje() { return new Date().toISOString().split('T')[0]; }
+function fmtData(d) { if (!d) return '—'; var p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function stBadge(s) { return '<span class="st st-p">' + (s || 'pendente') + '</span>'; }
 
 // ═══════════════════════════════════════════════════════════════
 // LOGIN/LOGOUT
@@ -801,7 +776,7 @@ async function carregarDados() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CALCULAR TANQUES ATIVOS (com lote)
+// TANQUES ATIVOS
 // ═══════════════════════════════════════════════════════════════
 function getTanquesAtivos() {
   var ativos = [];
@@ -818,9 +793,6 @@ function getTanquesAtivos() {
   return ativos;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// OBTER PESO MÉDIO DO TANQUE
-// ═══════════════════════════════════════════════════════════════
 function getPesoMedio(lote, tanqueNum) {
   if (lote.biometrias && lote.biometrias.length) {
     var bio = lote.biometrias.slice().reverse().find(function(b) { return b.tanque === tanqueNum; });
@@ -832,9 +804,6 @@ function getPesoMedio(lote, tanqueNum) {
   return 30;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// OBTER GPD BASEADO NO PESO
-// ═══════════════════════════════════════════════════════════════
 var tabelaGPD = [
   { peso: 1, gpd: 0.08 }, { peso: 2, gpd: 0.15 }, { peso: 3, gpd: 0.22 }, { peso: 5, gpd: 0.35 },
   { peso: 10, gpd: 0.65 }, { peso: 20, gpd: 1.2 }, { peso: 50, gpd: 2.0 }, { peso: 100, gpd: 3.2 },
@@ -853,7 +822,7 @@ function obterGPD(pm) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RENDER CARDS DOS TANQUES (igual à imagem)
+// RENDER TANKS (estilo PRO)
 // ═══════════════════════════════════════════════════════════════
 function renderTankCards() {
   var ativos = getTanquesAtivos();
@@ -883,12 +852,10 @@ function renderTankCards() {
     var coposPorTrato = pesoCopo > 0 ? (kgPorTrato / pesoCopo).toFixed(1) : '0';
     var coposDia = pesoCopo > 0 ? (racaoDia / pesoCopo).toFixed(1) : '0';
     
-    // Tratos registrados hoje para este tanque
     var tratosTanqueHoje = tratosHoje.filter(function(t) { return t.tanque_num === tanqueNum; });
     var totalKgFornecido = tratosTanqueHoje.reduce(function(s, t) { return s + (parseFloat(t.kg_racao) || 0); }, 0);
     var tratosFeitos = tratosTanqueHoje.length;
     var todosFeitos = tratosFeitos >= numTratos;
-    var falta = Math.max(0, racaoDia - totalKgFornecido);
     var percentual = racaoDia > 0 ? (totalKgFornecido / racaoDia) * 100 : 0;
     
     consumoTotal += totalKgFornecido;
@@ -921,7 +888,6 @@ function renderTankCards() {
   
   document.getElementById('tankCardsContainer').innerHTML = html;
   
-  // Renderizar consumo total
   var consumoHtml = '';
   consumosPorTanque.sort(function(a,b) { return a.num - b.num; });
   for (var j = 0; j < consumosPorTanque.length; j++) {
@@ -933,21 +899,19 @@ function renderTankCards() {
   document.getElementById('resumoConsumoTotal').innerHTML = '<span>Total</span><span>' + consumoTotal.toFixed(2) + ' kg</span>';
   document.getElementById('consumoCard').style.display = 'block';
   
-  // KPIs
   document.getElementById('kTratos').textContent = tratosHoje.length;
   document.getElementById('kTotalKg').textContent = consumoTotal.toFixed(1) + ' kg';
   document.getElementById('kTanques').textContent = ativos.length;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// REGISTRAR TRATO (1 TRATO PARA UM TANQUE ESPECÍFICO)
+// AÇÕES DE TRATOS
 // ═══════════════════════════════════════════════════════════════
 async function registrarTratoTanque(tanqueNum, kgRecomendado) {
-  var hojeStr = hoje();
   var reg = {
     colaborador_id: _user.id,
     admin_id: _adminId,
-    data: hojeStr,
+    data: hoje(),
     tanque_num: tanqueNum,
     lote_id: '',
     kg_racao: kgRecomendado,
@@ -963,9 +927,6 @@ async function registrarTratoTanque(tanqueNum, kgRecomendado) {
   } catch(e) { toast('❌ Erro: ' + e.message); }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 1 TRATO TODOS (primeiro pendente de cada tanque)
-// ═══════════════════════════════════════════════════════════════
 async function umTratoTodos() {
   var ativos = getTanquesAtivos();
   if (!ativos.length) { toast('⚠️ Nenhum tanque ativo'); return; }
@@ -1016,9 +977,6 @@ async function umTratoTodos() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// REGISTRAR TODOS TRATOS PENDENTES DE UM TANQUE
-// ═══════════════════════════════════════════════════════════════
 async function registrarTodosTratos(tanqueNum, kgPorTrato, numTratos) {
   var hojeStr = hoje();
   var tratosFeitos = _tratos.filter(function(t) { return t.data === hojeStr && t.tanque_num === tanqueNum; }).length;
@@ -1048,11 +1006,8 @@ async function registrarTodosTratos(tanqueNum, kgPorTrato, numTratos) {
   await atualizarTela();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// CONCLUIR DIA / RESETAR DIA
-// ═══════════════════════════════════════════════════════════════
 async function concluirDia() {
-  if (!confirm('Finalizar dia? Os tratos serão registrados como concluídos.')) return;
+  if (!confirm('Finalizar dia?')) return;
   toast('✅ Dia concluído!');
 }
 
@@ -1065,36 +1020,56 @@ async function resetarDia() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MORTALIDADE
+// MORTALIDADE (VERSÃO ORIGINAL)
 // ═══════════════════════════════════════════════════════════════
-async function salvarMort() {
-  var reg = {
-    colaborador_id: _user.id,
-    admin_id: _adminId,
-    data: document.getElementById('mData').value || hoje(),
-    tanque_num: parseInt(document.getElementById('mTanque').value),
-    quantidade: parseInt(document.getElementById('mQtd').value),
-    causa: document.getElementById('mCausa').value,
-    obs: '',
-    status: 'pendente'
-  };
-  try {
-    await SB.mortalidade.add(reg);
-    toast('✅ Mortalidade registrada');
-    document.getElementById('mQtd').value = '';
-    await atualizarTela();
-  } catch(e) { toast('❌ ' + e.message); }
-}
-
 function renderMort() {
-  var html = _mort.slice(0, 10).map(function(m) {
-    return '<div class="li"><div class="li-t">💀 Tanque ' + m.tanque_num + ' - ' + m.quantidade + ' peixes</div><div class="li-s">' + m.data + '</div></div>';
+  var hojeStr = hoje();
+  var mortHoje = _mort.filter(function(m) { return m.data === hojeStr; });
+  var mort7d = _mort.filter(function(m) { return m.data >= new Date(Date.now() - 7*864e5).toISOString().split('T')[0]; });
+  document.getElementById('mKpiHoje').textContent = mortHoje.reduce(function(s,m) { return s + (m.quantidade || 0); }, 0);
+  document.getElementById('mKpi7d').textContent = mort7d.reduce(function(s,m) { return s + (m.quantidade || 0); }, 0);
+  
+  var html = _mort.slice(0, 20).map(function(m) {
+    return '<div class="li"><div class="li-t">🏞️ Tanque ' + m.tanque_num + ' — <span style="color:#ef4444">' + m.quantidade + ' peixe(s)</span></div><div class="li-s">📅 ' + fmtData(m.data) + ' · ' + (m.causa || '—') + ' · ' + stBadge(m.status) + (m.obs ? '<br>📝 ' + m.obs : '') + '</div></div>';
   }).join('');
   document.getElementById('listaMort').innerHTML = html || '<div class="empty">Nenhum registro</div>';
 }
 
+async function salvarMort() {
+  var data = document.getElementById('mData').value;
+  var tanque = document.getElementById('mTanque').value;
+  var qtd = parseInt(document.getElementById('mQtd').value);
+  var causa = document.getElementById('mCausa').value;
+  var obs = document.getElementById('mObs').value.trim();
+  if (!data) { toast('⚠️ Informe a data'); return; }
+  if (!tanque) { toast('⚠️ Selecione o tanque'); return; }
+  if (!qtd || qtd <= 0) { toast('⚠️ Informe a quantidade'); return; }
+  if (!causa) { toast('⚠️ Selecione a causa'); return; }
+  
+  var lote = _lotes.find(function(l) { return !l.encerrado && (l.tanques || []).some(function(lt) { return lt.num == tanque && !lt.despescado; }); });
+  var reg = {
+    colaborador_id: _user.id,
+    admin_id: _adminId,
+    data: data,
+    tanque_num: tanque,
+    lote_id: lote ? String(lote.id) : '',
+    quantidade: qtd,
+    causa: causa,
+    obs: obs,
+    status: 'pendente'
+  };
+  try {
+    await SB.mortalidade.add(reg);
+    toast('✅ Mortalidade registrada!');
+    document.getElementById('mQtd').value = '';
+    document.getElementById('mObs').value = '';
+    document.getElementById('mCausa').value = '';
+    await atualizarTela();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
 // ═══════════════════════════════════════════════════════════════
-// VENDAS
+// VENDAS (VERSÃO ORIGINAL)
 // ═══════════════════════════════════════════════════════════════
 function calcTotal() {
   var kg = parseFloat(document.getElementById('vKg').value) || 0;
@@ -1102,36 +1077,65 @@ function calcTotal() {
   document.getElementById('vTotal').textContent = fmtR(kg * pr);
 }
 
+function renderVendas() {
+  var hojeStr = hoje();
+  var vendasHoje = _vendas.filter(function(v) { return v.data === hojeStr; });
+  var vValor = vendasHoje.reduce(function(s,v) { return s + (v.valor_total || 0); }, 0);
+  var vKg = vendasHoje.reduce(function(s,v) { return s + (v.kg_vendidos || 0); }, 0);
+  document.getElementById('vKpiValor').textContent = fmtR(vValor);
+  document.getElementById('vKpiKg').textContent = vKg.toFixed(1) + ' kg';
+  
+  var html = _vendas.slice(0, 20).map(function(v) {
+    return '<div class="li"><div class="li-t">👤 ' + (v.cliente || 'sem nome') + ' — <span style="color:#f59e0b">' + fmtR(v.valor_total) + '</span></div><div class="li-s">📅 ' + fmtData(v.data) + ' · ' + v.kg_vendidos + 'kg · ' + (v.tanque_origem ? 'Tanque ' + v.tanque_origem + ' · ' : '') + stBadge(v.status) + '</div></div>';
+  }).join('');
+  document.getElementById('listaVendas').innerHTML = html || '<div class="empty">Nenhuma venda registrada</div>';
+}
+
 async function salvarVenda() {
+  var data = document.getElementById('vData').value;
+  var cliente = document.getElementById('vCliente').value.trim();
+  var tel = document.getElementById('vTel').value.trim();
+  var tanque = document.getElementById('vTanque').value;
+  var cat = document.getElementById('vCat').value;
   var kg = parseFloat(document.getElementById('vKg').value);
   var preco = parseFloat(document.getElementById('vPreco').value);
+  var pag = document.getElementById('vPag').value;
+  var obs = document.getElementById('vObs').value.trim();
+  if (!data) { toast('⚠️ Informe a data'); return; }
+  if (!cliente) { toast('⚠️ Informe o nome do cliente'); return; }
+  if (!kg || kg <= 0) { toast('⚠️ Informe os kg vendidos'); return; }
+  if (!preco || preco <= 0) { toast('⚠️ Informe o preço por kg'); return; }
+  
+  var lote = tanque ? _lotes.find(function(l) { return !l.encerrado && (l.tanques || []).some(function(lt) { return lt.num == tanque && !lt.despescado; }); }) : null;
   var reg = {
     colaborador_id: _user.id,
     admin_id: _adminId,
-    data: document.getElementById('vData').value || hoje(),
-    cliente: document.getElementById('vCliente').value,
+    data: data,
+    cliente: cliente,
+    telefone: tel,
+    tanque_origem: tanque,
+    lote_id: lote ? String(lote.id) : '',
     kg_vendidos: kg,
     valor_kg: preco,
     valor_total: kg * preco,
-    tanque_origem: document.getElementById('vTanque').value || null,
+    categoria: cat,
+    forma_pagamento: pag,
+    obs: obs,
     status: 'pendente'
   };
   try {
     await SB.vendas.add(reg);
-    toast('✅ Venda registrada');
+    toast('✅ Venda registrada!');
     document.getElementById('vCliente').value = '';
+    document.getElementById('vTel').value = '';
     document.getElementById('vKg').value = '';
     document.getElementById('vPreco').value = '';
+    document.getElementById('vObs').value = '';
+    document.getElementById('vCat').value = '';
+    document.getElementById('vPag').value = '';
     document.getElementById('vTotal').textContent = 'R$ 0,00';
     await atualizarTela();
   } catch(e) { toast('❌ ' + e.message); }
-}
-
-function renderVendas() {
-  var html = _vendas.slice(0, 10).map(function(v) {
-    return '<div class="li"><div class="li-t">🛒 ' + (v.cliente || 'Cliente') + ' - ' + fmtR(v.valor_total) + '</div><div class="li-s">' + v.kg_vendidos + ' kg · ' + v.data + '</div></div>';
-  }).join('');
-  document.getElementById('listaVendas').innerHTML = html || '<div class="empty">Nenhuma venda</div>';
 }
 
 function popularSelects() {
@@ -1139,7 +1143,7 @@ function popularSelects() {
   var opts = ativos.map(function(a) { return '<option value="' + a.num + '">Tanque ' + a.num + '</option>'; }).join('');
   ['mTanque', 'vTanque'].forEach(function(id) {
     var s = document.getElementById(id);
-    if (s) s.innerHTML = '<option value="">Selecionar</option>' + opts;
+    if (s) s.innerHTML = '<option value="">Selecionar...</option>' + opts;
   });
 }
 
