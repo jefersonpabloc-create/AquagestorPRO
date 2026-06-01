@@ -4,14 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>🐟 AquaGestor | Colaborador v2.3</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>🐟 AquaGestor PRO | Colaborador</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>
 // ═══════════════════════════════════════════════════════
-// AQUAGESTOR — Módulo Supabase Compartilhado v1.1
+// AQUAGESTOR — Módulo Supabase
 // ═══════════════════════════════════════════════════════
 
 (function () {
@@ -52,7 +49,6 @@
         'Content-Type': 'application/json',
         'Prefer': opts.prefer || 'return=representation'
       };
-      Object.assign(headers, opts.headers || {});
       var res = await fetch(URL_BASE + path, {
         method: opts.method || 'GET',
         headers: headers,
@@ -61,7 +57,7 @@
       var raw = await res.text();
       var data;
       try { data = JSON.parse(raw); } catch(e) { data = {}; }
-      if (!res.ok) throw new Error(data.message || data.error_description || data.msg || ('Erro HTTP ' + res.status));
+      if (!res.ok) throw new Error(data.message || 'Erro HTTP ' + res.status);
       return data;
     },
 
@@ -74,27 +70,13 @@
         });
         var raw = await res.text();
         var data;
-        try { data = JSON.parse(raw); } catch(e) {
-          throw new Error('Resposta inválida do servidor.');
-        }
-        if (!res.ok) throw new Error(data.error_description || data.message || 'Credenciais inválidas');
+        try { data = JSON.parse(raw); } catch(e) { throw new Error('Erro de conexão'); }
+        if (!res.ok) throw new Error(data.error_description || 'Credenciais inválidas');
         localStorage.setItem('aq_session', JSON.stringify(data));
-        try {
-          var cfg = JSON.parse(localStorage.getItem('aq_config') || '{}');
-          cfg._savedEmail = email; cfg._savedPassword = senha;
-          localStorage.setItem('aq_config', JSON.stringify(cfg));
-        } catch(e) {}
         return data;
       },
 
       signOut: async function () {
-        var s = JSON.parse(localStorage.getItem('aq_session') || 'null');
-        if (s && s.access_token) {
-          await fetch(URL_BASE + '/auth/v1/logout', {
-            method: 'POST',
-            headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + s.access_token }
-          }).catch(function () {});
-        }
         localStorage.removeItem('aq_session');
       },
 
@@ -127,15 +109,6 @@
       get: async function (adminId, chave) {
         var rows = await window.SB.req('/rest/v1/user_data?user_id=eq.' + adminId + '&full_key=eq.' + encodeURIComponent(chave) + '&select=data_value&limit=1');
         return (Array.isArray(rows) && rows[0]) ? rows[0].data_value : null;
-      },
-      set: async function (chave, valor) {
-        var u = window.SB.auth.user();
-        if (!u) throw new Error('Não autenticado');
-        return window.SB.req('/rest/v1/user_data', {
-          method: 'POST',
-          prefer: 'resolution=merge-duplicates,return=representation',
-          body: { user_id: u.id, full_key: chave, data_value: valor }
-        });
       }
     },
 
@@ -149,7 +122,6 @@
       list: async function (adminId, filtros) {
         var q = '/rest/v1/colab_tratos?admin_id=eq.' + adminId + '&order=created_at.desc&select=*';
         if (filtros && filtros.data) q += '&data=eq.' + filtros.data;
-        if (filtros && filtros.colabId) q += '&colaborador_id=eq.' + filtros.colabId;
         return window.SB.req(q);
       },
       add: async function (reg) {
@@ -158,10 +130,8 @@
     },
 
     mortalidade: {
-      list: async function (adminId, filtros) {
-        var q = '/rest/v1/colab_mortalidade?admin_id=eq.' + adminId + '&order=created_at.desc&select=*';
-        if (filtros && filtros.data) q += '&data=eq.' + filtros.data;
-        return window.SB.req(q);
+      list: async function (adminId) {
+        return window.SB.req('/rest/v1/colab_mortalidade?admin_id=eq.' + adminId + '&order=created_at.desc&select=*');
       },
       add: async function (reg) {
         return window.SB.req('/rest/v1/colab_mortalidade', { method: 'POST', body: reg });
@@ -169,10 +139,8 @@
     },
 
     vendas: {
-      list: async function (adminId, filtros) {
-        var q = '/rest/v1/colab_vendas?admin_id=eq.' + adminId + '&order=created_at.desc&select=*';
-        if (filtros && filtros.data) q += '&data=eq.' + filtros.data;
-        return window.SB.req(q);
+      list: async function (adminId) {
+        return window.SB.req('/rest/v1/colab_vendas?admin_id=eq.' + adminId + '&order=created_at.desc&select=*');
       },
       add: async function (reg) {
         return window.SB.req('/rest/v1/colab_vendas', { method: 'POST', body: reg });
@@ -198,158 +166,430 @@
 })();
 </script>
 <style>
-:root{
-  --bg:#080f1c;--bg2:#0d1627;
-  --surf:rgba(22,34,58,.8);--card:rgba(17,27,46,.75);
-  --border:rgba(99,155,255,.12);
-  --blue:#4A9DFF;--blue2:#1A6DFF;--blue-l:rgba(74,157,255,.13);
-  --cyan:#00D4FF;--green:#00E5A0;--green-l:rgba(0,229,160,.12);
-  --red:#FF4D6A;--red-l:rgba(255,77,106,.12);
-  --amber:#FFB830;--amber-l:rgba(255,184,48,.12);
-  --text:#E8F0FF;--text2:#8BA8CC;--text3:#4A6080;
-  --r:14px;--r-lg:20px;--r-full:999px;
-  --sh:0 6px 24px rgba(0,0,0,.5);
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{
-  font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--text);
-  font-size:14px;line-height:1.55;padding-bottom:84px;min-height:100vh;
+
+body {
+  font-family: 'Outfit', system-ui, sans-serif;
+  background: #0a0f1a;
+  color: #f1f5f9;
+  padding-bottom: 80px;
 }
-.ov{position:fixed;inset:0;background:rgba(3,7,18,.96);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;flex-direction:column;gap:16px;backdrop-filter:blur(8px)}
-.ov.off{display:none}
-.login-box{background:rgba(17,27,46,.95);border:1px solid rgba(74,157,255,.2);border-radius:28px;padding:36px 28px;width:100%;max-width:390px}
-.login-fish{text-align:center;font-size:3.2rem}
-.login-ttl{text-align:center;font-size:1.3rem;font-weight:900;margin:8px 0 2px}
-.login-ttl span{background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.login-sub{text-align:center;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--green);border-radius:var(--r-full);padding:5px 16px;font-size:.7rem;font-weight:800;margin:10px auto 24px;width:fit-content}
-.f{margin-bottom:12px}
-.f label{display:block;font-size:.7rem;font-weight:700;color:var(--text2);margin-bottom:5px}
-.f input{width:100%;padding:12px 16px;border:1.5px solid rgba(74,157,255,.15);border-radius:var(--r);background:rgba(8,15,28,.6);color:var(--text)}
-.f input:focus{outline:none;border-color:var(--blue)}
-.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:800;border:none;border-radius:var(--r);cursor:pointer}
-.err-box{background:rgba(255,77,106,.1);color:#ff8fa3;border:1px solid rgba(255,77,106,.3);border-radius:var(--r);padding:10px 14px;font-size:.78rem;display:none}
-.err-box.on{display:block}
-.wifi-box{background:rgba(17,27,46,.97);border:1.5px solid rgba(255,77,106,.3);border-radius:24px;padding:32px 24px;width:100%;max-width:380px;text-align:center}
-.load-fish{font-size:3rem;animation:spin 1.5s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-header{background:rgba(5,10,20,.92);backdrop-filter:blur(24px);border-bottom:1px solid rgba(74,157,255,.1);position:sticky;top:0;z-index:200;height:56px;display:flex;align-items:center;padding:0 14px}
-.hdr{max-width:640px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between}
-.hdr-brand{display:flex;align-items:center;gap:8px}
-.hdr-name{font-size:.88rem;font-weight:900}
-.hdr-name span{background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.wifi-badge{padding:4px 10px;border-radius:var(--r-full);font-size:.65rem;font-weight:800}
-.wifi-badge.ok{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--green)}
-.wifi-badge.fail{background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.25);color:var(--red)}
-.hdr-user{background:rgba(74,157,255,.12);border:1px solid rgba(74,157,255,.22);border-radius:var(--r-full);padding:5px 12px;font-size:.7rem;font-weight:700;cursor:pointer}
-.dropdown{position:fixed;top:60px;right:14px;z-index:500;background:rgba(10,18,35,.98);border:1px solid rgba(74,157,255,.15);border-radius:18px;padding:12px;width:220px;display:none}
-.dropdown.on{display:block}
-.dd-name{font-size:.82rem;font-weight:700;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--border)}
-.dd-email{font-size:.7rem;color:var(--text3);margin-bottom:10px}
-.dd-btn{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text2);padding:7px 4px;font-size:.8rem;font-weight:600;cursor:pointer;border-radius:8px}
-.dd-btn:hover{background:rgba(74,157,255,.1);color:var(--blue)}
-.dd-logout{width:100%;margin-top:8px;background:linear-gradient(135deg,var(--red),#cc2244);color:#fff;border:none;border-radius:var(--r-full);padding:8px;font-weight:700;cursor:pointer}
-.container{max-width:640px;margin:0 auto;padding:14px}
-.hero{background:linear-gradient(135deg,rgba(26,109,255,.8) 0%,rgba(0,180,160,.5) 60%,rgba(0,229,160,.2) 100%);border-radius:22px;padding:18px;margin-bottom:12px}
-.hero-date{font-size:.65rem;font-weight:700;opacity:.7}
-.hero-time{font-size:1.9rem;font-weight:900;line-height:1}
-.hero-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
-.kpi{background:rgba(255,255,255,.11);border-radius:14px;padding:10px;text-align:center}
-.kpi-v{font-size:1.1rem;font-weight:900}
-.kpi-l{font-size:.58rem;font-weight:700;opacity:.68;margin-top:2px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px;margin:10px 0}
-.sec-ttl{font-size:.62rem;font-weight:700;letter-spacing:1.3px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:7px}
-.sec-ttl::after{content:'';flex:1;height:1px;background:var(--border)}
-.pg-ttl{font-weight:800;font-size:.95rem;margin:14px 0 10px;display:flex;align-items:center;gap:8px}
-.pg-ttl.green{color:var(--green);border-left:3px solid var(--green);padding-left:10px}
-.pg-ttl.red{color:var(--red);border-left:3px solid var(--red);padding-left:10px}
-.pg-ttl.amber{color:var(--amber);border-left:3px solid var(--amber);padding-left:10px}
-.ff{margin-bottom:10px}
-.ff label{display:block;font-size:.7rem;font-weight:700;color:var(--text2);margin-bottom:5px}
-input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid rgba(74,157,255,.14);border-radius:var(--r);background:rgba(8,15,28,.65);color:var(--text)}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-button{font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer;border:none;border-radius:var(--r-full);padding:10px 20px;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff}
-.btn-g{background:linear-gradient(135deg,var(--green),var(--teal));color:#000}
-.btn-r{background:linear-gradient(135deg,var(--red),#cc2244)}
-.btn-a{background:linear-gradient(135deg,var(--amber),#e09000)}
-.btn-out{background:transparent;border:1.5px solid rgba(74,157,255,.3);color:var(--blue)}
-.btn-full{width:100%}
-.btn-sm{padding:7px 14px;font-size:.74rem}
-.li{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 14px;background:rgba(17,27,46,.65);border:1px solid var(--border);border-radius:14px;margin:6px 0}
-.li-m{flex:1}
-.li-t{font-weight:700;font-size:.88rem}
-.li-s{font-size:.7rem;color:var(--text3);margin-top:3px}
-.st{display:inline-flex;padding:2px 9px;border-radius:var(--r-full);font-size:.62rem;font-weight:800}
-.st-p{background:var(--amber-l);color:var(--amber);border:1px solid rgba(255,184,48,.25)}
-.task{padding:11px 14px;border-radius:14px;margin:5px 0;display:flex;align-items:flex-start;gap:10px}
-.task.pend{background:rgba(255,184,48,.08);border-left:3px solid var(--amber)}
-.task.done{background:rgba(0,229,160,.07);border-left:3px solid var(--green)}
-.task-ico{font-size:1.1rem}
-.task-t{font-weight:700;font-size:.84rem}
-.venda-preview{background:rgba(0,229,160,.07);border-radius:var(--r);padding:11px 14px;margin:6px 0;display:flex;justify-content:space-between}
-.sync{background:rgba(0,229,160,.1);border-radius:var(--r-full);padding:6px 14px;font-size:.68rem;font-weight:700;color:var(--green);display:none;align-items:center;justify-content:center;margin:8px 0}
-.sync.on{display:flex}
-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(4,8,18,.95);backdrop-filter:blur(28px);border-top:1px solid rgba(74,157,255,.1);display:flex;align-items:center;justify-content:space-around;padding:8px 6px max(12px,env(safe-area-inset-bottom));z-index:300}
-.nb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:var(--r);font-size:.6rem;font-weight:700;color:var(--text3);cursor:pointer;background:transparent}
-.nb-ico{font-size:1.2rem}
-.nb.active{color:var(--blue)}
-.nb-fab{background:linear-gradient(135deg,var(--green),var(--teal));border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer}
-.page{display:none}
-.page.active{display:block}
-.empty{text-align:center;padding:28px 16px;color:var(--text3)}
-.empty-ico{font-size:2.5rem;display:block;opacity:.5}
-#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(17,27,46,.97);border:1px solid rgba(74,157,255,.2);backdrop-filter:blur(20px);padding:11px 22px;border-radius:var(--r-full);font-size:.82rem;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
-#toast.on{opacity:1}
-.tank-card{background:var(--surf);border:1px solid var(--border);border-radius:16px;margin:8px 0;overflow:hidden}
-.tank-card.done{border-color:rgba(0,229,160,.25)}
-.tank-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px;cursor:pointer}
-.tank-info{flex:1}
-.tank-name{font-size:.88rem;font-weight:800;margin-bottom:3px}
-.tank-meta{font-size:.72rem;color:var(--text3);margin-bottom:4px}
-.tank-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.tank-chevron{color:var(--text3);font-size:.8rem;transition:transform .25s}
-.tank-chevron.open{transform:rotate(180deg)}
-.tank-details{padding:0 14px 14px;border-top:1px solid var(--border)}
-.status-pill{display:inline-flex;padding:4px 12px;border-radius:100px;font-size:.7rem;font-weight:800}
-.status-pill.pendente{background:rgba(244,63,94,.12);color:var(--red)}
-.status-pill.concluido{background:rgba(34,197,94,.12);color:var(--green)}
-.tank-progress-wrap{margin:6px 0 2px}
-.tank-progress-bar{background:rgba(255,255,255,.08);border-radius:100px;height:6px;overflow:hidden}
-.tank-progress-fill{height:100%;border-radius:100px;background:var(--blue);transition:width .4s}
-.tank-progress-fill.done{background:var(--green)}
-.tank-progress-text{font-size:.7rem;color:var(--text3);margin-top:3px}
-.done-trato{opacity:.6}
+
+/* Overlays */
+.ov {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.ov.off { display: none; }
+
+/* Login */
+.login-box {
+  background: #0f172a;
+  border-radius: 32px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid #1e293b;
+}
+.login-fish { font-size: 3.5rem; text-align: center; }
+.login-ttl { font-size: 1.4rem; font-weight: 800; text-align: center; margin: 8px 0; }
+.login-ttl span { color: #3b82f6; }
+.login-sub { background: #1e293b; border-radius: 99px; padding: 5px 16px; font-size: 0.7rem; width: fit-content; margin: 10px auto; }
+.f { margin-bottom: 14px; }
+.f label { display: block; font-size: 0.7rem; font-weight: 600; color: #94a3b8; margin-bottom: 5px; }
+.f input { width: 100%; padding: 12px 16px; border-radius: 14px; border: 1px solid #1e293b; background: #1e293b; color: #f1f5f9; font-size: 0.9rem; }
+.login-btn { width: 100%; padding: 14px; background: #3b82f6; border: none; border-radius: 99px; color: #fff; font-weight: 800; font-size: 1rem; cursor: pointer; }
+.err-box { background: #450a0a; border-radius: 12px; padding: 10px; font-size: 0.75rem; margin-top: 10px; display: none; color: #ef4444; }
+.err-box.on { display: block; }
+
+/* WiFi */
+.wifi-box { background: #0f172a; border-radius: 32px; padding: 32px; text-align: center; max-width: 360px; border: 1px solid #ef4444; }
+.wifi-ico { font-size: 3rem; }
+.wifi-ttl { font-size: 1.1rem; font-weight: 800; color: #ef4444; margin: 12px 0; }
+.wifi-retry { background: #3b82f6; border: none; border-radius: 99px; padding: 12px 24px; color: #fff; font-weight: 700; margin-top: 16px; cursor: pointer; }
+.wifi-out { background: transparent; border: 1px solid #1e293b; border-radius: 99px; padding: 10px 20px; color: #94a3b8; margin-top: 8px; cursor: pointer; }
+
+/* Loading */
+.load-fish { font-size: 3rem; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Header */
+header {
+  background: #0f172a;
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #1e293b;
+}
+.hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.hdr-brand { display: flex; align-items: center; gap: 8px; }
+.hdr-brand-ico { font-size: 1.3rem; }
+.hdr-name { font-weight: 800; font-size: 0.9rem; }
+.hdr-name span { color: #3b82f6; }
+.hdr-farm { font-size: 0.6rem; color: #64748b; }
+.wifi-badge { padding: 4px 12px; border-radius: 99px; font-size: 0.65rem; font-weight: 700; }
+.wifi-badge.ok { background: #14532d; color: #22c55e; }
+.hdr-user { background: #1e293b; border: none; border-radius: 99px; padding: 6px 14px; color: #f1f5f9; font-size: 0.7rem; font-weight: 600; cursor: pointer; }
+
+/* Dropdown */
+.dropdown {
+  position: fixed;
+  top: 65px;
+  right: 16px;
+  background: #0f172a;
+  border-radius: 16px;
+  padding: 12px;
+  width: 200px;
+  display: none;
+  z-index: 200;
+  border: 1px solid #1e293b;
+}
+.dropdown.on { display: block; }
+.dd-name { font-size: 0.8rem; font-weight: 700; padding-bottom: 8px; border-bottom: 1px solid #1e293b; }
+.dd-email { font-size: 0.7rem; color: #64748b; margin: 8px 0; }
+.dd-btn { display: block; width: 100%; padding: 8px; text-align: left; background: transparent; border: none; color: #94a3b8; font-size: 0.75rem; cursor: pointer; border-radius: 8px; }
+.dd-btn:hover { background: #1e293b; }
+.dd-logout { width: 100%; margin-top: 8px; padding: 8px; background: #ef4444; border: none; border-radius: 12px; color: #fff; font-weight: 700; cursor: pointer; }
+
+/* Container */
+.container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, #1e3a8a, #0f172a);
+  border-radius: 28px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.hero-date { font-size: 0.65rem; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
+.hero-time { font-size: 2rem; font-weight: 800; line-height: 1; }
+.hero-kpis {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.kpi {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+}
+.kpi-v { font-size: 1.3rem; font-weight: 800; }
+.kpi-l { font-size: 0.6rem; font-weight: 700; opacity: 0.7; margin-top: 4px; }
+
+/* Cards */
+.card { background: #0f172a; border-radius: 24px; padding: 16px; margin: 12px 0; border: 1px solid #1e293b; }
+.sec-ttl { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.sec-ttl::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
+
+/* Botões de ação */
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.action-btn {
+  padding: 12px 4px;
+  border-radius: 14px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.action-btn span:first-child { font-size: 1rem; }
+.btn-trato { background: linear-gradient(135deg, #0d9488, #0891b2); }
+.btn-dia { background: linear-gradient(135deg, #16a34a, #15803d); }
+.btn-reset { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+
+/* Tank Card - Estilo igual à imagem */
+.tank-card {
+  background: #0f172a;
+  border-radius: 20px;
+  padding: 16px;
+  margin: 12px 0;
+  border: 1px solid #1e293b;
+}
+.tank-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  cursor: pointer;
+}
+.tank-name {
+  font-size: 1rem;
+  font-weight: 800;
+}
+.tank-lote {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+.tank-copos {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #06b6d4;
+  background: rgba(6, 182, 212, 0.1);
+  padding: 2px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-top: 6px;
+}
+.tank-stats {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 8px 0;
+}
+.tank-stats strong { color: #f1f5f9; }
+.tank-progress {
+  margin: 10px 0;
+}
+.progress-bar {
+  background: #1e293b;
+  border-radius: 99px;
+  height: 8px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #3b82f6;
+  transition: width 0.3s;
+}
+.progress-fill.done { background: #22c55e; }
+.progress-text {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+.tank-right {
+  text-align: right;
+}
+.status-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.status-pill.pendente { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.status-pill.concluido { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+.tank-details {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #1e293b;
+  display: none;
+}
+.tank-details.open { display: block; }
+.trato-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #1e293b;
+}
+.trato-row:last-child { border-bottom: none; }
+.trato-time { font-weight: 600; font-size: 0.8rem; }
+.trato-kg { font-size: 0.7rem; color: #64748b; }
+.trato-btn {
+  background: #22c55e;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 14px;
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.trato-done {
+  color: #22c55e;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.tank-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.tank-footer button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+.btn-pendentes { background: #22c55e; color: #000; }
+.btn-reset-tanque { background: #1e293b; color: #f1f5f9; border: 1px solid #334155; }
+
+/* Consumo Total */
+.consumo-card {
+  background: linear-gradient(135deg, #1e3a8a, #0f172a);
+  border-radius: 24px;
+  padding: 16px;
+  margin-top: 20px;
+}
+.consumo-titulo {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+.consumo-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.consumo-item {
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.75rem;
+}
+.consumo-item span:first-child { color: #94a3b8; }
+.consumo-item span:last-child { font-weight: 700; color: #f1f5f9; }
+.consumo-total {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #1e293b;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+}
+
+/* Bottom Nav */
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #0f172a;
+  backdrop-filter: blur(20px);
+  border-top: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 16px 20px;
+  z-index: 300;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.6rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+.nav-item.active { color: #3b82f6; }
+.nav-ico { font-size: 1.2rem; }
+.nav-fab {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #000;
+  margin-top: -20px;
+  cursor: pointer;
+  border: none;
+}
+
+/* Pages */
+.page { display: none; }
+.page.active { display: block; }
+
+/* Empty */
+.empty { text-align: center; padding: 40px; color: #64748b; }
+
+/* Toast */
+#toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  border-radius: 99px;
+  padding: 10px 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+#toast.on { opacity: 1; }
 </style>
 </head>
 <body>
 
-<!-- OVERLAY: LOGIN -->
+<!-- OVERLAY LOGIN -->
 <div class="ov" id="ovLogin">
   <div class="login-box">
-    <div style="text-align:center"><div class="login-fish">🐟</div></div>
-    <div class="login-ttl">Aqua<span>Gestor</span></div>
+    <div class="login-fish">🐟</div>
+    <div class="login-ttl">Aqua<span>Gestor PRO</span></div>
     <div class="login-sub">👷 Área do Colaborador</div>
     <div class="f"><label>E-mail</label><input type="email" id="lgEmail" placeholder="seu@email.com"></div>
     <div class="f"><label>Senha</label><input type="password" id="lgSenha" placeholder="••••••••"></div>
-    <button class="login-btn" id="lgBtn" onclick="login()">🔐 Entrar</button>
+    <button class="login-btn" onclick="login()">🔐 Entrar</button>
     <div class="err-box" id="lgErr"></div>
   </div>
 </div>
 
-<!-- OVERLAY: WIFI -->
+<!-- OVERLAY WIFI -->
 <div class="ov off" id="ovWifi">
   <div class="wifi-box">
     <div class="wifi-ico">📡</div>
     <div class="wifi-ttl">Rede não autorizada</div>
-    <div class="wifi-msg">Conecte-se à rede WiFi da piscicultura.</div>
-    <div class="wifi-ip">IP detectado: <span id="ipDetectado">...</span></div>
+    <div class="wifi-msg">Conecte-se à rede WiFi da piscicultura</div>
+    <div class="wifi-ip">IP: <span id="ipDetectado">---</span></div>
     <button class="wifi-retry" onclick="checkWifi()">🔄 Tentar novamente</button>
     <button class="wifi-out" onclick="logout()">↩ Sair</button>
   </div>
 </div>
 
-<!-- OVERLAY: LOADING -->
+<!-- OVERLAY LOADING -->
 <div class="ov off" id="ovLoad">
-  <div><div class="load-fish">🐟</div><div class="load-msg" id="loadMsg">Carregando...</div></div>
+  <div style="text-align:center"><div class="load-fish">🐟</div><div id="loadMsg">Carregando...</div></div>
 </div>
 
 <!-- APP -->
@@ -357,7 +597,10 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(4,8,18,.95);backdrop-
 
 <header>
   <div class="hdr">
-    <div class="hdr-brand"><span>🐟</span><div class="hdr-name">Aqua<span>Gestor</span></div></div>
+    <div class="hdr-brand">
+      <span class="hdr-brand-ico">🐟</span>
+      <div><div class="hdr-name">Aqua<span>Gestor PRO</span></div><div class="hdr-farm" id="hdrFarm">Piscicultura</div></div>
+    </div>
     <div><div class="wifi-badge ok" id="wifiBadge">📶 OK</div></div>
     <button class="hdr-user" onclick="toggleDD()">👷 <span id="hdrNome">—</span></button>
   </div>
@@ -370,73 +613,91 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(4,8,18,.95);backdrop-
   <button class="dd-logout" onclick="logout()">↩ Sair</button>
 </div>
 
-<!-- PÁGINA INÍCIO -->
-<div class="page active" id="pg-inicio">
+<!-- PÁGINA PRINCIPAL (ALIMENTAÇÃO) -->
+<div class="page active" id="pg-alimentacao">
   <div class="container">
+    
+    <!-- Hero / KPIs -->
     <div class="hero">
       <div class="hero-date" id="heroDate">Carregando...</div>
       <div class="hero-time" id="heroTime">--:--</div>
       <div class="hero-kpis">
         <div class="kpi"><div class="kpi-v" id="kTratos">0</div><div class="kpi-l">Tratos Hoje</div></div>
-        <div class="kpi"><div class="kpi-v" id="kMort">0</div><div class="kpi-l">Mortalidade</div></div>
-        <div class="kpi"><div class="kpi-v" id="kVendas">0</div><div class="kpi-l">Vendas</div></div>
+        <div class="kpi"><div class="kpi-v" id="kTotalKg">0</div><div class="kpi-l">Kg Totais</div></div>
+        <div class="kpi"><div class="kpi-v" id="kTanques">0</div><div class="kpi-l">Tanques</div></div>
       </div>
     </div>
-    <div class="sync" id="syncBar">✅ Sincronizado</div>
-    <div class="card"><div class="sec-ttl">📋 TAREFAS DO DIA</div><div id="listaTarefas"></div></div>
-    <div class="card"><div class="sec-ttl">🕐 ÚLTIMOS REGISTROS</div><div id="ultimosRegs"></div></div>
+
+    <!-- Botões de Ação -->
+    <div class="action-buttons">
+      <button class="action-btn btn-trato" onclick="umTratoTodos()"><span>🎯</span>1 Trato Todos</button>
+      <button class="action-btn btn-dia" onclick="concluirDia()"><span>✅</span>Concluir Dia</button>
+      <button class="action-btn btn-reset" onclick="resetarDia()"><span>🔄</span>Resetar Dia</button>
+    </div>
+
+    <!-- Cards dos Tanques -->
+    <div id="tankCardsContainer"></div>
+
+    <!-- Card de Consumo Total -->
+    <div id="consumoCard" class="consumo-card" style="display:none">
+      <div class="consumo-titulo">📊 Consumo de hoje</div>
+      <div id="consumoLista" class="consumo-lista"></div>
+      <div id="consumoTotal" class="consumo-total"></div>
+    </div>
+
   </div>
 </div>
 
-<!-- PÁGINA ALIMENTAÇÃO -->
-<div class="page" id="pg-alimentacao">
+<nav>
+  <button class="nav-item active" onclick="navTo('alimentacao')"><span class="nav-ico">🌾</span><span>Alimentação</span></button>
+  <button class="nav-item" onclick="navTo('resumo')"><span class="nav-ico">📊</span><span>Resumo</span></button>
+  <div class="nav-fab" onclick="navTo('alimentacao')">➕</div>
+  <button class="nav-item" onclick="navTo('mortalidade')"><span class="nav-ico">💀</span><span>Mortalidade</span></button>
+  <button class="nav-item" onclick="navTo('vendas')"><span class="nav-ico">🛒</span><span>Vendas</span></button>
+</nav>
+
+<!-- PÁGINA RESUMO (igual à segunda imagem) -->
+<div class="page" id="pg-resumo">
   <div class="container">
-    <div class="pg-ttl green">🌾 Alimentação</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <button onclick="umTratoTodos()" style="background:#0d9488">🎯 1 Trato Todos</button>
-      <button onclick="resetarDia()" style="background:#dc2626">🔄 Resetar Dia</button>
+    <div class="pg-ttl green">📊 Resumo do Dia</div>
+    <div id="resumoConsumoCard" class="consumo-card">
+      <div class="consumo-titulo">🍽️ Consumo de hoje</div>
+      <div id="resumoConsumoLista" class="consumo-lista"></div>
+      <div id="resumoConsumoTotal" class="consumo-total"></div>
     </div>
-    <div id="tankCardsContainer"></div>
-    <div class="card"><div class="sec-ttl">🕐 TRATOS DE HOJE</div><div id="tratosHoje"></div></div>
   </div>
 </div>
 
 <!-- PÁGINA MORTALIDADE -->
 <div class="page" id="pg-mortalidade">
   <div class="container">
-    <div class="pg-ttl red">💀 Mortalidade</div>
+    <div class="pg-ttl red">💀 Registrar Mortalidade</div>
     <div class="card">
       <div class="ff"><label>📅 Data</label><input type="date" id="mData"></div>
-      <div class="g2"><div class="ff"><label>🏞️ Tanque</label><select id="mTanque"></select></div><div class="ff"><label>💀 Quantidade</label><input type="number" id="mQtd"></div></div>
-      <div class="ff"><label>🔍 Causa</label><select id="mCausa"><option value="">Selecionar</option><option value="doença">Doença</option><option value="baixo_oxigenio">Baixo oxigênio</option></select></div>
-      <button class="btn-r btn-full" onclick="salvarMort()">Registrar</button>
+      <div class="ff"><label>🏞️ Tanque</label><select id="mTanque"></select></div>
+      <div class="ff"><label>💀 Quantidade</label><input type="number" id="mQtd" placeholder="Nº de peixes"></div>
+      <div class="ff"><label>🔍 Causa</label><select id="mCausa"><option value="">Selecionar</option><option value="doença">Doença</option><option value="oxigenio">Baixo oxigênio</option><option value="temperatura">Temperatura</option></select></div>
+      <button class="btn-red" style="width:100%;padding:12px" onclick="salvarMort()">💀 Registrar</button>
     </div>
-    <div class="card"><div class="sec-ttl">📋 REGISTROS</div><div id="listaMort"></div></div>
+    <div class="card"><div class="sec-ttl">📋 Histórico</div><div id="listaMort"></div></div>
   </div>
 </div>
 
 <!-- PÁGINA VENDAS -->
 <div class="page" id="pg-vendas">
   <div class="container">
-    <div class="pg-ttl amber">🛒 Vendas</div>
+    <div class="pg-ttl amber">🛒 Registrar Venda</div>
     <div class="card">
       <div class="ff"><label>📅 Data</label><input type="date" id="vData"></div>
-      <div class="g2"><div class="ff"><label>👤 Cliente</label><input type="text" id="vCliente"></div><div class="ff"><label>⚖️ Kg</label><input type="number" id="vKg" oninput="calcTotal()"></div></div>
-      <div class="g2"><div class="ff"><label>💰 R$/kg</label><input type="number" id="vPreco" oninput="calcTotal()"></div><div class="ff"><label>🏞️ Tanque</label><select id="vTanque"></select></div></div>
-      <div class="venda-preview"><span>Total:</span><span id="vTotal">R$ 0</span></div>
-      <button class="btn-a btn-full" onclick="salvarVenda()">Registrar Venda</button>
+      <div class="ff"><label>👤 Cliente</label><input type="text" id="vCliente" placeholder="Nome"></div>
+      <div class="g2"><div class="ff"><label>⚖️ Kg</label><input type="number" id="vKg" oninput="calcTotal()"></div><div class="ff"><label>💰 R$/kg</label><input type="number" id="vPreco" oninput="calcTotal()"></div></div>
+      <div class="ff"><label>🏞️ Tanque</label><select id="vTanque"></select></div>
+      <div class="venda-preview" style="display:flex;justify-content:space-between;background:#1e293b;border-radius:12px;padding:12px;margin:12px 0"><span>Total:</span><span id="vTotal">R$ 0,00</span></div>
+      <button class="btn-primary" style="width:100%" onclick="salvarVenda()">🛒 Registrar</button>
     </div>
-    <div class="card"><div class="sec-ttl">📋 VENDAS</div><div id="listaVendas"></div></div>
+    <div class="card"><div class="sec-ttl">📋 Vendas</div><div id="listaVendas"></div></div>
   </div>
 </div>
-
-<nav>
-  <button class="nb active" onclick="navTo('inicio')"><span class="nb-ico">🏠</span><span>Início</span></button>
-  <button class="nb" onclick="navTo('alimentacao')"><span class="nb-ico">🌾</span><span>Alimentação</span></button>
-  <button class="nb-fab" onclick="navTo('alimentacao')">➕</button>
-  <button class="nb" onclick="navTo('mortalidade')"><span class="nb-ico">💀</span><span>Mortalidade</span></button>
-  <button class="nb" onclick="navTo('vendas')"><span class="nb-ico">🛒</span><span>Vendas</span></button>
-</nav>
 
 </div>
 <div id="toast"></div>
@@ -448,20 +709,17 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(4,8,18,.95);backdrop-
 var _user = null, _perfil = null, _adminId = null;
 var _tanques = [], _lotes = [], _horariosTratos = [], _configAlim = {};
 var _tratos = [], _mort = [], _vendas = [], _wifis = [];
-var _tratosAdminMap = {};
-var _wifiOk = false, _localIp = null;
+var _wifiOk = false;
 
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════
 function ov(id, show) { document.getElementById(id).classList[show ? 'remove' : 'add']('off'); }
-function setLoading(msg) { document.getElementById('loadMsg').textContent = msg || 'Carregando...'; ov('ovLoad', true); }
+function setLoading(msg) { document.getElementById('loadMsg').textContent = msg; ov('ovLoad', true); }
 function hideLoading() { ov('ovLoad', false); }
-function toast(msg) { var el = document.getElementById('toast'); el.textContent = msg; el.classList.add('on'); setTimeout(function() { el.classList.remove('on'); }, 3000); }
+function toast(msg) { var el = document.getElementById('toast'); el.textContent = msg; el.classList.add('on'); setTimeout(function() { el.classList.remove('on'); }, 2500); }
 function fmtR(v) { return 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 function hoje() { return new Date().toISOString().split('T')[0]; }
-function fmtData(d) { if (!d) return '—'; var p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
-function stBadge(s) { return '<span class="st st-p">' + (s || 'pendente') + '</span>'; }
 
 // ═══════════════════════════════════════════════════════════════
 // LOGIN/LOGOUT
@@ -470,15 +728,12 @@ async function login() {
   var email = document.getElementById('lgEmail').value.trim();
   var senha = document.getElementById('lgSenha').value;
   var err = document.getElementById('lgErr');
-  var btn = document.getElementById('lgBtn');
   if (!email || !senha) { err.textContent = 'Preencha e-mail e senha'; err.classList.add('on'); return; }
-  btn.disabled = true; btn.textContent = '⏳...';
   try {
     var auth = await SB.auth.signIn(email, senha);
     _user = auth.user;
     _perfil = await SB.perfil();
-    if (!_perfil) throw new Error('Perfil não encontrado');
-    if (_perfil.role !== 'colaborador') throw new Error('Acesso negado');
+    if (!_perfil || _perfil.role !== 'colaborador') throw new Error('Acesso negado');
     if (!_perfil.ativo) throw new Error('Conta desativada');
     _adminId = _perfil.admin_id;
     document.getElementById('hdrNome').textContent = _perfil.nome || email.split('@')[0];
@@ -489,8 +744,6 @@ async function login() {
   } catch (e) {
     err.textContent = '❌ ' + e.message;
     err.classList.add('on');
-    btn.disabled = false;
-    btn.textContent = '🔐 Entrar';
   }
 }
 
@@ -513,24 +766,15 @@ document.addEventListener('click', function(e) {
 async function checkWifi() {
   ov('ovWifi', false);
   setLoading('Verificando WiFi...');
-  _localIp = await SB.getLocalIP();
-  document.getElementById('ipDetectado').textContent = _localIp || 'não detectado';
+  var ip = await SB.getLocalIP();
+  document.getElementById('ipDetectado').textContent = ip || 'não detectado';
   try { _wifis = await SB.wifi.list(_adminId); } catch(e) { _wifis = []; }
   hideLoading();
   if (!_wifis.length) { _wifiOk = true; iniciarPagina(); return; }
   var ok = false;
-  if (_localIp) {
-    for (var i = 0; i < _wifis.length; i++) {
-      if (_localIp.startsWith(_wifis[i].ip_prefix)) { ok = true; break; }
-    }
-  }
+  if (ip) { for (var i = 0; i < _wifis.length; i++) { if (ip.startsWith(_wifis[i].ip_prefix)) { ok = true; break; } } }
   _wifiOk = ok;
-  if (ok) { iniciarPagina(); } else { mostrarBloqueio(); }
-}
-
-function mostrarBloqueio() {
-  document.getElementById('appWrap').style.display = 'none';
-  ov('ovWifi', true);
+  if (ok) { iniciarPagina(); } else { document.getElementById('appWrap').style.display = 'none'; ov('ovWifi', true); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -543,458 +787,292 @@ async function carregarDados() {
     SB.userData.get(_adminId, 'horariosTratos'),
     SB.userData.get(_adminId, 'configAlimentacao'),
     SB.tratos.list(_adminId, {}),
-    SB.mortalidade.list(_adminId, {}),
-    SB.vendas.list(_adminId, {})
+    SB.mortalidade.list(_adminId),
+    SB.vendas.list(_adminId)
   ]);
   _tanques = results[0].status === 'fulfilled' ? (results[0].value || []) : [];
   _lotes = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
-  _horariosTratos = results[2].status === 'fulfilled' ? (results[2].value || []) : [];
+  _horariosTratos = results[2].status === 'fulfilled' ? (results[2].value || []) : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
   _configAlim = results[3].status === 'fulfilled' ? (results[3].value || {}) : {};
   var myId = _user.id;
   _tratos = results[4].status === 'fulfilled' ? ((results[4].value || []).filter(function(r) { return r.colaborador_id === myId; })) : [];
   _mort = results[5].status === 'fulfilled' ? ((results[5].value || []).filter(function(r) { return r.colaborador_id === myId; })) : [];
   _vendas = results[6].status === 'fulfilled' ? ((results[6].value || []).filter(function(r) { return r.colaborador_id === myId; })) : [];
-
-  // Carregar tratos do admin (tratos_TXX)
-  _tratosAdminMap = {};
-  for (var i = 0; i < _tanques.length; i++) {
-    var num = _tanques[i].num;
-    var adminTratos = await SB.userData.get(_adminId, 'tratos_' + num).catch(function() { return null; });
-    if (adminTratos && Array.isArray(adminTratos)) {
-      _tratosAdminMap[num] = adminTratos;
-    } else {
-      var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
-      _tratosAdminMap[num] = horarios.map(function(h) { return { hora: h.hora, tratado: false, kgFornecidos: 0 }; });
-    }
-  }
-}
-
-function popularSelects() {
-  var opts = _tanques.map(function(t) { return '<option value="' + t.num + '">Tanque ' + t.num + '</option>'; }).join('');
-  ['mTanque', 'vTanque'].forEach(function(id) {
-    var s = document.getElementById(id);
-    if (s) s.innerHTML = '<option value="">Selecionar</option>' + opts;
-  });
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BUILD TANQUES OCUPADOS (cálculo igual ao admin)
+// CALCULAR TANQUES ATIVOS (com lote)
 // ═══════════════════════════════════════════════════════════════
-var _tabelaGPD = [
-  { peso: 1, gpd: 0.08 }, { peso: 2, gpd: 0.15 }, { peso: 3, gpd: 0.22 }, { peso: 5, gpd: 0.35 },
-  { peso: 10, gpd: 0.65 }, { peso: 20, gpd: 1.2 }, { peso: 50, gpd: 2.0 }, { peso: 100, gpd: 3.2 },
-  { peso: 200, gpd: 4.5 }, { peso: 300, gpd: 5.5 }, { peso: 500, gpd: 6.5 }, { peso: 800, gpd: 7.5 },
-  { peso: 1000, gpd: 8.0 }, { peso: 1300, gpd: 8.5 }
-];
-
-function obterGPD(pm) {
-  if (pm <= 0) return 0.05;
-  for (var i = 0; i < _tabelaGPD.length - 1; i++) {
-    if (pm >= _tabelaGPD[i].peso && pm <= _tabelaGPD[i + 1].peso) {
-      var f = (pm - _tabelaGPD[i].peso) / (_tabelaGPD[i + 1].peso - _tabelaGPD[i].peso);
-      return parseFloat((_tabelaGPD[i].gpd + (_tabelaGPD[i + 1].gpd - _tabelaGPD[i].gpd) * f).toFixed(3));
-    }
-  }
-  return 0.5;
-}
-
-function buildTanquesOcupados() {
-  var lista = [];
-  var caSel = parseFloat((_configAlim && _configAlim.ca) || 1.4) || 1.4;
-  var pesoCopo = parseFloat((_configAlim && _configAlim.pesoCopo) || 1) || 1;
-  var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
-  
+function getTanquesAtivos() {
+  var ativos = [];
   for (var i = 0; i < _lotes.length; i++) {
     var lote = _lotes[i];
     if (lote.encerrado) continue;
     for (var j = 0; j < (lote.tanques || []).length; j++) {
-      var tanque = lote.tanques[j];
-      if (!tanque.qtdPeixes || tanque.despescado) continue;
-      
-      var pm = 0;
-      if (lote.biometrias && lote.biometrias.length) {
-        var bioTanque = lote.biometrias.slice().reverse().find(function(b) { return b.tanque === tanque.num; });
-        if (bioTanque) pm = parseFloat(bioTanque.pesoMedio) || 0;
-        if (!pm) { var bioGeral = lote.biometrias[lote.biometrias.length - 1]; pm = parseFloat(bioGeral && bioGeral.pesoMedio) || 0; }
+      var t = lote.tanques[j];
+      if (t.qtdPeixes && !t.despescado) {
+        ativos.push({ num: t.num, lote: lote, tanque: t });
       }
-      if (!pm) pm = parseFloat(tanque.ultimoPesoMedio || lote.pesoMedioAlevino || 5) || 5;
-      
-      var gpd = obterGPD(pm);
-      var ca = pm <= 30 ? 1.0 : caSel;
-      var racaoDia = (tanque.qtdPeixes * gpd / 1000) * ca;
-      var tratos = _tratosAdminMap[tanque.num];
-      if (!tratos || !Array.isArray(tratos)) {
-        tratos = horarios.map(function(h) { return { hora: h.hora, tratado: false, kgFornecidos: 0 }; });
-      }
-      
-      lista.push({
-        num: tanque.num,
-        qtdPeixes: tanque.qtdPeixes,
-        pesoMedio: pm,
-        loteId: lote.id,
-        gpd: gpd,
-        ca: ca,
-        racaoDia: racaoDia,
-        tipoRacao: 'Ração',
-        tratos: tratos,
-        pesoCopo: pesoCopo
-      });
     }
   }
-  return lista;
+  return ativos;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SINCRONIZAR TRATO ADMIN (chave tratos_TXX)
+// OBTER PESO MÉDIO DO TANQUE
 // ═══════════════════════════════════════════════════════════════
-async function syncTratoAdmin(tanqueNum, tratoIdx, kgFornecido, hora) {
-  try {
-    var chave = 'tratos_' + tanqueNum;
-    var tratosAtual = _tratosAdminMap[tanqueNum] || [];
-    var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
-    
-    if (tratosAtual.length !== horarios.length) {
-      tratosAtual = horarios.map(function(h) { return { hora: h.hora, tratado: false, kgFornecidos: 0 }; });
-    }
-    
-    if (tratoIdx >= 0 && tratosAtual[tratoIdx]) {
-      tratosAtual[tratoIdx] = {
-        ...tratosAtual[tratoIdx],
-        tratado: true,
-        kgFornecidos: kgFornecido,
-        registradoPor: 'colaborador',
-        registradoEm: new Date().toLocaleString('pt-BR')
-      };
-    }
-    
-    var session = JSON.parse(localStorage.getItem('aq_session') || 'null');
-    var token = session && session.access_token ? session.access_token : SB.key;
-    await fetch(SB.url + '/rest/v1/user_data', {
-      method: 'POST',
-      headers: {
-        'apikey': SB.key,
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify({ user_id: _adminId, full_key: chave, data_value: tratosAtual, updated_at: new Date().toISOString() })
-    });
-    _tratosAdminMap[tanqueNum] = tratosAtual;
-    return true;
-  } catch (e) {
-    console.error('syncTratoAdmin error:', e);
-    return false;
+function getPesoMedio(lote, tanqueNum) {
+  if (lote.biometrias && lote.biometrias.length) {
+    var bio = lote.biometrias.slice().reverse().find(function(b) { return b.tanque === tanqueNum; });
+    if (bio && bio.pesoMedio) return parseFloat(bio.pesoMedio);
+    var bioGeral = lote.biometrias[lote.biometrias.length - 1];
+    if (bioGeral && bioGeral.pesoMedio) return parseFloat(bioGeral.pesoMedio);
   }
+  if (lote.pesoMedioAlevino) return parseFloat(lote.pesoMedioAlevino);
+  return 30;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// REGISTRAR TRATO (FORNECER)
+// OBTER GPD BASEADO NO PESO
 // ═══════════════════════════════════════════════════════════════
-async function fornecerTrato(tankIdx, tratoIdx, kgRecomendado) {
-  var t = window._tankRenderList[tankIdx];
-  if (!t) return;
+var tabelaGPD = [
+  { peso: 1, gpd: 0.08 }, { peso: 2, gpd: 0.15 }, { peso: 3, gpd: 0.22 }, { peso: 5, gpd: 0.35 },
+  { peso: 10, gpd: 0.65 }, { peso: 20, gpd: 1.2 }, { peso: 50, gpd: 2.0 }, { peso: 100, gpd: 3.2 },
+  { peso: 200, gpd: 4.5 }, { peso: 300, gpd: 5.5 }, { peso: 500, gpd: 6.5 }, { peso: 800, gpd: 7.5 },
+  { peso: 1000, gpd: 8.0 }
+];
+function obterGPD(pm) {
+  if (pm <= 0) return 0.5;
+  for (var i = 0; i < tabelaGPD.length - 1; i++) {
+    if (pm >= tabelaGPD[i].peso && pm <= tabelaGPD[i + 1].peso) {
+      var f = (pm - tabelaGPD[i].peso) / (tabelaGPD[i + 1].peso - tabelaGPD[i].peso);
+      return tabelaGPD[i].gpd + (tabelaGPD[i + 1].gpd - tabelaGPD[i].gpd) * f;
+    }
+  }
+  return 6.5;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER CARDS DOS TANQUES (igual à imagem)
+// ═══════════════════════════════════════════════════════════════
+function renderTankCards() {
+  var ativos = getTanquesAtivos();
+  if (!ativos.length) { document.getElementById('tankCardsContainer').innerHTML = '<div class="empty">🏞️ Nenhum tanque ativo</div>'; return; }
   
   var hojeStr = hoje();
-  var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
-  var hora = horarios[tratoIdx] ? horarios[tratoIdx].hora : new Date().toTimeString().slice(0, 5);
+  var tratosHoje = _tratos.filter(function(t) { return t.data === hojeStr; });
+  var pesoCopo = parseFloat((_configAlim && _configAlim.pesoCopo) || 1) || 1;
+  var caPadrao = parseFloat((_configAlim && _configAlim.ca) || 1.4) || 1.4;
+  var html = '';
+  var consumoTotal = 0;
+  var consumosPorTanque = [];
   
+  for (var i = 0; i < ativos.length; i++) {
+    var a = ativos[i];
+    var tanqueNum = a.num;
+    var lote = a.lote;
+    var tanqueInfo = a.tanque;
+    var qtd = tanqueInfo.qtdPeixes || 0;
+    var pesoMedio = getPesoMedio(lote, tanqueNum);
+    var gpd = obterGPD(pesoMedio);
+    var ca = (lote && lote.ca) || caPadrao;
+    var biomassa = (qtd * pesoMedio) / 1000;
+    var racaoDia = (biomassa * ca * gpd) / 1000;
+    var numTratos = _horariosTratos.length || 3;
+    var kgPorTrato = racaoDia / numTratos;
+    var coposPorTrato = pesoCopo > 0 ? (kgPorTrato / pesoCopo).toFixed(1) : '0';
+    var coposDia = pesoCopo > 0 ? (racaoDia / pesoCopo).toFixed(1) : '0';
+    
+    // Tratos registrados hoje para este tanque
+    var tratosTanqueHoje = tratosHoje.filter(function(t) { return t.tanque_num === tanqueNum; });
+    var totalKgFornecido = tratosTanqueHoje.reduce(function(s, t) { return s + (parseFloat(t.kg_racao) || 0); }, 0);
+    var tratosFeitos = tratosTanqueHoje.length;
+    var todosFeitos = tratosFeitos >= numTratos;
+    var falta = Math.max(0, racaoDia - totalKgFornecido);
+    var percentual = racaoDia > 0 ? (totalKgFornecido / racaoDia) * 100 : 0;
+    
+    consumoTotal += totalKgFornecido;
+    consumosPorTanque.push({ num: tanqueNum, kg: totalKgFornecido });
+    
+    var statusClass = todosFeitos ? 'concluido' : 'pendente';
+    var statusLabel = todosFeitos ? '✅ Concluído' : '⏳ Pendente';
+    
+    html += '<div class="tank-card">';
+    html += '<div class="tank-header">';
+    html += '<div><div class="tank-name">🏞️ Tanque ' + tanqueNum + '</div>';
+    html += '<div class="tank-lote">Lote #' + String(lote.id).slice(-4) + '</div>';
+    html += '<div class="tank-copos">🥤 ' + coposPorTrato + ' copos/trato · ' + coposDia + ' copos/dia</div>';
+    html += '</div>';
+    html += '<div class="tank-right"><span class="status-pill ' + statusClass + '">' + statusLabel + '</span></div>';
+    html += '</div>';
+    html += '<div class="tank-stats">' + qtd.toLocaleString() + ' peixes · ' + pesoMedio.toFixed(0) + 'g · ' + (tanqueInfo.tipoRacao || 'Ração') + '</div>';
+    html += '<div class="tank-progress">';
+    html += '<div class="progress-bar"><div class="progress-fill ' + (todosFeitos ? 'done' : '') + '" style="width:' + percentual.toFixed(1) + '%"></div></div>';
+    html += '<div class="progress-text"><span>' + totalKgFornecido.toFixed(2) + ' kg</span><span>' + racaoDia.toFixed(2) + ' kg</span></div>';
+    html += '</div>';
+    html += '<div class="tank-footer">';
+    html += '<button class="btn-pendentes" onclick="registrarTratoTanque(' + tanqueNum + ', ' + kgPorTrato.toFixed(2) + ')">🎯 1 Trato</button>';
+    if (!todosFeitos) {
+      html += '<button class="btn-reset-tanque" onclick="registrarTodosTratos(' + tanqueNum + ', ' + kgPorTrato.toFixed(2) + ', ' + numTratos + ')">🎯 Todos pendentes</button>';
+    }
+    html += '</div>';
+    html += '</div>';
+  }
+  
+  document.getElementById('tankCardsContainer').innerHTML = html;
+  
+  // Renderizar consumo total
+  var consumoHtml = '';
+  consumosPorTanque.sort(function(a,b) { return a.num - b.num; });
+  for (var j = 0; j < consumosPorTanque.length; j++) {
+    consumoHtml += '<div class="consumo-item"><span>Tanque ' + consumosPorTanque[j].num + '</span><span>' + consumosPorTanque[j].kg.toFixed(2) + ' kg</span></div>';
+  }
+  document.getElementById('consumoLista').innerHTML = consumoHtml;
+  document.getElementById('resumoConsumoLista').innerHTML = consumoHtml;
+  document.getElementById('consumoTotal').innerHTML = '<span>Total</span><span>' + consumoTotal.toFixed(2) + ' kg</span>';
+  document.getElementById('resumoConsumoTotal').innerHTML = '<span>Total</span><span>' + consumoTotal.toFixed(2) + ' kg</span>';
+  document.getElementById('consumoCard').style.display = 'block';
+  
+  // KPIs
+  document.getElementById('kTratos').textContent = tratosHoje.length;
+  document.getElementById('kTotalKg').textContent = consumoTotal.toFixed(1) + ' kg';
+  document.getElementById('kTanques').textContent = ativos.length;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REGISTRAR TRATO (1 TRATO PARA UM TANQUE ESPECÍFICO)
+// ═══════════════════════════════════════════════════════════════
+async function registrarTratoTanque(tanqueNum, kgRecomendado) {
+  var hojeStr = hoje();
   var reg = {
     colaborador_id: _user.id,
     admin_id: _adminId,
     data: hojeStr,
-    tanque_num: t.num,
-    lote_id: String(t.loteId),
+    tanque_num: tanqueNum,
+    lote_id: '',
     kg_racao: kgRecomendado,
-    tipo_racao: t.tipoRacao || '',
-    hora_trato: hora,
-    obs: '',
+    tipo_racao: '',
+    hora_trato: new Date().toTimeString().slice(0, 5),
+    obs: 'Trato rápido',
     status: 'pendente'
   };
-  
   try {
     await SB.tratos.add(reg);
-    await syncTratoAdmin(t.num, tratoIdx, kgRecomendado, hora);
-    toast('✅ ' + kgRecomendado.toFixed(2) + 'kg · Tanque ' + t.num);
+    toast('✅ ' + kgRecomendado.toFixed(2) + 'kg · Tanque ' + tanqueNum);
     await atualizarTela();
-  } catch (e) {
-    toast('❌ Erro: ' + e.message);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// TODOS TRATOS PENDENTES DE UM TANQUE
-// ═══════════════════════════════════════════════════════════════
-async function todosTratos(tankIdx) {
-  var t = window._tankRenderList[tankIdx];
-  if (!t) return;
-  
-  var horarios = t.tratos;
-  var kgPorTrato = t.racaoDia / horarios.length;
-  var hojeStr = hoje();
-  var count = 0;
-  
-  for (var i = 0; i < horarios.length; i++) {
-    if (!horarios[i].tratado) {
-      var reg = {
-        colaborador_id: _user.id,
-        admin_id: _adminId,
-        data: hojeStr,
-        tanque_num: t.num,
-        lote_id: String(t.loteId),
-        kg_racao: parseFloat(kgPorTrato.toFixed(2)),
-        tipo_racao: t.tipoRacao || '',
-        hora_trato: horarios[i].hora,
-        obs: 'Trato em lote',
-        status: 'pendente'
-      };
-      try {
-        await SB.tratos.add(reg);
-        await syncTratoAdmin(t.num, i, parseFloat(kgPorTrato.toFixed(2)), horarios[i].hora);
-        count++;
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }
-  
-  if (count > 0) {
-    toast('✅ ' + count + ' trato(s) registrados para o Tanque ' + t.num);
-    await atualizarTela();
-  } else {
-    toast('⚠️ Todos os tratos já foram realizados hoje!');
-  }
+  } catch(e) { toast('❌ Erro: ' + e.message); }
 }
 
 // ═══════════════════════════════════════════════════════════════
 // 1 TRATO TODOS (primeiro pendente de cada tanque)
 // ═══════════════════════════════════════════════════════════════
 async function umTratoTodos() {
-  var tanquesOcupados = buildTanquesOcupados();
+  var ativos = getTanquesAtivos();
+  if (!ativos.length) { toast('⚠️ Nenhum tanque ativo'); return; }
+  
   var hojeStr = hoje();
-  var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
+  var tratosHoje = _tratos.filter(function(t) { return t.data === hojeStr; });
+  var pesoCopo = parseFloat((_configAlim && _configAlim.pesoCopo) || 1) || 1;
+  var caPadrao = parseFloat((_configAlim && _configAlim.ca) || 1.4) || 1.4;
+  var numTratos = _horariosTratos.length || 3;
   var total = 0;
   
-  for (var i = 0; i < tanquesOcupados.length; i++) {
-    var t = tanquesOcupados[i];
-    var tratosAtuais = _tratosAdminMap[t.num];
-    if (!tratosAtuais) continue;
+  for (var i = 0; i < ativos.length; i++) {
+    var a = ativos[i];
+    var qtd = a.tanque.qtdPeixes || 0;
+    var pesoMedio = getPesoMedio(a.lote, a.num);
+    var gpd = obterGPD(pesoMedio);
+    var ca = (a.lote && a.lote.ca) || caPadrao;
+    var biomassa = (qtd * pesoMedio) / 1000;
+    var racaoDia = (biomassa * ca * gpd) / 1000;
+    var kgPorTrato = racaoDia / numTratos;
     
-    var proximoIdx = -1;
-    for (var j = 0; j < tratosAtuais.length; j++) {
-      if (!tratosAtuais[j].tratado) {
-        proximoIdx = j;
-        break;
-      }
-    }
-    if (proximoIdx === -1) continue;
+    var tratosFeitos = tratosHoje.filter(function(t) { return t.tanque_num === a.num; }).length;
+    if (tratosFeitos >= numTratos) continue;
     
-    var kgPorTrato = t.racaoDia / tratosAtuais.length;
     var reg = {
       colaborador_id: _user.id,
       admin_id: _adminId,
       data: hojeStr,
-      tanque_num: t.num,
-      lote_id: String(t.loteId),
+      tanque_num: a.num,
+      lote_id: '',
       kg_racao: parseFloat(kgPorTrato.toFixed(2)),
-      tipo_racao: t.tipoRacao || '',
-      hora_trato: tratosAtuais[proximoIdx].hora,
+      tipo_racao: '',
+      hora_trato: new Date().toTimeString().slice(0, 5),
       obs: '1 trato rápido',
       status: 'pendente'
     };
-    
     try {
       await SB.tratos.add(reg);
-      await syncTratoAdmin(t.num, proximoIdx, parseFloat(kgPorTrato.toFixed(2)), tratosAtuais[proximoIdx].hora);
       total++;
-    } catch (e) {
-      console.error('Erro no tanque ' + t.num, e);
-    }
+    } catch(e) { console.error(e); }
   }
   
   if (total > 0) {
     toast('✅ 1 trato em ' + total + ' tanque(s)!');
     await atualizarTela();
   } else {
-    toast('⚠️ Nenhum trato pendente encontrado!');
+    toast('⚠️ Nenhum trato pendente');
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RESETAR DIA (limpar todos os tratos do admin)
+// REGISTRAR TODOS TRATOS PENDENTES DE UM TANQUE
 // ═══════════════════════════════════════════════════════════════
+async function registrarTodosTratos(tanqueNum, kgPorTrato, numTratos) {
+  var hojeStr = hoje();
+  var tratosFeitos = _tratos.filter(function(t) { return t.data === hojeStr && t.tanque_num === tanqueNum; }).length;
+  var faltam = numTratos - tratosFeitos;
+  if (faltam <= 0) { toast('⚠️ Todos os tratos já foram registrados'); return; }
+  
+  var count = 0;
+  for (var i = 0; i < faltam; i++) {
+    var reg = {
+      colaborador_id: _user.id,
+      admin_id: _adminId,
+      data: hojeStr,
+      tanque_num: tanqueNum,
+      lote_id: '',
+      kg_racao: parseFloat(kgPorTrato.toFixed(2)),
+      tipo_racao: '',
+      hora_trato: new Date().toTimeString().slice(0, 5),
+      obs: 'Trato em lote',
+      status: 'pendente'
+    };
+    try {
+      await SB.tratos.add(reg);
+      count++;
+    } catch(e) { console.error(e); }
+  }
+  toast('✅ ' + count + ' trato(s) para o Tanque ' + tanqueNum);
+  await atualizarTela();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONCLUIR DIA / RESETAR DIA
+// ═══════════════════════════════════════════════════════════════
+async function concluirDia() {
+  if (!confirm('Finalizar dia? Os tratos serão registrados como concluídos.')) return;
+  toast('✅ Dia concluído!');
+}
+
 async function resetarDia() {
   if (!confirm('Resetar TODOS os tratos de hoje?')) return;
-  var horarios = _horariosTratos.length ? _horariosTratos : [{ hora: '08:00' }, { hora: '12:30' }, { hora: '17:00' }];
-  var novosTratos = horarios.map(function(h) { return { hora: h.hora, tratado: false, kgFornecidos: 0 }; });
-  
-  for (var num in _tratosAdminMap) {
-    await syncTratoAdmin(parseInt(num), -1, 0, '');
-  }
-  
   var hojeStr = hoje();
-  _tratos = _tratos.filter(function(tr) { return tr.data !== hojeStr; });
+  _tratos = _tratos.filter(function(t) { return t.data !== hojeStr; });
   toast('🔄 Todos os tratos resetados!');
   await atualizarTela();
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ATUALIZAR TELA APÓS QUALQUER OPERAÇÃO
+// MORTALIDADE
 // ═══════════════════════════════════════════════════════════════
-async function atualizarTela() {
-  await carregarDados();
-  window._tankRenderList = buildTanquesOcupados();
-  renderTankCards();
-  renderDash();
-  renderTratos();
-  renderMort();
-  renderVendas();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER CARDS DOS TANQUES
-// ═══════════════════════════════════════════════════════════════
-window._tankRenderList = [];
-var _abertos = new Set();
-
-function renderTankCards() {
-  var container = document.getElementById('tankCardsContainer');
-  if (!container) return;
-  
-  var lista = window._tankRenderList;
-  if (!lista.length) {
-    container.innerHTML = '<div class="empty"><span class="empty-ico">🏞️</span>Nenhum tanque ativo</div>';
-    return;
-  }
-  
-  var html = '';
-  for (var i = 0; i < lista.length; i++) {
-    var t = lista[i];
-    var totalKg = t.tratos.reduce(function(s, tr) { return s + (tr.tratado ? (tr.kgFornecidos || 0) : 0); }, 0);
-    var todosFeitos = t.tratos.every(function(tr) { return tr.tratado; });
-    var pct = t.racaoDia > 0 ? (totalKg / t.racaoDia) * 100 : 0;
-    var detailId = 'td_' + t.num;
-    var chevId = 'chv_' + t.num;
-    var aberto = _abertos.has(detailId);
-    
-    var tratosHtml = '';
-    var kgPorTrato = t.racaoDia / t.tratos.length;
-    for (var j = 0; j < t.tratos.length; j++) {
-      var tr = t.tratos[j];
-      var feito = tr.tratado;
-      tratosHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
-        '<div><div style="font-weight:600">' + (j + 1) + 'º Trato — ' + tr.hora + '</div>' +
-        '<div style="font-size:.7rem;color:var(--text3)">' + kgPorTrato.toFixed(2) + ' kg</div></div>' +
-        (feito ? '<div><span style="color:var(--green)">✅ ' + (tr.kgFornecidos || 0).toFixed(2) + 'kg</span></div>' :
-         '<button onclick="fornecerTrato(' + i + ',' + j + ',' + kgPorTrato.toFixed(2) + ')" style="background:#16a34a;padding:6px 14px;font-size:.7rem">Fornecer</button>') +
-        '</div>';
-    }
-    
-    html += '<div class="tank-card ' + (todosFeitos ? 'done' : '') + '">' +
-      '<div class="tank-header" onclick="toggleDetalhe(\'' + detailId + '\', \'' + chevId + '\')">' +
-        '<div class="tank-info">' +
-          '<div class="tank-name">🏞️ Tanque ' + t.num + ' <small style="color:var(--text3)">Lote #' + String(t.loteId).slice(-4) + '</small></div>' +
-          '<div class="tank-meta">' + t.qtdPeixes + ' peixes · ' + t.pesoMedio.toFixed(0) + 'g</div>' +
-          '<div class="tank-progress-wrap">' +
-            '<div class="tank-progress-bar"><div class="tank-progress-fill ' + (todosFeitos ? 'done' : '') + '" style="width:' + pct.toFixed(1) + '%"></div></div>' +
-            '<div class="tank-progress-text">' + totalKg.toFixed(1) + ' / ' + t.racaoDia.toFixed(1) + ' kg</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="tank-right">' +
-          '<span class="status-pill ' + (todosFeitos ? 'concluido' : 'pendente') + '">' + (todosFeitos ? '✅ Concluído' : '⏳ Pendente') + '</span>' +
-          '<span class="tank-chevron" id="' + chevId + '">▼</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="tank-details" id="' + detailId + '" style="display:' + (aberto ? 'block' : 'none') + '">' +
-        '<div style="margin-bottom:10px;font-size:.75rem">🍽️ ' + t.racaoDia.toFixed(2) + ' kg/dia · CA ' + t.ca.toFixed(2) + ' · GPD ' + t.gpd.toFixed(2) + 'g</div>' +
-        tratosHtml +
-        '<div style="display:flex;gap:8px;margin-top:12px">' +
-          '<button onclick="todosTratos(' + i + ')" style="flex:1;background:var(--green);color:#000">🎯 Todos pendentes</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }
-  container.innerHTML = html;
-}
-
-function toggleDetalhe(detailId, chevId) {
-  var d = document.getElementById(detailId);
-  var c = document.getElementById(chevId);
-  if (!d) return;
-  var visible = d.style.display !== 'none';
-  d.style.display = visible ? 'none' : 'block';
-  if (c) c.classList.toggle('open', !visible);
-  if (!visible) _abertos.add(detailId);
-  else _abertos.delete(detailId);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER DASHBOARD
-// ═══════════════════════════════════════════════════════════════
-function renderDash() {
-  var h = hoje();
-  var tH = _tratos.filter(function(t) { return t.data === h; });
-  var mH = _mort.filter(function(m) { return m.data === h; });
-  var vH = _vendas.filter(function(v) { return v.data === h; });
-  document.getElementById('kTratos').textContent = tH.length;
-  document.getElementById('kMort').textContent = mH.reduce(function(s, m) { return s + (m.quantidade || 0); }, 0);
-  document.getElementById('kVendas').textContent = vH.length;
-  
-  // Tarefas do dia
-  var tanquesAtivos = buildTanquesOcupados();
-  var tarefasHtml = tanquesAtivos.length ? tanquesAtivos.map(function(t) {
-    var feito = t.tratos.every(function(tr) { return tr.tratado; });
-    return '<div class="task ' + (feito ? 'done' : 'pend') + '">' +
-      '<span class="task-ico">' + (feito ? '✅' : '⏳') + '</span>' +
-      '<div><div class="task-t">Tanque ' + t.num + ' — Alimentação</div>' +
-      '<div class="task-s">' + (feito ? 'Concluído' : 'Pendente') + '</div></div>' +
-      (!feito ? '<button class="btn-sm" style="margin-left:auto" onclick="navTo(\'alimentacao\')">Registrar</button>' : '') +
-      '</div>';
-  }).join('') : '<div class="empty">Sem tanques ativos</div>';
-  document.getElementById('listaTarefas').innerHTML = tarefasHtml;
-  
-  // Últimos registros
-  var ultimos = [].concat(
-    _tratos.slice(0, 5).map(function(t) { return { ico: '🌾', desc: 'Trato Tanque ' + t.tanque_num + ' - ' + t.kg_racao + 'kg', st: t.status }; }),
-    _mort.slice(0, 3).map(function(m) { return { ico: '💀', desc: 'Mortalidade Tanque ' + m.tanque_num + ' - ' + m.quantidade + ' peixes', st: m.status }; }),
-    _vendas.slice(0, 3).map(function(v) { return { ico: '🛒', desc: 'Venda - ' + fmtR(v.valor_total), st: v.status }; })
-  ).slice(0, 6);
-  document.getElementById('ultimosRegs').innerHTML = ultimos.length ? ultimos.map(function(r) {
-    return '<div class="task pend"><span class="task-ico">' + r.ico + '</span><div><div class="task-t">' + r.desc + '</div><div class="task-s">' + stBadge(r.st) + '</div></div></div>';
-  }).join('') : '<div class="empty">Nenhum registro</div>';
-}
-
-function renderTratos() {
-  var h = hoje();
-  var hj = _tratos.filter(function(t) { return t.data === h; });
-  document.getElementById('tratosHoje').innerHTML = hj.length ? hj.map(function(t) {
-    return '<div class="li"><div class="li-m"><div class="li-t">🏞️ Tanque ' + t.tanque_num + ' — ' + t.kg_racao + 'kg</div><div class="li-s">⏰ ' + (t.hora_trato || '—') + ' · ' + stBadge(t.status) + (t.obs ? '<br>📝 ' + t.obs : '') + '</div></div></div>';
-  }).join('') : '<div class="empty">Nenhum trato hoje</div>';
-}
-
-function renderMort() {
-  document.getElementById('listaMort').innerHTML = _mort.length ? _mort.slice(0, 10).map(function(m) {
-    return '<div class="li"><div class="li-m"><div class="li-t">🏞️ Tanque ' + m.tanque_num + ' — ' + m.quantidade + ' peixes</div><div class="li-s">📅 ' + fmtData(m.data) + ' · ' + stBadge(m.status) + '</div></div></div>';
-  }).join('') : '<div class="empty">Nenhum registro</div>';
-}
-
-function renderVendas() {
-  document.getElementById('listaVendas').innerHTML = _vendas.length ? _vendas.slice(0, 10).map(function(v) {
-    return '<div class="li"><div class="li-m"><div class="li-t">👤 ' + (v.cliente || 'sem nome') + ' — ' + fmtR(v.valor_total) + '</div><div class="li-s">📅 ' + fmtData(v.data) + ' · ' + v.kg_vendidos + 'kg · ' + stBadge(v.status) + '</div></div></div>';
-  }).join('') : '<div class="empty">Nenhuma venda</div>';
-}
-
-function calcTotal() {
-  var kg = parseFloat(document.getElementById('vKg').value) || 0;
-  var pr = parseFloat(document.getElementById('vPreco').value) || 0;
-  document.getElementById('vTotal').textContent = fmtR(kg * pr);
-}
-
 async function salvarMort() {
   var reg = {
     colaborador_id: _user.id,
     admin_id: _adminId,
-    data: document.getElementById('mData').value,
-    tanque_num: document.getElementById('mTanque').value,
+    data: document.getElementById('mData').value || hoje(),
+    tanque_num: parseInt(document.getElementById('mTanque').value),
     quantidade: parseInt(document.getElementById('mQtd').value),
     causa: document.getElementById('mCausa').value,
     obs: '',
@@ -1002,10 +1080,26 @@ async function salvarMort() {
   };
   try {
     await SB.mortalidade.add(reg);
-    toast('✅ Mortalidade registrada!');
-    await atualizarTela();
+    toast('✅ Mortalidade registrada');
     document.getElementById('mQtd').value = '';
-  } catch (e) { toast('❌ ' + e.message); }
+    await atualizarTela();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+function renderMort() {
+  var html = _mort.slice(0, 10).map(function(m) {
+    return '<div class="li"><div class="li-t">💀 Tanque ' + m.tanque_num + ' - ' + m.quantidade + ' peixes</div><div class="li-s">' + m.data + '</div></div>';
+  }).join('');
+  document.getElementById('listaMort').innerHTML = html || '<div class="empty">Nenhum registro</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VENDAS
+// ═══════════════════════════════════════════════════════════════
+function calcTotal() {
+  var kg = parseFloat(document.getElementById('vKg').value) || 0;
+  var pr = parseFloat(document.getElementById('vPreco').value) || 0;
+  document.getElementById('vTotal').textContent = fmtR(kg * pr);
 }
 
 async function salvarVenda() {
@@ -1014,25 +1108,57 @@ async function salvarVenda() {
   var reg = {
     colaborador_id: _user.id,
     admin_id: _adminId,
-    data: document.getElementById('vData').value,
+    data: document.getElementById('vData').value || hoje(),
     cliente: document.getElementById('vCliente').value,
     kg_vendidos: kg,
     valor_kg: preco,
     valor_total: kg * preco,
-    tanque_origem: document.getElementById('vTanque').value,
-    forma_pagamento: '',
-    obs: '',
+    tanque_origem: document.getElementById('vTanque').value || null,
     status: 'pendente'
   };
   try {
     await SB.vendas.add(reg);
-    toast('✅ Venda registrada!');
-    await atualizarTela();
+    toast('✅ Venda registrada');
     document.getElementById('vCliente').value = '';
     document.getElementById('vKg').value = '';
     document.getElementById('vPreco').value = '';
     document.getElementById('vTotal').textContent = 'R$ 0,00';
-  } catch (e) { toast('❌ ' + e.message); }
+    await atualizarTela();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+function renderVendas() {
+  var html = _vendas.slice(0, 10).map(function(v) {
+    return '<div class="li"><div class="li-t">🛒 ' + (v.cliente || 'Cliente') + ' - ' + fmtR(v.valor_total) + '</div><div class="li-s">' + v.kg_vendidos + ' kg · ' + v.data + '</div></div>';
+  }).join('');
+  document.getElementById('listaVendas').innerHTML = html || '<div class="empty">Nenhuma venda</div>';
+}
+
+function popularSelects() {
+  var ativos = getTanquesAtivos();
+  var opts = ativos.map(function(a) { return '<option value="' + a.num + '">Tanque ' + a.num + '</option>'; }).join('');
+  ['mTanque', 'vTanque'].forEach(function(id) {
+    var s = document.getElementById(id);
+    if (s) s.innerHTML = '<option value="">Selecionar</option>' + opts;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ATUALIZAR TELA
+// ═══════════════════════════════════════════════════════════════
+async function atualizarTela() {
+  setLoading('Atualizando...');
+  await carregarDados();
+  renderTankCards();
+  renderMort();
+  renderVendas();
+  popularSelects();
+  hideLoading();
+}
+
+async function sincronizar() {
+  await atualizarTela();
+  toast('✅ Sincronizado!');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1040,37 +1166,31 @@ async function salvarVenda() {
 // ═══════════════════════════════════════════════════════════════
 function tickClock() {
   var now = new Date();
-  document.getElementById('heroTime').textContent = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+  document.getElementById('heroTime').textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
   document.getElementById('heroDate').textContent = now.toLocaleDateString('pt-BR');
 }
 
-function navTo(p) {
-  document.querySelectorAll('.page').forEach(function(pg) { pg.classList.remove('active'); });
-  document.getElementById('pg-' + p).classList.add('active');
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  document.getElementById('pg-' + page).classList.add('active');
+  if (page === 'alimentacao') document.querySelector('.nav-item:first-child').classList.add('active');
+  if (page === 'resumo') document.querySelector('.nav-item:nth-child(2)').classList.add('active');
+  if (page === 'mortalidade') document.querySelector('.nav-item:nth-child(4)').classList.add('active');
+  if (page === 'vendas') document.querySelector('.nav-item:nth-child(5)').classList.add('active');
   window.scrollTo(0, 0);
-}
-
-async function sincronizar() {
-  setLoading('Sincronizando...');
-  await atualizarTela();
-  hideLoading();
-  toast('✅ Sincronizado!');
 }
 
 async function iniciarPagina() {
   document.getElementById('appWrap').style.display = 'block';
-  setLoading('Carregando...');
+  setLoading('Carregando dados...');
   await carregarDados();
-  popularSelects();
-  var hojeStr = hoje();
-  document.getElementById('mData').value = hojeStr;
-  document.getElementById('vData').value = hojeStr;
-  window._tankRenderList = buildTanquesOcupados();
   renderTankCards();
-  renderDash();
-  renderTratos();
   renderMort();
   renderVendas();
+  popularSelects();
+  document.getElementById('mData').value = hoje();
+  document.getElementById('vData').value = hoje();
   hideLoading();
   tickClock();
   setInterval(tickClock, 1000);
@@ -1107,11 +1227,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // EXPOR FUNÇÕES GLOBAIS
-window.fornecerTrato = fornecerTrato;
-window.todosTratos = todosTratos;
 window.umTratoTodos = umTratoTodos;
+window.concluirDia = concluirDia;
 window.resetarDia = resetarDia;
-window.toggleDetalhe = toggleDetalhe;
+window.registrarTratoTanque = registrarTratoTanque;
+window.registrarTodosTratos = registrarTodosTratos;
 window.salvarMort = salvarMort;
 window.salvarVenda = salvarVenda;
 window.calcTotal = calcTotal;
